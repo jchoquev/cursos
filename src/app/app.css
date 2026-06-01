@@ -1,0 +1,19 @@
+.navbar {
+  background: rgba(92, 10, 30, 0.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(92, 10, 30, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.navbar:hover {
+  background: rgba(92, 10, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    0 6px 16px rgba(92, 10, 30, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}

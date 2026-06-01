@@ -1,0 +1,1132 @@
+<section class="max-w-7xl mx-auto px-4 pb-16 pt-6">
+  
+  <!-- Banner Institucional Rediseñado -->
+  <app-hero-image />
+
+  <!-- Layout Principal de Dos Columnas (75% Main - 25% Sidebar) -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-12">
+    
+    <!-- ==========================================
+         COLUMNA PRINCIPAL: CATÁLOGO DE EVENTOS
+         ========================================== -->
+    <div class="lg:col-span-3 lg:order-last space-y-8">
+      
+      <!-- Fila de Filtros y Conmutadores -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+        
+        <!-- Categorías de Eventos -->
+        <div class="flex flex-wrap gap-1">
+          <button
+            *ngFor="let cat of ['Todos', 'Curso', 'Taller', 'Seminario', 'Repositorio']"
+            (click)="selectCategory(cat)"
+            [class]="selectedCategory() === cat 
+              ? 'px-4 py-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10 transition-all' 
+              : 'px-4 py-2 rounded-full text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all'"
+          >
+            {{ cat === 'Todos' ? '📂 Todos' : cat === 'Repositorio' ? '🏛️ Repositorio' : cat }}
+          </button>
+        </div>
+
+        <!-- Conmutador Activos / Pasados (Cursos) -->
+        <div *ngIf="selectedCategory() !== 'Repositorio'" class="flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0">
+          <button
+            (click)="selectStatus('activo')"
+            [class]="selectedStatus() === 'activo'
+              ? 'px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow'
+              : 'px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
+          >
+            🔥 Nuevos Eventos
+          </button>
+          <button
+            (click)="selectStatus('pasado')"
+            [class]="selectedStatus() === 'pasado'
+              ? 'px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow'
+              : 'px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
+          >
+            ⌛ Eventos Pasados
+          </button>
+        </div>
+
+        <!-- Conmutador de Años (Repositorio) -->
+        <div *ngIf="selectedCategory() === 'Repositorio'" class="flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0 items-center">
+          <span class="text-[10px] font-black uppercase text-slate-500 px-3 tracking-wider select-none font-mono">Año:</span>
+          <button
+            *ngFor="let yr of ['Todos', '2026', '2025', '2024', '2023']"
+            (click)="selectYear(yr)"
+            [class]="selectedYear() === yr
+              ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 shadow-md shadow-amber-500/10 transition-all cursor-pointer'
+              : 'px-3 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all cursor-pointer hover:bg-white/5'"
+          >
+            {{ yr }}
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Grilla de Tarjetas (Cards) de Cursos -->
+      <div *ngIf="filteredEvents().length === 0" class="text-center py-16 rounded-3xl border border-white/5 bg-white/[0.01]">
+        <div class="text-4xl mb-3">📂</div>
+        <h3 class="text-lg font-bold text-slate-200">No se encontraron eventos</h3>
+        <p class="text-slate-400 text-sm max-w-xs mx-auto mt-1">
+          No hay actividades disponibles en la categoría seleccionada por el momento.
+        </p>
+      </div>
+
+      <div *ngIf="filteredEvents().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <ng-container *ngFor="let ev of filteredEvents()">
+          
+          <!-- Card Individual (Curso, Taller, Seminario) -->
+          <div
+            *ngIf="ev.type !== 'Repositorio'"
+            class="group rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 flex flex-col justify-between"
+          >
+            <!-- Banner con Gradiente Estético -->
+            <div class="h-40 relative flex items-center justify-center bg-gradient-to-br {{ ev.imageGradient }} overflow-hidden">
+              <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span class="text-6xl transform group-hover:scale-110 transition-transform duration-300">{{ ev.icon }}</span>
+              
+              <span class="absolute top-4 left-4 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide bg-slate-950/60 text-white backdrop-blur-sm border border-white/10">
+                {{ ev.type }}
+              </span>
+
+              <span *ngIf="ev.status === 'pasado'" class="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide bg-rose-600 text-white shadow-md shadow-rose-600/30">
+                Concluido
+              </span>
+            </div>
+
+            <!-- Contenido de la Card -->
+            <div class="p-6 flex-1 flex flex-col justify-between gap-4">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs font-mono text-amber-400 font-bold">
+                  <span>📅 {{ ev.date }}</span>
+                  <span>⏱️ {{ ev.hours }} horas</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-100 group-hover:text-amber-300 transition-colors line-clamp-2">
+                  {{ ev.title }}
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                  {{ ev.description }}
+                </p>
+              </div>
+
+              <!-- Botones e Información Adicional -->
+              <div class="pt-4 border-t border-white/5 flex items-center justify-between gap-2">
+                
+                <button
+                  (click)="openEventDetails(ev)"
+                  class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer"
+                >
+                  👁️ Detalles
+                </button>
+
+                <button
+                  *ngIf="ev.status === 'activo'"
+                  (click)="startRegistrationFlow(ev)"
+                  [disabled]="ev.registeredCount >= ev.capacity"
+                  class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 transition-all cursor-pointer hover:shadow-lg hover:shadow-amber-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ ev.registeredCount >= ev.capacity ? 'Cupos Agotados' : 'Inscribirse' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Horizontal Especial (Repositorio de Tesis / Artículos / Proyectos) -->
+          <div
+            *ngIf="ev.type === 'Repositorio'"
+            class="col-span-1 md:col-span-2 group rounded-3xl border border-[#be123c]/20 hover:border-[#be123c]/40 bg-white/[0.02] hover:bg-white/[0.04] p-5 shadow-xl relative overflow-hidden flex flex-col sm:flex-row gap-6 transition-all duration-300 hover:-translate-y-1"
+          >
+            <!-- Portada del Documento en CSS Puro de Alta Fidelidad -->
+            <div class="w-32 h-44 rounded-xl bg-white flex-shrink-0 flex flex-col justify-between p-2 shadow-lg border border-slate-300/40 relative overflow-hidden select-none">
+              <!-- Top blue stripe -->
+              <div class="absolute top-0 left-0 right-0 h-2 bg-[#0c3c60] flex items-center justify-center">
+                <span class="text-[3px] text-white font-sans tracking-[0.2px] scale-90">IESTP CHOJATA</span>
+              </div>
+              
+              <!-- Logo Chojata en miniatura -->
+              <img src="/logo-chojata.png" alt="Emblema" class="w-8 h-8 object-contain mx-auto mt-2.5 opacity-95" />
+              
+              <!-- Título formal en mayúsculas -->
+              <div class="text-[5.5px] font-black text-slate-800 text-center leading-tight my-1 uppercase px-0.5 line-clamp-4">
+                {{ ev.title }}
+              </div>
+              
+              <!-- Presentado por -->
+              <div class="text-[4px] text-slate-500 font-semibold text-center mt-auto uppercase tracking-wider line-clamp-1 border-t border-slate-100 pt-1">
+                {{ ev.authors?.split(';')?.[0] }}
+              </div>
+              
+              <!-- Ciudad y año -->
+              <div class="text-[4px] text-slate-400 font-bold text-center uppercase tracking-widest font-mono">
+                MOQUEGUA - PERÚ
+              </div>
+            </div>
+
+            <!-- Metadatos de la Tesis (Estilo exacto a tu imagen de referencia) -->
+            <div class="flex-1 flex flex-col justify-between text-left">
+              <div>
+                <!-- Blue badge Thesis -->
+                <span class="px-3 py-1 rounded-full text-[9px] font-black bg-[#0c3c60] text-white uppercase tracking-wider select-none shadow-sm">
+                  {{ ev.docType || 'Thesis' }}
+                </span>
+                
+                <!-- Título del Repositorio -->
+                <h3 class="text-base font-bold text-slate-100 group-hover:text-amber-300 transition-colors mt-3 leading-snug line-clamp-2">
+                  {{ ev.title }}
+                </h3>
+                
+                <!-- Autores / Fecha -->
+                <p class="text-xs text-slate-400 font-medium mt-1 leading-normal font-sans">
+                  <span class="text-slate-200">{{ ev.authors }}</span> — <span class="text-amber-400 font-mono font-bold">{{ ev.date }}</span> — <span class="text-slate-500 font-semibold">(IESTP Chojata • Moquegua)</span>
+                </p>
+                
+                <!-- Abstract Resumen -->
+                <p class="text-xs text-slate-400 leading-relaxed mt-2 line-clamp-3">
+                  {{ ev.description }}
+                </p>
+              </div>
+
+              <!-- Botones de Acción (Resumen & Descarga) -->
+              <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-4">
+                <button
+                  (click)="openEventDetails(ev)"
+                  class="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 bg-transparent border-0 cursor-pointer font-sans"
+                >
+                  <span>🔍</span> Ver Resumen Completo
+                </button>
+                
+                <a href="https://iestpchojata.edu.pe/repositorio/tesis-mock.pdf" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#be123c]/15 border border-[#be123c]/35 hover:bg-[#be123c]/25 text-[#f43f5e] no-underline transition-all shadow-sm">
+                  📥 Descargar PDF
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </ng-container>
+
+      </div>
+
+    </div>
+
+    <!-- ==========================================
+         COLUMNA LATERAL (SIDEBAR): VALIDACIÓN Y MENÚS
+         ========================================== -->
+    <div class="lg:col-span-1 lg:order-first space-y-6">
+      
+      <!-- Bloque 1: Validación Rápida de Certificados -->
+      <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl relative overflow-hidden">
+        <div class="absolute -right-12 -top-12 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl"></div>
+        
+        <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+          <span>🛡️</span> Validación Rápida
+        </h3>
+        <p class="text-xs text-slate-400 leading-normal mb-4">
+          Ingrese el código único impreso en su diploma para comprobar su validez.
+        </p>
+
+        <form (submit)="handleQuickValidation(); $event.preventDefault()" class="space-y-3">
+          <input
+            type="text"
+            [(ngModel)]="quickCertCode"
+            [name]="'quickCertCode'"
+            placeholder="CERT-2026-001"
+            class="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"
+          />
+          <button
+            type="submit"
+            [disabled]="!quickCertCode.trim()"
+            class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white text-xs transition-all cursor-pointer shadow-lg shadow-wine-900/30 disabled:opacity-40"
+          >
+            Verificar Código
+          </button>
+        </form>
+      </div>
+
+      <!-- Bloque 2: Menú Rápido de Navegación -->
+      <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
+        <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
+          <span>🔗</span> Menú del Sitio
+        </h3>
+        <ul class="space-y-2 text-xs font-semibold text-slate-400">
+          <li>
+            <a routerLink="/" class="flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-white/5 hover:text-white transition-all">
+              <span>🏠</span> Inicio / Catálogo
+            </a>
+          </li>
+          <li>
+            <a routerLink="/buscar-certificados" class="flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-white/5 hover:text-white transition-all">
+              <span>🔎</span> Buscar Certificados DNI
+            </a>
+          </li>
+          <li>
+            <a routerLink="/intranet" class="flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-white/5 hover:text-white transition-all">
+              <span>💻</span> Acceso a Intranet
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Bloque 3: Novedades Destacadas -->
+      <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl space-y-4">
+        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+          <span>⭐</span> Destacados de la Semana
+        </h3>
+        
+        <div class="space-y-3">
+          <div class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.02] transition-colors">
+            <span class="text-xl">🔐</span>
+            <div>
+              <h4 class="text-xs font-bold text-slate-200 line-clamp-1">Seminario Criptografía</h4>
+              <span class="text-[10px] text-amber-400 font-mono">02 de Junio, 2026</span>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.02] transition-colors">
+            <span class="text-xl">🅰️</span>
+            <div>
+              <h4 class="text-xs font-bold text-slate-200 line-clamp-1">Angular 21 Pro</h4>
+              <span class="text-[10px] text-rose-400 font-mono">15 de Junio, 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ==========================================
+       MODAL: DETALLES DE CURSO / EVENTO
+       ========================================== -->
+  <div *ngIf="selectedEventForModal() as ev" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5">
+      
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-4xl">{{ ev.icon }}</span>
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
+              {{ ev.type }}
+            </span>
+            <h3 class="text-xl font-bold text-slate-100 mt-1">{{ ev.title }}</h3>
+          </div>
+        </div>
+        <button
+          (click)="closeEventDetailsModal()"
+          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer font-bold"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-2xl border border-white/5 text-xs">
+        <div>
+          <span class="block text-slate-500 font-bold uppercase tracking-wider">Fecha Programada</span>
+          <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">📅 {{ ev.date }}</span>
+        </div>
+        <div>
+          <span class="block text-slate-500 font-bold uppercase tracking-wider">Docente Expositor</span>
+          <span class="text-slate-200 font-medium text-sm mt-0.5 block">👨‍🏫 {{ ev.instructor }}</span>
+        </div>
+        <div>
+          <span class="block text-slate-500 font-bold uppercase tracking-wider">Duración Lectiva</span>
+          <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">⏱️ {{ ev.hours }} horas</span>
+        </div>
+        <div>
+          <span class="block text-slate-500 font-bold uppercase tracking-wider">Capacidad Disponible</span>
+          <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">
+            👥 {{ ev.registeredCount }} / {{ ev.capacity }} participantes
+          </span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Acerca de la Actividad</h4>
+        <p class="text-xs text-slate-300 leading-relaxed font-medium">
+          {{ ev.fullDescription }}
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <button
+          *ngIf="ev.status === 'activo'"
+          (click)="startRegistrationFlow(ev); closeEventDetailsModal()"
+          [disabled]="ev.registeredCount >= ev.capacity"
+          class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 text-xs transition-all cursor-pointer text-center"
+        >
+          ✓ Solicitar Vacante
+        </button>
+        <button
+          (click)="closeEventDetailsModal()"
+          class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
+        >
+          Cerrar Ventana
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ======================================================================
+       REFINEMENT: 3-STEP REGISTRATION MODALS (ESTILO BOOTSTRAP 5 CENTRADOS)
+       ====================================================================== -->
+
+  <!-- PASO 1: MODAL DE VALIDACIÓN DNI -->
+  <div *ngIf="activeStep() === 1" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="modal-dialog-centered bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5">
+      
+      <!-- Encabezado Modal -->
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <span>📝</span> Inscripción al Evento
+        </h3>
+        <button
+          (click)="closeRegistrationFlow()"
+          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Contenido / Campo DNI -->
+      <form (submit)="onDniSearch(); $event.preventDefault()" class="space-y-4">
+        <div class="space-y-2">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Número de DNI</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500 text-sm">🆔</span>
+            <input
+              type="text"
+              [(ngModel)]="dniInput"
+              [name]="'dniInput'"
+              placeholder="Ingrese su DNI"
+              maxlength="8"
+              class="w-full pl-10 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono text-sm font-bold"
+              required
+            />
+          </div>
+          <span class="block text-[10px] text-slate-500 font-medium font-mono">
+            (únicamente 8 dígitos)
+          </span>
+          <!-- Error alert -->
+          <div *ngIf="dniError()" class="text-xs font-semibold text-rose-400 mt-1">
+            ⚠️ {{ dniError() }}
+          </div>
+        </div>
+
+        <!-- Botones Inferiores -->
+        <div class="flex items-center gap-3 pt-2">
+          <button
+            type="submit"
+            class="flex-1 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10"
+          >
+            🔍 Buscar
+          </button>
+          <button
+            type="button"
+            (click)="closeRegistrationFlow()"
+            class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- PASO 2: MODAL DE INSCRIPCIÓN (FORMULARIO AMPLIO) -->
+  <div *ngIf="activeStep() === 2" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
+    <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl p-6 shadow-2xl space-y-6 my-8">
+      
+      <!-- Encabezado Modal -->
+      <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>📝</span> Ficha de Registro de Participante
+          </h3>
+          <span class="text-xs text-slate-400 font-mono">Evento: <strong class="text-amber-400">"{{ currentRegisterEvent()?.title }}"</strong></span>
+        </div>
+        <button
+          (click)="closeRegistrationFlow()"
+          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Formulario 2 Columnas -->
+      <form (submit)="onRegisterSubmit(); $event.preventDefault()" class="space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium">
+          
+          <!-- SECCIÓN: DATOS PERSONALES -->
+          <div class="space-y-4">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 border-b border-white/5 pb-1">
+              👤 Datos Personales
+            </h4>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Número de DNI</label>
+                <input
+                  type="text"
+                  [value]="dniInput"
+                  disabled
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 text-slate-500 font-mono text-xs font-bold"
+                />
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Procedencia</label>
+                <select
+                  [(ngModel)]="provenance"
+                  [name]="'provenance'"
+                  class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold"
+                >
+                  <option value="Interno">Interno</option>
+                  <option value="Externo">Externo</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Tipo de Asistente</label>
+              <select
+                [(ngModel)]="assistantType"
+                [name]="'assistantType'"
+                class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold"
+              >
+                <option value="Estudiante">Estudiante</option>
+                <option value="Egresado">Egresado</option>
+                <option value="Docente">Docente</option>
+                <option value="Administrativo">Administrativo</option>
+                <option value="Público General">Público General</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Nombres</label>
+                <input
+                  type="text"
+                  [(ngModel)]="firstName"
+                  [name]="'firstName'"
+                  placeholder="Ingrese sus nombres"
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Apellidos</label>
+                <input
+                  type="text"
+                  [(ngModel)]="lastName"
+                  [name]="'lastName'"
+                  placeholder="Ingrese sus apellidos"
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Grado Académico <span class="text-slate-500">(Opcional)</span></label>
+              <input
+                type="text"
+                [(ngModel)]="degree"
+                [name]="'degree'"
+                placeholder="Ej: Bachiller, Licenciado, Magíster..."
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+              />
+            </div>
+          </div>
+
+          <!-- SECCIÓN: DATOS DE CONTACTO Y SEGURIDAD -->
+          <div class="space-y-4 flex flex-col justify-between">
+            <div class="space-y-4">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 border-b border-white/5 pb-1">
+                📞 Datos de Contacto
+              </h4>
+
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Correo Electrónico</label>
+                <input
+                  type="email"
+                  [(ngModel)]="emailInput"
+                  [name]="'emailInput'"
+                  placeholder="ejemplo@correo.com"
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Número de Celular</label>
+                <input
+                  type="text"
+                  [(ngModel)]="phoneInput"
+                  [name]="'phoneInput'"
+                  placeholder="987654321"
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- VALIDACIÓN CAPTCHA -->
+            <div class="space-y-3 bg-white/[0.01] border border-white/5 p-4 rounded-2xl mt-4">
+              <label class="block text-[11px] text-slate-400 font-bold uppercase tracking-wider">🛡️ Validación de Seguridad</label>
+              
+              <div class="flex items-center gap-4">
+                <!-- Styled distended CAPTCHA drawing -->
+                <div class="captcha-box relative flex items-center justify-center bg-slate-950 w-32 h-11 rounded-lg border border-white/10 select-none overflow-hidden shrink-0">
+                  <!-- Vector background lines for noise -->
+                  <svg class="absolute inset-0 w-full h-full opacity-40 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0" y1="10" x2="120" y2="35" stroke="#f59e0b" stroke-width="1.5" />
+                    <line x1="10" y1="35" x2="110" y2="5" stroke="#5c0a1e" stroke-width="1.5" />
+                    <line x1="40" y1="0" x2="80" y2="40" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3" />
+                  </svg>
+                  <span class="captcha-letters text-amber-400 font-serif font-black tracking-widest text-lg italic select-none">
+                    {{ captchaText() }}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  (click)="generateCaptcha()"
+                  class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
+                  title="Cambiar código"
+                >
+                  🔄
+                </button>
+
+                <input
+                  type="text"
+                  [(ngModel)]="captchaUserInput"
+                  [name]="'captchaUserInput'"
+                  placeholder="Escriba el código"
+                  class="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"
+                  required
+                />
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Alert messages in step 2 -->
+        <div *ngIf="captchaError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
+          ⚠️ {{ captchaError() }}
+        </div>
+
+        <!-- Botones de Control de Formulario -->
+        <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
+          <button
+            type="button"
+            (click)="closeRegistrationFlow()"
+            class="px-5 py-3 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer"
+          >
+            ✕ Cerrar
+          </button>
+          
+          <button
+            type="submit"
+            class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10"
+          >
+            ✓ Registrar
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- PASO 3: CONFIRMACIÓN DE ÉXITO -->
+  <div *ngIf="activeStep() === 3" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl text-center space-y-6">
+      
+      <!-- Icono de Éxito Check Animado -->
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center text-3xl text-emerald-400 shadow-lg shadow-emerald-500/15 animate-bounce mb-3">
+          ✓
+        </div>
+        <h3 class="text-xl font-black text-white">¡Inscripción Exitosa!</h3>
+        <p class="text-slate-400 text-xs mt-1">Inscripción realizada correctamente.</p>
+      </div>
+
+      <!-- Ficha de Datos Registrados -->
+      <div class="text-left bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-3 text-xs">
+        <div>
+          <span class="block text-slate-500 font-bold uppercase tracking-wider text-[10px]">Código de Inscripción</span>
+          <span class="font-mono text-sm font-bold text-amber-300">{{ registrationCode() }}</span>
+        </div>
+
+        <div>
+          <span class="block text-slate-500 font-bold uppercase tracking-wider text-[10px]">Participante Registrado</span>
+          <span class="text-sm font-bold text-slate-200">{{ successFullName() }}</span>
+        </div>
+
+        <div>
+          <span class="block text-slate-500 font-bold uppercase tracking-wider text-[10px]">Evento Académico</span>
+          <span class="text-slate-300 font-medium block mt-0.5">{{ currentRegisterEvent()?.title }}</span>
+        </div>
+      </div>
+
+      <!-- Botones de Acción Paso 3 -->
+      <div class="flex flex-col gap-2 pt-2">
+        <button
+          (click)="downloadConstancia()"
+          class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg"
+        >
+          📥 Descargar Constancia
+        </button>
+        <button
+          (click)="closeRegistrationFlow()"
+          class="w-full py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
+        >
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       MODAL: RESULTADO VALIDACIÓN DE CERTIFICADO DESDE LA SIDEBAR
+       ========================================== -->
+  <div
+    class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
+    *ngIf="quickValidationResult() as res"
+    (click)="closeQuickValidation()"
+  >
+    <div
+      class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-4xl p-6 shadow-2xl flex flex-col gap-6"
+      (click)="$event.stopPropagation()"
+    >
+      
+      <div *ngIf="!res.success" class="text-center p-8 space-y-4">
+        <div class="text-5xl">⚠️</div>
+        <h3 class="text-xl font-bold text-slate-100">Código de Certificado No Válido</h3>
+        <p class="text-slate-400 max-w-md mx-auto text-xs leading-relaxed">
+          {{ res.message }}
+        </p>
+        <button
+          (click)="closeQuickValidation()"
+          class="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all cursor-pointer"
+        >
+          Cerrar e Intentar de Nuevo
+        </button>
+      </div>
+
+      <ng-container *ngIf="res.success && res.cert">
+        <div *ngIf="res.cert as cert" class="flex flex-col gap-6 w-full">
+          <!-- Botones de Control Superiores (Ocultos en impresión) -->
+          <div class="flex items-center justify-between border-b border-white/10 pb-4 print:hidden">
+            <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <span>📜</span> {{ showPrintCertModal() ? 'Vista de Diploma Oficial' : 'Verificación de Autenticidad' }}
+            </h3>
+            <div class="flex items-center gap-3">
+              <button
+                *ngIf="showPrintCertModal()"
+                (click)="showPrintCertModal.set(false)"
+                class="px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/15 text-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                👁️ Ver Panel de Verificación
+              </button>
+              <button
+                *ngIf="showPrintCertModal()"
+                (click)="downloadCertificate()"
+                class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-amber-500/10"
+              >
+                🖨️ Imprimir / Descargar PDF
+              </button>
+              <button
+                (click)="closeQuickValidation()"
+                class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- MODO 1: VERIFICACIÓN PROFESIONAL (PÁGINA DE ÉXITO DESTACADO) -->
+          <div *ngIf="!showPrintCertModal()" class="space-y-6 flex-1 overflow-y-auto max-h-[70vh] pr-2">
+            
+            <!-- Encabezado de Validación -->
+            <div class="flex flex-col items-center text-center my-4">
+              <div class="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 text-3xl shadow-lg shadow-emerald-500/20 mb-3 animate-pulse">
+                ✓
+              </div>
+              <h2 class="text-2xl font-extrabold text-white tracking-widest uppercase">CERTIFICADO VÁLIDO</h2>
+              <p class="text-slate-300 text-sm mt-1.5 max-w-xl leading-relaxed">
+                El certificado ha sido verificado exitosamente en la base de datos institucional.
+              </p>
+            </div>
+
+            <!-- Información del Participante en Tarjetas Organizadas y Responsivas -->
+            <div class="space-y-4">
+              <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">
+                👨‍🎓 Datos de la Certificación y Participante
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <!-- Nombre completo -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nombre Completo</span>
+                  <span class="text-slate-100 font-bold text-sm mt-1 block uppercase">{{ cert.fullName }}</span>
+                </div>
+
+                <!-- Curso / Evento -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all lg:col-span-2">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curso / Evento</span>
+                  <span class="text-amber-300 font-bold text-sm mt-1 block">{{ cert.eventTitle }}</span>
+                </div>
+
+                <!-- ID del certificado -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID del Certificado</span>
+                  <span class="text-slate-200 font-mono font-bold text-sm mt-1 block tracking-wider">{{ cert.code }}</span>
+                </div>
+
+                <!-- Duración -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Duración Lectiva</span>
+                  <span class="text-slate-200 font-semibold text-sm mt-1 block">⏱️ {{ cert.hours }} Horas Académicas</span>
+                </div>
+
+                <!-- Modalidad -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Modalidad</span>
+                  <span class="text-slate-200 font-semibold text-sm mt-1 block">🌐 {{ cert.hours >= 40 ? 'Virtual - Sincrónico' : 'Virtual - Asincrónico' }}</span>
+                </div>
+
+                <!-- Fecha de inicio -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fecha de Inicio</span>
+                  <span class="text-slate-200 font-mono text-sm mt-1 block">
+                    📅 10/{{ cert.issueDate.substring(5, 7) === '04' ? '03' : '02' }}/{{ cert.issueDate.substring(0, 4) }}
+                  </span>
+                </div>
+
+                <!-- Fecha de finalización -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fecha de Finalización</span>
+                  <span class="text-slate-200 font-mono text-sm mt-1 block">
+                    📅 {{ cert.issueDate.substring(8, 10) }}/{{ cert.issueDate.substring(5, 7) }}/{{ cert.issueDate.substring(0, 4) }}
+                  </span>
+                </div>
+
+                <!-- Tipo de certificación -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tipo de Certificación</span>
+                  <span class="text-slate-200 font-semibold text-sm mt-1 block">🏆 Aprobación</span>
+                </div>
+
+                <!-- Institución -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all lg:col-span-2">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Institución</span>
+                  <span class="text-slate-200 font-semibold text-xs mt-1 block">🏛️ IESTP Chojata (Moquegua)</span>
+                </div>
+
+                <!-- Área organizadora -->
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all lg:col-span-1">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Área Organizadora</span>
+                  <span class="text-slate-200 font-semibold text-xs mt-1 block">🔬 Jefatura de Unidad Académica</span>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Nueva Sección: Resolución de Aprobación -->
+            <div class="p-6 rounded-3xl bg-gradient-to-r from-wine-950/40 to-slate-900/60 border border-wine-500/20 relative overflow-hidden">
+              <div class="absolute -right-16 -top-16 w-32 h-32 bg-wine-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              
+              <h4 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <span>📄</span> Resolución de Aprobación
+              </h4>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                <div>
+                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Número de Resolución</span>
+                  <span class="text-slate-200 font-mono font-bold block">RD-025-2026-CHOJATA</span>
+                </div>
+                <div>
+                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Fecha de Emisión</span>
+                  <span class="text-slate-200 block font-mono">15/03/2026</span>
+                </div>
+                <div>
+                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Emitido Por</span>
+                  <span class="text-slate-200 block">Jefatura de Unidad Académica</span>
+                </div>
+                <div>
+                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Estado de Resolución</span>
+                  <span class="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Vigente
+                  </span>
+                </div>
+              </div>
+
+              <!-- Botones de Acción de la Resolución -->
+              <div class="flex flex-wrap items-center gap-3 mt-6 border-t border-white/5 pt-4">
+                <button
+                  (click)="viewResolutionPdf(cert)"
+                  class="px-5 py-2.5 rounded-full text-xs font-bold bg-wine-700 hover:bg-wine-600 text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-wine-800/30"
+                >
+                  📄 Ver Resolución PDF
+                </button>
+                <button
+                  (click)="showPrintCertModal.set(true)"
+                  class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  🎓 Ver Diploma Imprimible
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- MODO 2: DIPLOMA IMPRIMIBLE ORIGINAL -->
+          <div *ngIf="showPrintCertModal()" class="certificate-canvas-wrapper overflow-auto flex-1 flex justify-center bg-slate-950 p-6 rounded-2xl border border-white/5">
+            <div id="certificate-print-area" class="certificate-sheet relative w-[800px] h-[560px] bg-slate-950 text-slate-200 border-[12px] border-wine-800 p-12 flex flex-col justify-between overflow-hidden shadow-2xl shrink-0">
+              
+              <!-- Fondo Marca de Agua e Hilos de Seguridad -->
+              <div class="absolute inset-0 bg-[radial-gradient(#ffffff04_1.5px,transparent_1.5px)] [background-size:16px_16px] pointer-events-none"></div>
+              <div class="absolute -right-24 -top-24 w-80 h-80 bg-wine-800/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div class="absolute -left-24 -bottom-24 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+              
+              <!-- Marco Interno de Oro Fino -->
+              <div class="absolute inset-2 border-[2px] border-amber-500/30 rounded pointer-events-none"></div>
+              
+              <!-- Encabezado del Certificado -->
+              <div class="text-center relative z-10">
+                <div class="flex justify-center items-center gap-3 mb-2">
+                  <span class="text-4xl text-amber-400">🎓</span>
+                  <div class="text-left">
+                    <div class="text-xs font-bold tracking-widest uppercase text-amber-500 font-mono">IESTP CHOJATA</div>
+                    <div class="text-[9px] text-slate-400 font-mono tracking-wider">RESOLUCIÓN DIRECTORAL N° 0451-2026-CHOJATA</div>
+                  </div>
+                </div>
+                <div class="h-[1px] w-48 mx-auto bg-gradient-to-r from-transparent via-amber-500/50 to-transparent mt-3 mb-4"></div>
+                
+                <h2 class="text-xs font-bold tracking-[0.3em] uppercase text-slate-400 font-mono mb-2">OTORGA EL PRESENTE</h2>
+                <h1 class="text-4xl font-serif font-bold text-amber-300 italic tracking-wide">Certificado de Aprobación</h1>
+              </div>
+
+              <!-- Cuerpo del Certificado -->
+              <div class="text-center px-8 relative z-10">
+                <p class="text-xs text-slate-400 italic mb-2">Por cuanto se ha acreditado el cumplimiento y asistencia de:</p>
+                <h3 class="text-2xl font-bold tracking-wide text-white uppercase font-sans mb-3 underline decoration-amber-500/40 decoration-wavy underline-offset-4">
+                  {{ cert.fullName }}
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed max-w-xl mx-auto">
+                  Por haber participado y aprobado satisfactoriamente en calidad de participante en el evento académico:
+                  <strong class="text-slate-100 font-semibold block text-sm mt-1 mb-2 font-serif text-amber-200">"{{ cert.eventTitle }}"</strong>
+                  realizado en nuestras instalaciones académicas y plataforma virtual institucional, con una duración lectiva de
+                  <strong class="text-amber-400 font-mono">{{ cert.hours }} horas académicas</strong>.
+                </p>
+              </div>
+
+              <!-- Pie del Certificado con Firmas, QR y Sello de Oro -->
+              <div class="flex justify-between items-end relative z-10 mt-2">
+                
+                <!-- Código QR para validación -->
+                <div class="flex items-center gap-3 w-1/3">
+                  <div class="w-20 h-20 bg-white p-1 rounded border border-amber-500/30 flex items-center justify-center shadow-lg" [innerHTML]="getQrCodeSvg(cert.code)">
+                  </div>
+                  <div class="text-[9px] font-mono text-slate-500 leading-normal">
+                    <div class="font-bold text-slate-400">VALIDACIÓN OFICIAL</div>
+                    <div>Código: <span class="text-amber-400 font-bold">{{ cert.code }}</span></div>
+                    <div>Estado: <span class="text-emerald-400 font-bold">VÁLIDO</span></div>
+                  </div>
+                </div>
+
+                <!-- Sello Universitario de Oro Metálico -->
+                <div class="w-1/3 flex justify-center pb-2">
+                  <div class="relative w-20 h-20 rounded-full border-4 border-amber-600/30 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex flex-col items-center justify-center text-center shadow-2xl shadow-amber-500/20 font-bold select-none cursor-default">
+                    <div class="absolute inset-1 rounded-full border border-dashed border-amber-900/40"></div>
+                    <span class="text-[8px] tracking-widest font-mono uppercase font-bold leading-none text-amber-950">SELLO</span>
+                    <span class="text-xs text-amber-950 font-extrabold my-0.5">IESTP-CH</span>
+                    <span class="text-[7px] font-mono font-semibold text-amber-950">OFICIAL</span>
+                  </div>
+                </div>
+
+                <!-- Firma Digital Firma -->
+                <div class="w-1/3 text-center">
+                  <div class="inline-block relative">
+                    <!-- Firma Caligráfica Vectorial Mock -->
+                    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-12 opacity-80 pointer-events-none select-none">
+                      <svg viewBox="0 0 100 40" class="w-full h-full text-indigo-400" stroke="currentColor" fill="none" stroke-width="1.5">
+                        <path d="M10,30 Q25,5 35,25 T55,10 T75,30 T90,20 M15,22 L85,22 M30,12 C40,0 45,35 60,25" />
+                      </svg>
+                    </div>
+                    <div class="h-[1px] w-36 bg-slate-600 mx-auto mt-8 mb-2"></div>
+                    <div class="text-[10px] font-bold text-slate-300 leading-tight uppercase font-mono">{{ cert.signatureName }}</div>
+                    <div class="text-[8px] text-slate-500 font-mono tracking-wide mt-0.5">{{ cert.signatureRole }}</div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Código y Metadato en los extremos inferiores -->
+              <div class="absolute bottom-2 left-6 text-[8px] font-mono text-slate-600">
+                ID Emisión: {{ cert.dni }}-{{ cert.eventId }} | Fecha de registro: {{ cert.issueDate }}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- MODAL DE VISOR OFICIAL DE RESOLUCIÓN DE APROBACIÓN (TIPO PDF DECREE) - SIDEBAR HOME -->
+      <div
+        class="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto"
+        *ngIf="showResolutionModal() && res.cert as cert"
+        (click)="closeResolutionPdf()"
+      >
+        <div
+          class="modal-content relative bg-white text-slate-900 rounded-3xl w-full max-w-3xl p-6 shadow-2xl flex flex-col gap-6"
+          (click)="$event.stopPropagation()"
+        >
+          <!-- Close button -->
+          <button
+            (click)="closeResolutionPdf()"
+            class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all cursor-pointer text-lg font-bold"
+          >
+            ✕
+          </button>
+
+          <!-- PDF Decree Content Page -->
+          <div class="pdf-decree-sheet bg-white p-8 sm:p-12 border border-slate-300 rounded shadow-inner max-h-[75vh] overflow-y-auto font-serif relative">
+            <!-- Watermark Shield -->
+            <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+              <svg viewBox="0 0 100 100" class="w-[300px] h-[300px] text-slate-950">
+                <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" fill="currentColor"/>
+                <text x="50" y="55" font-family="serif" font-size="30" font-weight="bold" text-anchor="middle">I</text>
+              </svg>
+            </div>
+
+            <!-- Header -->
+            <div class="text-center font-sans border-b-2 border-double border-slate-900 pb-4 mb-6">
+              <h2 class="text-sm sm:text-base font-bold tracking-widest text-slate-900 uppercase">IESTP CHOJATA</h2>
+              <h3 class="text-[10px] sm:text-xs font-bold tracking-wider text-slate-700 uppercase mt-0.5">DIRECCIÓN GENERAL / JEFATURA DE UNIDAD ACADÉMICA</h3>
+              <p class="text-[8px] text-slate-500 tracking-wide font-mono mt-1">"Año de la Consolidación de la Calidad en la Educación Tecnológica"</p>
+            </div>
+
+            <!-- Title -->
+            <div class="text-center mb-6">
+              <h1 class="text-xs sm:text-sm font-bold tracking-wider text-slate-900 uppercase">RESOLUCIÓN DE APROBACIÓN ACADÉMICA</h1>
+              <h2 class="text-sm font-bold text-slate-800 font-mono mt-1">Resolución Directoral N.° RD-025-2026-IESTP-CHOJATA</h2>
+            </div>
+
+            <!-- Location and Date -->
+            <div class="text-right text-xs text-slate-700 italic mb-6">
+              Chojata, Moquegua, 15 de marzo de 2026
+            </div>
+
+            <!-- VISTO / CONSIDERANDO -->
+            <div class="text-xs leading-relaxed text-justify space-y-4 mb-6 text-slate-800 font-serif">
+              <p>
+                <strong>VISTO:</strong> El expediente de validación curricular y la base de datos centralizada de certificados correspondientes a las actividades de capacitación académica presencial y virtual ejecutadas institucionalmente; y,
+              </p>
+              <p>
+                <strong>CONSIDERANDO:</strong>
+              </p>
+              <p class="pl-4">
+                Que, de acuerdo a la Ley de Institutos y Escuelas de Educación Superior N.° 30512, el IESTP Chojata promueve de forma permanente cursos y talleres complementarios destinados a fortalecer las habilidades tecnológicas y de empleabilidad de sus estudiantes y egresados;
+              </p>
+              <p class="pl-4">
+                Que, la Jefatura de Unidad Académica ha corroborado que los participantes detallados en el sistema informático han culminado de forma satisfactoria las exigencias curriculares y de evaluación estipuladas para sus correspondientes asignaturas;
+              </p>
+              <p class="pl-4">
+                Estando a lo informado por los coordinadores del área académica y en uso de las atribuciones que confiere el Reglamento Institucional de esta casa de estudios tecnológicos;
+              </p>
+            </div>
+
+            <!-- SE RESUELVE -->
+            <div class="text-xs leading-relaxed text-justify space-y-4 mb-8 text-slate-800 font-serif">
+              <p class="font-sans font-bold"><strong>SE RESUELVE:</strong></p>
+              <p>
+                <strong>Artículo 1°.-</strong> <strong>APROBAR</strong> con validez legal plena y oficial el certificado electrónico institucional correspondiente a los registros oficiales del participante:
+              </p>
+              <div class="bg-slate-50 p-4 border border-slate-200 rounded-xl my-4 font-sans text-xs space-y-2">
+                <div><strong>Código de Certificado:</strong> <span class="font-mono text-slate-900 font-bold bg-slate-200/60 px-2 py-0.5 rounded">{{ cert.code }}</span></div>
+                <div><strong>Participante Validado:</strong> <span class="text-slate-900 font-bold uppercase">{{ cert.fullName }}</span></div>
+                <div><strong>Documento Nacional de Identidad:</strong> <span class="font-mono text-slate-900">{{ cert.dni }}</span></div>
+                <div><strong>Programa o Curso Académico:</strong> <span class="text-slate-900 font-semibold">"{{ cert.eventTitle }}"</span></div>
+                <div><strong>Carga Lectiva Acreditada:</strong> <span class="text-slate-900 font-semibold">{{ cert.hours }} Horas Académicas</span></div>
+                <div><strong>Fecha Oficial de Registro:</strong> <span class="text-slate-900 font-semibold">{{ cert.issueDate }}</span></div>
+              </div>
+              <p>
+                <strong>Artículo 2°.-</strong> <strong>DECLARAR</strong> en condición de <strong>VIGENTE</strong> y sin restricciones el registro del certificado a fin de acreditar el perfil académico institucional del participante para los fines convenientes.
+              </p>
+              <p>
+                <strong>Artículo 3°.-</strong> Regístrese, comuníquese y archívese.
+              </p>
+            </div>
+
+            <!-- Signatures / Stamps -->
+            <div class="flex justify-between items-center mt-12 pt-6 border-t border-slate-200">
+              <div class="text-center w-1/2 relative">
+                <!-- Stamp Mockup -->
+                <div class="absolute top-[-25px] left-[15%] w-24 h-24 border-4 border-double border-[#be123c]/25 rounded-full flex flex-col items-center justify-center text-[7px] text-[#be123c]/50 font-mono font-bold rotate-[-12deg] pointer-events-none select-none">
+                  <span>JEFATURA DE</span>
+                  <span class="text-[8px] font-extrabold">U. ACADÉMICA</span>
+                  <span>IESTP CHOJATA</span>
+                </div>
+                <div class="inline-block relative">
+                  <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-12 opacity-80 pointer-events-none select-none">
+                    <svg viewBox="0 0 100 40" class="w-full h-full text-[#be123c]/85" stroke="currentColor" fill="none" stroke-width="1.5">
+                      <path d="M15,28 Q35,8 45,28 T65,12 T85,32 M25,25 L75,25 M40,15 C50,2 55,38 70,28" />
+                    </svg>
+                  </div>
+                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-8 mb-2"></div>
+                  <div class="text-[9px] font-sans font-bold text-slate-800 uppercase">Ing. Alejandro Benítez</div>
+                  <div class="text-[8px] font-sans text-slate-500 uppercase tracking-wide">Jefe de Unidad Académica</div>
+                </div>
+              </div>
+              <div class="text-center w-1/2 relative">
+                <!-- Stamp Mockup 2 -->
+                <div class="absolute top-[-25px] right-[15%] w-24 h-24 border-4 border-double border-red-600/20 rounded-full flex flex-col items-center justify-center text-[7px] text-red-600/30 font-mono font-bold rotate-[12deg] pointer-events-none select-none">
+                  <span>SECRETARÍA</span>
+                  <span class="text-[8px] font-extrabold">ACADÉMICA</span>
+                  <span>IESTP CHOJATA</span>
+                </div>
+                <div class="inline-block relative">
+                  <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-12 opacity-80 pointer-events-none select-none">
+                    <svg viewBox="0 0 100 40" class="w-full h-full text-red-700" stroke="currentColor" fill="none" stroke-width="1.5">
+                      <path d="M10,25 Q30,5 40,25 T60,10 T80,30 M20,22 L80,22" />
+                    </svg>
+                  </div>
+                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-8 mb-2"></div>
+                  <div class="text-[9px] font-sans font-bold text-slate-800 uppercase">Dra. Clara Valdivia</div>
+                  <div class="text-[8px] font-sans text-slate-500 uppercase tracking-wide">Secretaria Académica</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Footer Buttons -->
+          <div class="flex justify-end gap-3 print:hidden">
+            <button
+              (click)="closeResolutionPdf()"
+              class="px-6 py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all cursor-pointer"
+            >
+              Cerrar Resolución
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</section>

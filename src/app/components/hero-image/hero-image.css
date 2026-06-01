@@ -1,0 +1,7 @@
+.hero-wrapper {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.hero-overlay {
+  background: linear-gradient(to bottom, rgba(10, 5, 30, 0.2), rgba(10, 5, 30, 0.7));
+}

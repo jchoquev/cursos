@@ -1,0 +1,7 @@
+.cards-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.card-tag {
+  background: linear-gradient(135deg, #7c1a34, #5c0a1e);
+}
