@@ -77,6 +77,293 @@ export class IntranetComponent {
   // Active Certificate for Modal View inside Intranet
   activeCertificate = signal<Certificate | null>(null);
 
+  // --- SIGNALS FOR USERS DATATABLE ---
+  userSearchQuery = signal<string>('');
+  userSortColumn = signal<string>('name');
+  userSortDirection = signal<'asc' | 'desc'>('asc');
+  userCurrentPage = signal<number>(1);
+  userPageSize = signal<number>(5);
+
+  readonly filteredAndPaginatedUsers = computed(() => {
+    const query = this.userSearchQuery().toLowerCase().trim();
+    const sortCol = this.userSortColumn();
+    const sortDir = this.userSortDirection();
+    const page = this.userCurrentPage();
+    const size = this.userPageSize();
+
+    let list = [...this.platformService.users()];
+
+    if (query) {
+      list = list.filter(u =>
+        u.name.toLowerCase().includes(query) ||
+        u.email.toLowerCase().includes(query) ||
+        u.dni.includes(query) ||
+        u.role.toLowerCase().includes(query)
+      );
+    }
+
+    list.sort((a: any, b: any) => {
+      const valA = a[sortCol] || '';
+      const valB = b[sortCol] || '';
+      return sortDir === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    const start = (page - 1) * size;
+    return {
+      items: list.slice(start, start + size),
+      totalItems: list.length,
+      totalPages: Math.ceil(list.length / size) || 1
+    };
+  });
+
+  changeUserSort(column: string): void {
+    if (this.userSortColumn() === column) {
+      this.userSortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.userSortColumn.set(column);
+      this.userSortDirection.set('asc');
+    }
+    this.userCurrentPage.set(1);
+  }
+
+  // --- SIGNALS FOR EVENTS DATATABLE ---
+  eventSearchQuery = signal<string>('');
+  eventSortColumn = signal<string>('title');
+  eventSortDirection = signal<'asc' | 'desc'>('asc');
+  eventCurrentPage = signal<number>(1);
+  eventPageSize = signal<number>(5);
+
+  readonly filteredAndPaginatedEvents = computed(() => {
+    const query = this.eventSearchQuery().toLowerCase().trim();
+    const sortCol = this.eventSortColumn();
+    const sortDir = this.eventSortDirection();
+    const page = this.eventCurrentPage();
+    const size = this.eventPageSize();
+
+    let list = [...this.platformService.events()].filter(e => e.type !== 'Repositorio');
+
+    if (query) {
+      list = list.filter(e =>
+        e.title.toLowerCase().includes(query) ||
+        e.instructor.toLowerCase().includes(query) ||
+        e.type.toLowerCase().includes(query) ||
+        e.date.toLowerCase().includes(query)
+      );
+    }
+
+    list.sort((a: any, b: any) => {
+      const valA = a[sortCol] || '';
+      const valB = b[sortCol] || '';
+      return sortDir === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    const start = (page - 1) * size;
+    return {
+      items: list.slice(start, start + size),
+      totalItems: list.length,
+      totalPages: Math.ceil(list.length / size) || 1
+    };
+  });
+
+  changeEventSort(column: string): void {
+    if (this.eventSortColumn() === column) {
+      this.eventSortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.eventSortColumn.set(column);
+      this.eventSortDirection.set('asc');
+    }
+    this.eventCurrentPage.set(1);
+  }
+
+  // --- SIGNALS FOR REGISTRATIONS DATATABLE ---
+  regSearchQuery = signal<string>('');
+  regSortColumn = signal<string>('userName');
+  regSortDirection = signal<'asc' | 'desc'>('asc');
+  regCurrentPage = signal<number>(1);
+  regPageSize = signal<number>(5);
+
+  readonly filteredAndPaginatedRegistrations = computed(() => {
+    const query = this.regSearchQuery().toLowerCase().trim();
+    const sortCol = this.regSortColumn();
+    const sortDir = this.regSortDirection();
+    const page = this.regCurrentPage();
+    const size = this.regPageSize();
+
+    let list = this.platformService.registrations().filter(r => r.status === 'Pendiente');
+
+    if (query) {
+      list = list.filter(r =>
+        r.userName.toLowerCase().includes(query) ||
+        r.userDni.includes(query) ||
+        r.eventTitle.toLowerCase().includes(query) ||
+        r.userEmail.toLowerCase().includes(query)
+      );
+    }
+
+    list.sort((a: any, b: any) => {
+      const valA = a[sortCol] || '';
+      const valB = b[sortCol] || '';
+      return sortDir === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    const start = (page - 1) * size;
+    return {
+      items: list.slice(start, start + size),
+      totalItems: list.length,
+      totalPages: Math.ceil(list.length / size) || 1
+    };
+  });
+
+  changeRegSort(column: string): void {
+    if (this.regSortColumn() === column) {
+      this.regSortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.regSortColumn.set(column);
+      this.regSortDirection.set('asc');
+    }
+    this.regCurrentPage.set(1);
+  }
+
+  // --- SIGNALS FOR CERTIFICATES DATATABLE ---
+  certSearchQuery = signal<string>('');
+  certFilterYear = signal<string>('');
+  certFilterCourse = signal<string>('');
+  certSortColumn = signal<string>('code');
+  certSortDirection = signal<'asc' | 'desc'>('asc');
+  certCurrentPage = signal<number>(1);
+  certPageSize = signal<number>(5);
+
+  /** Años únicos extraídos de los certificados emitidos */
+  readonly certAvailableYears = computed(() => {
+    const years = this.platformService.certificates()
+      .map(c => c.issueDate?.substring(0, 4))
+      .filter((y): y is string => !!y);
+    return [...new Set(years)].sort((a, b) => b.localeCompare(a));
+  });
+
+  /** Cursos/eventos únicos extraídos de los certificados */
+  readonly certAvailableCourses = computed(() => {
+    const courses = this.platformService.certificates()
+      .map(c => c.eventTitle)
+      .filter((e): e is string => !!e);
+    return [...new Set(courses)].sort();
+  });
+
+  readonly filteredAndPaginatedCertificates = computed(() => {
+    const query = this.certSearchQuery().toLowerCase().trim();
+    const filterYear = this.certFilterYear();
+    const filterCourse = this.certFilterCourse();
+    const sortCol = this.certSortColumn();
+    const sortDir = this.certSortDirection();
+    const page = this.certCurrentPage();
+    const size = this.certPageSize();
+
+    let list = [...this.platformService.certificates()];
+
+    if (filterYear) {
+      list = list.filter(c => c.issueDate?.startsWith(filterYear));
+    }
+
+    if (filterCourse) {
+      list = list.filter(c => c.eventTitle === filterCourse);
+    }
+
+    if (query) {
+      list = list.filter(c =>
+        c.code.toLowerCase().includes(query) ||
+        c.fullName.toLowerCase().includes(query) ||
+        c.dni.includes(query) ||
+        c.eventTitle.toLowerCase().includes(query) ||
+        c.status.toLowerCase().includes(query)
+      );
+    }
+
+    list.sort((a: any, b: any) => {
+      const valA = a[sortCol] || '';
+      const valB = b[sortCol] || '';
+      return sortDir === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    const start = (page - 1) * size;
+    return {
+      items: list.slice(start, start + size),
+      totalItems: list.length,
+      totalPages: Math.ceil(list.length / size) || 1
+    };
+  });
+
+  changeCertSort(column: string): void {
+    if (this.certSortColumn() === column) {
+      this.certSortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.certSortColumn.set(column);
+      this.certSortDirection.set('asc');
+    }
+    this.certCurrentPage.set(1);
+  }
+
+  getPagesArray(totalPages: number): number[] {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  getMinRecord(page: number, size: number, total: number): number {
+    return Math.min(page * size, total);
+  }
+
+  // --- PAYMENT VALIDATION STATE & METHODS ---
+  showPaymentModal = signal<boolean>(false);
+  selectedRegistrationId = 0;
+  paymentReceiptNumber = '';
+  paymentDate = '';
+  paymentAmount = 150.00;
+  paymentImage = '';
+
+  openValidatePayment(reg: Registration): void {
+    this.selectedRegistrationId = reg.id;
+    this.paymentReceiptNumber = '';
+    this.paymentDate = new Date().toISOString().split('T')[0];
+    this.paymentAmount = 150.00;
+    this.paymentImage = '';
+    this.showPaymentModal.set(true);
+  }
+
+  onReceiptFileChange(event: any): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.paymentImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  submitPaymentValidation(): void {
+    if (!this.paymentReceiptNumber || !this.paymentDate || !this.paymentAmount) {
+      alert('Por favor complete todos los datos del recibo.');
+      return;
+    }
+
+    this.platformService.validatePaymentAndApprove(
+      this.selectedRegistrationId,
+      this.paymentReceiptNumber,
+      this.paymentDate,
+      this.paymentAmount,
+      this.paymentImage || 'https://images.unsplash.com/photo-1554416278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80'
+    );
+
+    this.showPaymentModal.set(false);
+    alert('Pago validado correctamente e inscripción aprobada.');
+  }
+
   constructor() {
     // If logged in, set default tab
     this.updateDefaultTab();
@@ -96,11 +383,13 @@ export class IntranetComponent {
     }
   }
 
-  quickLogin(role: 'admin' | 'caja'): void {
+  quickLogin(role: 'admin' | 'caja' | 'formacion' | 'investigacion'): void {
     this.loginError = '';
     let email = '';
     if (role === 'admin') email = 'admin@institucion.edu';
     else if (role === 'caja') email = 'caja@institucion.edu';
+    else if (role === 'formacion') email = 'formacion@institucion.edu';
+    else if (role === 'investigacion') email = 'investigacion@institucion.edu';
 
     this.platformService.login(email);
     this.updateDefaultTab();
@@ -117,6 +406,10 @@ export class IntranetComponent {
       this.activeTab.set('overview');
     } else if (role === 'Caja') {
       this.activeTab.set('registrations');
+    } else if (role === 'Formación Continua') {
+      this.activeTab.set('events');
+    } else if (role === 'Investigación') {
+      this.activeTab.set('projects');
     }
   }
 
@@ -148,6 +441,11 @@ export class IntranetComponent {
       totalCertificates: certs.length,
       attendanceRate: attendPercent,
     };
+  });
+
+  // --- PROJECTS LIST ---
+  readonly projectsList = computed(() => {
+    return this.platformService.events().filter(e => e.type === 'Repositorio');
   });
 
   // --- USER CRUD ---
@@ -189,17 +487,28 @@ export class IntranetComponent {
       };
       this.platformService.editUser(updatedUser, this.originalUserEmail);
     } else {
+      // Auto-generar contraseña segura (se enviará al correo del usuario)
+      const autoPassword = this.generateSecurePassword();
       const newUser: UserItem = {
         email: this.userForm.email,
         name: this.userForm.name,
         role: this.userForm.role,
         dni: this.userForm.dni,
-        password: this.userForm.password || 'pwd123',
+        password: autoPassword,
       };
       this.platformService.addUser(newUser);
+      // Simular notificación de envío por correo
+      console.log(`[Correo simulado] → ${newUser.email} | Usuario: ${newUser.email} | Contraseña: ${autoPassword}`);
+      alert(`✅ Usuario registrado. Se ha enviado un correo a ${newUser.email} con las credenciales de acceso.`);
     }
 
     this.showUserModal.set(false);
+  }
+
+  /** Genera una contraseña aleatoria segura para nuevos usuarios */
+  private generateSecurePassword(): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+    return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   }
 
   deleteUser(email: string): void {
@@ -225,6 +534,25 @@ export class IntranetComponent {
       instructor: '',
       capacity: 35,
     };
+    this.showEventModal.set(true);
+  }
+
+  openAddProject(): void {
+    this.isEditing.set(false);
+    this.eventForm = {
+      id: 0,
+      title: '',
+      type: 'Repositorio',
+      date: new Date().toISOString().split('T')[0],
+      description: '',
+      fullDescription: '',
+      imageGradient: 'from-indigo-600 via-violet-600 to-purple-700',
+      icon: '🔬',
+      status: 'activo',
+      hours: 0,
+      instructor: '',
+      capacity: 100,
+    } as EventItem;
     this.showEventModal.set(true);
   }
 
@@ -259,6 +587,9 @@ export class IntranetComponent {
     } else if (this.eventForm.type === 'Taller') {
       gradient = 'from-amber-500 via-orange-600 to-red-600';
       icon = '🎨';
+    } else if (this.eventForm.type === 'Repositorio') {
+      gradient = 'from-indigo-600 via-violet-600 to-purple-700';
+      icon = '🔬';
     }
 
     if (this.isEditing()) {
@@ -343,6 +674,7 @@ export class IntranetComponent {
       return {
         ...r,
         alreadyHasCert,
+        isPaymentValidated: r.isPaymentValidated === true,
       };
     });
   });
@@ -372,7 +704,7 @@ export class IntranetComponent {
   readonly upcomingEventsForParticipant = computed(() => {
     const myRegs = this.myRegistrations();
     return this.platformService.events().filter(
-      (e) => e.status === 'activo' && !myRegs.some((r) => r.eventId === e.id)
+      (e) => e.status === 'activo' && e.type !== 'Repositorio' && !myRegs.some((r) => r.eventId === e.id)
     );
   });
 

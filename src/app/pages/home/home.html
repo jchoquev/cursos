@@ -12,7 +12,7 @@
     <div class="lg:col-span-3 lg:order-last space-y-8">
       
       <!-- Fila de Filtros y Conmutadores -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div class="lp-filter-border flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
         
         <!-- Categorías de Eventos -->
         <div class="flex flex-wrap gap-1">
@@ -21,19 +21,19 @@
             (click)="selectCategory(cat)"
             [class]="selectedCategory() === cat 
               ? 'px-4 py-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10 transition-all' 
-              : 'px-4 py-2 rounded-full text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all'"
+              : 'lp-filter-btn px-4 py-2 rounded-full text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all'"
           >
             {{ cat === 'Todos' ? '📂 Todos' : cat === 'Repositorio' ? '🏛️ Repositorio' : cat }}
           </button>
         </div>
 
         <!-- Conmutador Activos / Pasados (Cursos) -->
-        <div *ngIf="selectedCategory() !== 'Repositorio'" class="flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0">
+        <div *ngIf="selectedCategory() !== 'Repositorio'" class="lp-filter-toggle flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0">
           <button
             (click)="selectStatus('activo')"
             [class]="selectedStatus() === 'activo'
               ? 'px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow'
-              : 'px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
+              : 'lp-filter-toggle-label px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
           >
             🔥 Nuevos Eventos
           </button>
@@ -41,15 +41,15 @@
             (click)="selectStatus('pasado')"
             [class]="selectedStatus() === 'pasado'
               ? 'px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow'
-              : 'px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
+              : 'lp-filter-toggle-label px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
           >
             ⌛ Eventos Pasados
           </button>
         </div>
 
         <!-- Conmutador de Años (Repositorio) -->
-        <div *ngIf="selectedCategory() === 'Repositorio'" class="flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0 items-center">
-          <span class="text-[10px] font-black uppercase text-slate-500 px-3 tracking-wider select-none font-mono">Año:</span>
+        <div *ngIf="selectedCategory() === 'Repositorio'" class="lp-filter-toggle flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0 items-center">
+          <span class="lp-filter-toggle-label text-[10px] font-black uppercase text-slate-500 px-3 tracking-wider select-none font-mono">Año:</span>
           <button
             *ngFor="let yr of ['Todos', '2026', '2025', '2024', '2023']"
             (click)="selectYear(yr)"
@@ -64,7 +64,7 @@
       </div>
 
       <!-- Grilla de Tarjetas (Cards) de Cursos -->
-      <div *ngIf="filteredEvents().length === 0" class="text-center py-16 rounded-3xl border border-white/5 bg-white/[0.01]">
+      <div *ngIf="filteredEvents().length === 0" class="lp-empty-state text-center py-16 rounded-3xl border border-white/5 bg-white/[0.01]">
         <div class="text-4xl mb-3">📂</div>
         <h3 class="text-lg font-bold text-slate-200">No se encontraron eventos</h3>
         <p class="text-slate-400 text-sm max-w-xs mx-auto mt-1">
@@ -79,7 +79,7 @@
           <!-- Card Individual (Curso, Taller, Seminario) -->
           <div
             *ngIf="ev.type !== 'Repositorio'"
-            class="group rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 flex flex-col justify-between"
+            class="lp-card group rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 flex flex-col justify-between"
           >
             <!-- Banner con Gradiente Estético -->
             <div class="h-40 relative flex items-center justify-center bg-gradient-to-br {{ ev.imageGradient }} overflow-hidden">
@@ -98,24 +98,24 @@
             <!-- Contenido de la Card -->
             <div class="p-6 flex-1 flex flex-col justify-between gap-4">
               <div class="space-y-2">
-                <div class="flex items-center justify-between text-xs font-mono text-amber-400 font-bold">
+                <div class="lp-card-meta flex items-center justify-between text-xs font-mono text-amber-400 font-bold">
                   <span>📅 {{ ev.date }}</span>
                   <span>⏱️ {{ ev.hours }} horas</span>
                 </div>
-                <h3 class="text-lg font-bold text-slate-100 group-hover:text-amber-300 transition-colors line-clamp-2">
+                <h3 class="lp-card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition-colors line-clamp-2">
                   {{ ev.title }}
                 </h3>
-                <p class="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                <p class="lp-card-desc text-xs text-slate-400 leading-relaxed line-clamp-3">
                   {{ ev.description }}
                 </p>
               </div>
 
               <!-- Botones e Información Adicional -->
-              <div class="pt-4 border-t border-white/5 flex items-center justify-between gap-2">
+              <div class="lp-card-footer pt-4 border-t border-white/5 flex items-center justify-between gap-2">
                 
                 <button
                   (click)="openEventDetails(ev)"
-                  class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer"
+                  class="lp-card-btn-outline px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer"
                 >
                   👁️ Detalles
                 </button>
@@ -135,7 +135,7 @@
           <!-- Card Horizontal Especial (Repositorio de Tesis / Artículos / Proyectos) -->
           <div
             *ngIf="ev.type === 'Repositorio'"
-            class="col-span-1 md:col-span-2 group rounded-3xl border border-[#be123c]/20 hover:border-[#be123c]/40 bg-white/[0.02] hover:bg-white/[0.04] p-5 shadow-xl relative overflow-hidden flex flex-col sm:flex-row gap-6 transition-all duration-300 hover:-translate-y-1"
+            class="lp-repo-card col-span-1 md:col-span-2 group rounded-3xl border border-[#be123c]/20 hover:border-[#be123c]/40 bg-white/[0.02] hover:bg-white/[0.04] p-5 shadow-xl relative overflow-hidden flex flex-col sm:flex-row gap-6 transition-all duration-300 hover:-translate-y-1"
           >
             <!-- Portada del Documento en CSS Puro de Alta Fidelidad -->
             <div class="w-32 h-44 rounded-xl bg-white flex-shrink-0 flex flex-col justify-between p-2 shadow-lg border border-slate-300/40 relative overflow-hidden select-none">
@@ -172,17 +172,17 @@
                 </span>
                 
                 <!-- Título del Repositorio -->
-                <h3 class="text-base font-bold text-slate-100 group-hover:text-amber-300 transition-colors mt-3 leading-snug line-clamp-2">
+                <h3 class="lp-card-title text-base font-bold text-slate-100 group-hover:text-amber-300 transition-colors mt-3 leading-snug line-clamp-2">
                   {{ ev.title }}
                 </h3>
                 
                 <!-- Autores / Fecha -->
-                <p class="text-xs text-slate-400 font-medium mt-1 leading-normal font-sans">
+                <p class="lp-repo-meta text-xs text-slate-400 font-medium mt-1 leading-normal font-sans">
                   <span class="text-slate-200">{{ ev.authors }}</span> — <span class="text-amber-400 font-mono font-bold">{{ ev.date }}</span> — <span class="text-slate-500 font-semibold">(IESTP Chojata • Moquegua)</span>
                 </p>
                 
                 <!-- Abstract Resumen -->
-                <p class="text-xs text-slate-400 leading-relaxed mt-2 line-clamp-3">
+                <p class="lp-card-desc text-xs text-slate-400 leading-relaxed mt-2 line-clamp-3">
                   {{ ev.description }}
                 </p>
               </div>
@@ -215,7 +215,7 @@
     <div class="lg:col-span-1 lg:order-first space-y-6">
       
       <!-- Bloque 1: Validación Rápida de Certificados -->
-      <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl relative overflow-hidden">
+      <div class="lp-sidebar-block rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl relative overflow-hidden">
         <div class="absolute -right-12 -top-12 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl"></div>
         
         <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
@@ -231,7 +231,7 @@
             [(ngModel)]="quickCertCode"
             [name]="'quickCertCode'"
             placeholder="CERT-2026-001"
-            class="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"
+            class="lp-sidebar-input w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"
           />
           <button
             type="submit"
@@ -244,7 +244,7 @@
       </div>
 
       <!-- Bloque 2: Menú Rápido de Navegación -->
-      <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
+      <div class="lp-sidebar-block rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
         <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
           <span>🔗</span> Menú del Sitio
         </h3>
@@ -268,7 +268,7 @@
       </div>
 
       <!-- Bloque 3: Novedades Destacadas -->
-      <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl space-y-4">
+      <div class="lp-sidebar-block rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl space-y-4">
         <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
           <span>⭐</span> Destacados de la Semana
         </h3>
@@ -278,14 +278,14 @@
             <span class="text-xl">🔐</span>
             <div>
               <h4 class="text-xs font-bold text-slate-200 line-clamp-1">Seminario Criptografía</h4>
-              <span class="text-[10px] text-amber-400 font-mono">02 de Junio, 2026</span>
+              <span class="lp-sidebar-date text-[10px] text-amber-400 font-mono">02 de Junio, 2026</span>
             </div>
           </div>
           <div class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.02] transition-colors">
             <span class="text-xl">🅰️</span>
             <div>
               <h4 class="text-xs font-bold text-slate-200 line-clamp-1">Angular 21 Pro</h4>
-              <span class="text-[10px] text-rose-400 font-mono">15 de Junio, 2026</span>
+              <span class="lp-sidebar-date text-[10px] text-rose-400 font-mono">15 de Junio, 2026</span>
             </div>
           </div>
         </div>
@@ -299,8 +299,8 @@
   <!-- ==========================================
        MODAL: DETALLES DE CURSO / EVENTO
        ========================================== -->
-  <div *ngIf="selectedEventForModal() as ev" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-    <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5">
+  <div *ngIf="selectedEventForModal() as ev" class="lp-modal-bg fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="lp-modal-content bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5">
       
       <div class="flex items-start justify-between">
         <div class="flex items-center gap-3">
@@ -314,13 +314,13 @@
         </div>
         <button
           (click)="closeEventDetailsModal()"
-          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer font-bold"
+          class="lp-modal-close w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer font-bold"
         >
           ✕
         </button>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-2xl border border-white/5 text-xs">
+      <div class="lp-modal-info-block grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-2xl border border-white/5 text-xs">
         <div>
           <span class="block text-slate-500 font-bold uppercase tracking-wider">Fecha Programada</span>
           <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">📅 {{ ev.date }}</span>
@@ -359,7 +359,7 @@
         </button>
         <button
           (click)="closeEventDetailsModal()"
-          class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
+          class="lp-modal-btn-ghost flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
         >
           Cerrar Ventana
         </button>
@@ -374,8 +374,8 @@
        ====================================================================== -->
 
   <!-- PASO 1: MODAL DE VALIDACIÓN DNI -->
-  <div *ngIf="activeStep() === 1" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-    <div class="modal-dialog-centered bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5">
+  <div *ngIf="activeStep() === 1" class="lp-modal-bg fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="lp-modal-content modal-dialog-centered bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5">
       
       <!-- Encabezado Modal -->
       <div class="flex items-center justify-between border-b border-white/5 pb-3">
@@ -402,7 +402,7 @@
               [name]="'dniInput'"
               placeholder="Ingrese su DNI"
               maxlength="8"
-              class="w-full pl-10 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono text-sm font-bold"
+              class="lp-modal-input w-full pl-10 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono text-sm font-bold"
               required
             />
           </div>
@@ -426,7 +426,7 @@
           <button
             type="button"
             (click)="closeRegistrationFlow()"
-            class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
+            class="lp-modal-btn-ghost flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"
           >
             Cancelar
           </button>
@@ -438,8 +438,8 @@
 
 
   <!-- PASO 2: MODAL DE INSCRIPCIÓN (FORMULARIO AMPLIO) -->
-  <div *ngIf="activeStep() === 2" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
-    <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl p-6 shadow-2xl space-y-6 my-8">
+  <div *ngIf="activeStep() === 2" class="lp-modal-bg fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
+    <div class="lp-modal-content bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl p-6 shadow-2xl space-y-6 my-8">
       
       <!-- Encabezado Modal -->
       <div class="flex items-center justify-between border-b border-white/5 pb-3">
@@ -649,8 +649,8 @@
 
 
   <!-- PASO 3: CONFIRMACIÓN DE ÉXITO -->
-  <div *ngIf="activeStep() === 3" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
-    <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl text-center space-y-6">
+  <div *ngIf="activeStep() === 3" class="lp-modal-bg fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="lp-modal-content bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl text-center space-y-6">
       
       <!-- Icono de Éxito Check Animado -->
       <div class="flex flex-col items-center">
@@ -662,7 +662,7 @@
       </div>
 
       <!-- Ficha de Datos Registrados -->
-      <div class="text-left bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-3 text-xs">
+      <div class="lp-modal-info-block text-left bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-3 text-xs">
         <div>
           <span class="block text-slate-500 font-bold uppercase tracking-wider text-[10px]">Código de Inscripción</span>
           <span class="font-mono text-sm font-bold text-amber-300">{{ registrationCode() }}</span>
@@ -703,12 +703,12 @@
        MODAL: RESULTADO VALIDACIÓN DE CERTIFICADO DESDE LA SIDEBAR
        ========================================== -->
   <div
-    class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
+    class="lp-modal-bg modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
     *ngIf="quickValidationResult() as res"
     (click)="closeQuickValidation()"
   >
     <div
-      class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-4xl p-6 shadow-2xl flex flex-col gap-6"
+      class="lp-modal-content modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-4xl p-6 shadow-2xl flex flex-col gap-6"
       (click)="$event.stopPropagation()"
     >
       
@@ -987,12 +987,12 @@
 
       <!-- MODAL DE VISOR OFICIAL DE RESOLUCIÓN DE APROBACIÓN (TIPO PDF DECREE) - SIDEBAR HOME -->
       <div
-        class="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto"
+        class="lp-modal-bg modal-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto"
         *ngIf="showResolutionModal() && res.cert as cert"
         (click)="closeResolutionPdf()"
       >
         <div
-          class="modal-content relative bg-white text-slate-900 rounded-3xl w-full max-w-3xl p-6 shadow-2xl flex flex-col gap-6"
+          class="lp-modal-content modal-content relative bg-white text-slate-900 rounded-3xl w-full max-w-3xl p-6 shadow-2xl flex flex-col gap-6"
           (click)="$event.stopPropagation()"
         >
           <!-- Close button -->

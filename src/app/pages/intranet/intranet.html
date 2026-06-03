@@ -1,9 +1,8 @@
-<div class="intranet-container max-w-7xl mx-auto px-4 py-8">
-  
-  <!-- ==========================================
-       1. VISTA DE INICIO DE SESIÓN (NO LOGUEADO)
-       ========================================== -->
-  <div *ngIf="!platformService.isLoggedIn()" class="max-w-md mx-auto my-12">
+<!-- ==========================================
+     1. VISTA DE INICIO DE SESIÓN (NO LOGUEADO)
+     ========================================== -->
+<div *ngIf="!platformService.isLoggedIn()" class="intranet-container max-w-7xl mx-auto px-4 py-8">
+  <div class="max-w-md mx-auto my-12">
     <!-- Card de Login -->
     <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
       <div class="absolute -right-16 -top-16 w-32 h-32 bg-wine-800/20 rounded-full blur-3xl"></div>
@@ -12,8 +11,8 @@
       <!-- Cabecera de Login -->
       <div class="text-center mb-8">
         <span class="text-4xl">🔐</span>
-        <h2 class="text-2xl font-extrabold text-white mt-3">Intranet Institucional</h2>
-        <p class="text-slate-400 text-sm mt-1">Acceda para gestionar cursos, asistencias y certificaciones</p>
+        <h2 class="text-2xl font-extrabold text-white mt-3">Cursos e Investigación</h2>
+        <p class="text-slate-400 text-sm mt-1">Plataforma de gestión académica y de investigación institucional</p>
       </div>
 
       <!-- Formulario -->
@@ -60,7 +59,7 @@
         <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 text-center mb-4">
           ⚡ ACCESO RÁPIDO DE EVALUACIÓN
         </h4>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
           <button
             (click)="quickLogin('admin')"
             class="py-2.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-amber-500/30 text-left text-xs font-semibold text-slate-200 transition-all cursor-pointer flex flex-col justify-between"
@@ -76,26 +75,43 @@
             <span class="text-amber-400">💵 Caja / Tesorería</span>
             <span class="text-[9px] text-slate-500 font-mono mt-0.5">Gestión de Pagos</span>
           </button>
+
+          <button
+            (click)="quickLogin('formacion')"
+            class="py-2.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-amber-500/30 text-left text-xs font-semibold text-slate-200 transition-all cursor-pointer flex flex-col justify-between"
+          >
+            <span class="text-amber-400">🎓 Form. Continua</span>
+            <span class="text-[9px] text-slate-500 font-mono mt-0.5">Cursos y Certificados</span>
+          </button>
+
+          <button
+            (click)="quickLogin('investigacion')"
+            class="py-2.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-amber-500/30 text-left text-xs font-semibold text-slate-200 transition-all cursor-pointer flex flex-col justify-between"
+          >
+            <span class="text-amber-400">🔬 Investigación</span>
+            <span class="text-[9px] text-slate-500 font-mono mt-0.5">Gestión Proyectos</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
+</div>
 
 
-  <!-- ==========================================
-       2. PANEL DE DASHBOARD INTERNO (LOGUEADO)
-       ========================================== -->
-  <div *ngIf="platformService.currentUser() as user" class="dashboard-shell-layout relative flex min-h-[75vh] w-full gap-0 overflow-hidden text-slate-100 rounded-3xl border border-white/10 bg-[#0c0305]/95 backdrop-blur-xl shadow-2xl animate-fade-in print:hidden">
+<!-- ==========================================
+     2. PANEL DE DASHBOARD INTERNO (LOGUEADO)
+     ========================================== -->
+<div *ngIf="platformService.currentUser() as user" class="dashboard-shell-layout relative flex min-h-screen w-full gap-0 text-slate-100 bg-[#0c0305]/95 backdrop-blur-xl animate-fade-in print:hidden">
     
     <!-- BARRA LATERAL IZQUIERDA (SIDEBAR ESTILO DATTA ABLE) -->
-    <aside class="dashboard-sidebar flex flex-col border-r border-white/5 bg-[#120508] transition-all duration-300 shrink-0" [class.collapsed]="sidebarCollapsed()">
+    <aside class="dashboard-sidebar flex flex-col border-r border-white/5 bg-[#120508] transition-all duration-300 shrink-0 sticky top-0 self-start min-h-screen" [class.collapsed]="sidebarCollapsed()">
       <!-- Brand Header -->
       <div class="sidebar-brand-header flex items-center justify-between p-5 border-b border-white/5 min-h-[72px]">
         <div class="flex items-center gap-2.5 overflow-hidden">
           <img src="/logo-chojata.png" alt="IESTP Chojata" class="w-8 h-8 object-contain shrink-0 drop-shadow-[0_0_5px_rgba(244,63,94,0.35)]" />
           <div class="flex flex-col leading-none text-left sidebar-brand-text transition-opacity duration-300">
-            <span class="text-xs font-black uppercase tracking-wider text-white">IESTP Chojata</span>
-            <span class="text-[8px] font-bold text-slate-500 font-mono tracking-widest mt-0.5">INTRANET</span>
+            <span class="text-xs font-black uppercase tracking-wider text-white">Cursos e Investigación</span>
+            <span class="text-[8px] font-bold text-slate-500 font-mono tracking-widest mt-0.5">PLATAFORMA</span>
           </div>
         </div>
         <!-- Collapse toggle button -->
@@ -119,7 +135,7 @@
       <!-- Navigation Menu -->
       <nav class="sidebar-nav flex-1 px-3 pb-6 overflow-y-auto space-y-4 text-left">
         <!-- Grupo: Navegación -->
-        <div class="space-y-1">
+        <div *ngIf="user.role === 'Administrador' || user.role === 'Caja'" class="space-y-1">
           <span class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Navegación</span>
           
           <button *ngIf="user.role === 'Administrador'"
@@ -130,7 +146,7 @@
             <span class="sidebar-btn-text">Resumen General</span>
           </button>
           
-          <button
+          <button *ngIf="user.role === 'Administrador' || user.role === 'Caja'"
             (click)="activeTab.set('registrations')"
             [class]="activeTab() === 'registrations' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'"
           >
@@ -142,7 +158,7 @@
           </button>
         </div>
 
-        <!-- Grupo: Gestión Académica -->
+        <!-- Grupo: Administración -->
         <div *ngIf="user.role === 'Administrador'" class="space-y-1 pt-2 border-t border-white/5">
           <span class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Administración</span>
           
@@ -153,29 +169,39 @@
             <span class="sidebar-btn-icon">👥</span>
             <span class="sidebar-btn-text">Gestión Usuarios</span>
           </button>
+        </div>
+
+        <!-- Grupo: Formación Continua -->
+        <div *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'" class="space-y-1 pt-2 border-t border-white/5">
+          <span class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Formación Continua</span>
           
           <button
             (click)="activeTab.set('events')"
             [class]="activeTab() === 'events' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'"
           >
             <span class="sidebar-btn-icon">📅</span>
-            <span class="sidebar-btn-text">Gestión Cursos</span>
+            <span class="sidebar-btn-text">Gestión de Cursos</span>
           </button>
           
           <button
             (click)="activeTab.set('certificates')"
             [class]="activeTab() === 'certificates' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'"
           >
-            <span class="sidebar-btn-icon">📜</span>
-            <span class="sidebar-btn-text">Emisión Diplomas</span>
+            <span class="sidebar-btn-icon">🎓</span>
+            <span class="sidebar-btn-text">Emisión de Certificados</span>
           </button>
+        </div>
+
+        <!-- Grupo: Investigación -->
+        <div *ngIf="user.role === 'Administrador' || user.role === 'Investigación'" class="space-y-1 pt-2 border-t border-white/5">
+          <span class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Investigación</span>
           
           <button
-            (click)="activeTab.set('attendance')"
-            [class]="activeTab() === 'attendance' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'"
+            (click)="activeTab.set('projects')"
+            [class]="activeTab() === 'projects' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'"
           >
-            <span class="sidebar-btn-icon">⏱️</span>
-            <span class="sidebar-btn-text">Toma Asistencias</span>
+            <span class="sidebar-btn-icon">🔬</span>
+            <span class="sidebar-btn-text">Gestión de Proyectos</span>
           </button>
         </div>
 
@@ -215,7 +241,7 @@
           
           <!-- Breadcrumb Path -->
           <div class="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
-            <span>Intranet</span>
+            <span>Cursos e Investigación</span>
             <span class="text-slate-700">/</span>
             <span class="text-[#f43f5e] font-bold font-mono uppercase tracking-wider">{{ activeTab() }}</span>
           </div>
@@ -261,21 +287,21 @@
       </header>
 
       <!-- CUERPO PRINCIPAL DEL DASHBOARD -->
-      <div class="dashboard-body flex-1 p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-72px)] scrollbar-none text-left">
+      <div class="dashboard-body flex-1 p-6 space-y-6 text-left">
         
         <!-- Breadcrumbs Titular -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2">
           <div>
             <h1 class="text-2xl font-black text-white tracking-tight uppercase flex items-center gap-2.5">
               <span *ngIf="activeTab() === 'overview'">📊 Resumen Operativo de la Plataforma</span>
-              <span *ngIf="activeTab() === 'users'">👥 Control General de Usuarios</span>
-              <span *ngIf="activeTab() === 'events'">📅 Administración General de Eventos</span>
+              <span *ngIf="activeTab() === 'users'">👥 Administración — Gestión de Usuarios</span>
+              <span *ngIf="activeTab() === 'events'">📅 Formación Continua — Gestión de Cursos</span>
               <span *ngIf="activeTab() === 'registrations'">📥 Validación General de Inscripciones</span>
-              <span *ngIf="activeTab() === 'certificates'">📜 Registro General de Certificados</span>
-              <span *ngIf="activeTab() === 'attendance'">⏱️ Registro General de Asistencias</span>
+              <span *ngIf="activeTab() === 'certificates'">🎓 Formación Continua — Emisión de Certificados</span>
+              <span *ngIf="activeTab() === 'projects'">🔬 Investigación — Gestión de Proyectos</span>
               <span *ngIf="activeTab() === 'reports'">📉 Reportes y Descargas Excel</span>
             </h1>
-            <p class="text-slate-400 text-xs mt-1">Portal institucional centralizado de IESTP Chojata.</p>
+            <p class="text-slate-400 text-xs mt-1">Sistema de Cursos e Investigación — IESTP Chojata.</p>
           </div>
           <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/[0.03] border border-white/5 px-3 py-1.5 rounded-xl self-start font-mono">
             Ciclo Actual: 2026-I
@@ -453,19 +479,69 @@
           </button>
         </div>
 
+        <!-- Datatable Controls Row -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span>Mostrar</span>
+            <select
+              [ngModel]="userPageSize()"
+              (ngModelChange)="userPageSize.set(+$event); userCurrentPage.set(1)"
+              class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer"
+            >
+              <option [value]="5">5</option>
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+            <span>registros</span>
+          </div>
+
+          <div class="relative w-full sm:w-72">
+            <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+            <input
+              type="text"
+              [ngModel]="userSearchQuery()"
+              (ngModelChange)="userSearchQuery.set($event); userCurrentPage.set(1)"
+              placeholder="Buscar usuarios..."
+              class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all"
+            />
+          </div>
+        </div>
+
         <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
-                  <th class="px-6 py-4">Usuario</th>
-                  <th class="px-6 py-4">DNI / Documento</th>
-                  <th class="px-6 py-4">Rol</th>
+                  <th (click)="changeUserSort('name')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Usuario
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ userSortColumn() === 'name' ? (userSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeUserSort('dni')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    DNI / Documento
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ userSortColumn() === 'dni' ? (userSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeUserSort('role')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Rol
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ userSortColumn() === 'role' ? (userSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
                   <th class="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-white/5 text-sm">
-                <tr *ngFor="let u of platformService.users()" class="hover:bg-white/[0.02]">
+                <!-- Fallback: no results found -->
+                <tr *ngIf="filteredAndPaginatedUsers().items.length === 0">
+                  <td colspan="4" class="text-center py-8 text-slate-500 text-xs">
+                    No se encontraron usuarios coincidentes.
+                  </td>
+                </tr>
+                <tr *ngFor="let u of filteredAndPaginatedUsers().items" class="hover:bg-white/[0.02]">
                   <td class="px-6 py-4">
                     <div class="font-bold text-slate-100">{{ u.name }}</div>
                     <div class="text-xs text-slate-400 font-mono">{{ u.email }}</div>
@@ -502,6 +578,43 @@
             </table>
           </div>
         </div>
+
+        <!-- Datatable Pagination Row -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4">
+          <div class="text-xs text-slate-400 font-medium">
+            Mostrando registros del {{ filteredAndPaginatedUsers().items.length === 0 ? 0 : (userCurrentPage() - 1) * userPageSize() + 1 }} al 
+            {{ getMinRecord(userCurrentPage(), userPageSize(), filteredAndPaginatedUsers().totalItems) }} de un total de 
+            {{ filteredAndPaginatedUsers().totalItems }} registros
+          </div>
+
+          <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedUsers().totalPages > 1">
+            <button
+              [disabled]="userCurrentPage() === 1"
+              (click)="userCurrentPage.set(userCurrentPage() - 1)"
+              class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Anterior
+            </button>
+
+            <button
+              *ngFor="let page of getPagesArray(filteredAndPaginatedUsers().totalPages)"
+              (click)="userCurrentPage.set(page)"
+              [class]="userCurrentPage() === page
+                ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
+                : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'"
+            >
+              {{ page }}
+            </button>
+
+            <button
+              [disabled]="userCurrentPage() === filteredAndPaginatedUsers().totalPages"
+              (click)="userCurrentPage.set(userCurrentPage() + 1)"
+              class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- ==========================================
@@ -518,21 +631,81 @@
           </button>
         </div>
 
+        <!-- Datatable Controls Row -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span>Mostrar</span>
+            <select
+              [ngModel]="eventPageSize()"
+              (ngModelChange)="eventPageSize.set(+$event); eventCurrentPage.set(1)"
+              class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer"
+            >
+              <option [value]="5">5</option>
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+            <span>registros</span>
+          </div>
+
+          <div class="relative w-full sm:w-72">
+            <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+            <input
+              type="text"
+              [ngModel]="eventSearchQuery()"
+              (ngModelChange)="eventSearchQuery.set($event); eventCurrentPage.set(1)"
+              placeholder="Buscar eventos..."
+              class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all"
+            />
+          </div>
+        </div>
+
         <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
-                  <th class="px-6 py-4">Evento</th>
-                  <th class="px-6 py-4">Docente / Tutor</th>
-                  <th class="px-6 py-4">Capacidad / Cupos</th>
-                  <th class="px-6 py-4">Fecha</th>
-                  <th class="px-6 py-4 text-center">Estado</th>
+                  <th (click)="changeEventSort('title')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Evento
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ eventSortColumn() === 'title' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeEventSort('instructor')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Docente / Tutor
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ eventSortColumn() === 'instructor' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeEventSort('capacity')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Capacidad / Cupos
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ eventSortColumn() === 'capacity' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeEventSort('date')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Fecha
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ eventSortColumn() === 'date' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeEventSort('status')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none text-center">
+                    Estado
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ eventSortColumn() === 'status' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
                   <th class="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-white/5 text-sm">
-                <tr *ngFor="let e of platformService.events()" class="hover:bg-white/[0.02]">
+                <!-- Fallback: no results found -->
+                <tr *ngIf="filteredAndPaginatedEvents().items.length === 0">
+                  <td colspan="6" class="text-center py-8 text-slate-500 text-xs">
+                    No se encontraron eventos coincidentes.
+                  </td>
+                </tr>
+                <tr *ngFor="let e of filteredAndPaginatedEvents().items" class="hover:bg-white/[0.02]">
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
                       <span class="text-lg">{{ e.icon }}</span>
@@ -577,6 +750,43 @@
             </table>
           </div>
         </div>
+
+        <!-- Datatable Pagination Row -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4">
+          <div class="text-xs text-slate-400 font-medium">
+            Mostrando registros del {{ filteredAndPaginatedEvents().items.length === 0 ? 0 : (eventCurrentPage() - 1) * eventPageSize() + 1 }} al 
+            {{ getMinRecord(eventCurrentPage(), eventPageSize(), filteredAndPaginatedEvents().totalItems) }} de un total de 
+            {{ filteredAndPaginatedEvents().totalItems }} registros
+          </div>
+
+          <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedEvents().totalPages > 1">
+            <button
+              [disabled]="eventCurrentPage() === 1"
+              (click)="eventCurrentPage.set(eventCurrentPage() - 1)"
+              class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Anterior
+            </button>
+
+            <button
+              *ngFor="let page of getPagesArray(filteredAndPaginatedEvents().totalPages)"
+              (click)="eventCurrentPage.set(page)"
+              [class]="eventCurrentPage() === page
+                ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
+                : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'"
+            >
+              {{ page }}
+            </button>
+
+            <button
+              [disabled]="eventCurrentPage() === filteredAndPaginatedEvents().totalPages"
+              (click)="eventCurrentPage.set(eventCurrentPage() + 1)"
+              class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- ==========================================
@@ -584,6 +794,35 @@
            ========================================== -->
       <div *ngIf="activeTab() === 'registrations'" class="space-y-6 animate-fade-in">
         <h2 class="text-2xl font-bold text-white">Control de Inscripciones Pendientes</h2>
+
+        <!-- Datatable Controls Row -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span>Mostrar</span>
+            <select
+              [ngModel]="regPageSize()"
+              (ngModelChange)="regPageSize.set(+$event); regCurrentPage.set(1)"
+              class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer"
+            >
+              <option [value]="5">5</option>
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+            <span>registros</span>
+          </div>
+
+          <div class="relative w-full sm:w-72">
+            <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+            <input
+              type="text"
+              [ngModel]="regSearchQuery()"
+              (ngModelChange)="regSearchQuery.set($event); regCurrentPage.set(1)"
+              placeholder="Buscar solicitudes..."
+              class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all"
+            />
+          </div>
+        </div>
 
         <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
           
@@ -597,14 +836,35 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
-                  <th class="px-6 py-4">Alumno / DNI</th>
-                  <th class="px-6 py-4">Evento Solicitado</th>
-                  <th class="px-6 py-4">Fecha Solicitud</th>
+                  <th (click)="changeRegSort('userName')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Alumno / DNI
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ regSortColumn() === 'userName' ? (regSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeRegSort('eventTitle')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Evento Solicitado
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ regSortColumn() === 'eventTitle' ? (regSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeRegSort('date')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                    Fecha Solicitud
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ regSortColumn() === 'date' ? (regSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
                   <th class="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-white/5 text-sm">
-                <tr *ngFor="let r of platformService.registrations()" [class.hidden]="r.status !== 'Pendiente'" class="hover:bg-white/[0.02]">
+                <!-- Fallback: no results found -->
+                <tr *ngIf="filteredAndPaginatedRegistrations().items.length === 0">
+                  <td colspan="4" class="text-center py-8 text-slate-500 text-xs">
+                    No se encontraron solicitudes pendientes coincidentes.
+                  </td>
+                </tr>
+                <tr *ngFor="let r of filteredAndPaginatedRegistrations().items" class="hover:bg-white/[0.02]">
                   <td class="px-6 py-4">
                     <div class="font-bold text-slate-100">{{ r.userName }}</div>
                     <div class="text-xs text-slate-400 font-mono">DNI: {{ r.userDni }} | {{ r.userEmail }}</div>
@@ -616,10 +876,10 @@
                   <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
                       <button
-                        (click)="approveReg(r.id)"
-                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all cursor-pointer"
+                        (click)="openValidatePayment(r)"
+                        class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10"
                       >
-                        ✓ Aprobar
+                        ✓ Validar Pago
                       </button>
                       <button
                         (click)="rejectReg(r.id)"
@@ -633,7 +893,153 @@
               </tbody>
             </table>
           </div>
+        </div>
 
+        <!-- Datatable Pagination Row -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4" *ngIf="stats().pendingRegistrations > 0">
+          <div class="text-xs text-slate-400 font-medium">
+            Mostrando registros del {{ filteredAndPaginatedRegistrations().items.length === 0 ? 0 : (regCurrentPage() - 1) * regPageSize() + 1 }} al 
+            {{ getMinRecord(regCurrentPage(), regPageSize(), filteredAndPaginatedRegistrations().totalItems) }} de un total de 
+            {{ filteredAndPaginatedRegistrations().totalItems }} registros
+          </div>
+
+          <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedRegistrations().totalPages > 1">
+            <button
+              [disabled]="regCurrentPage() === 1"
+              (click)="regCurrentPage.set(regCurrentPage() - 1)"
+              class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Anterior
+            </button>
+
+            <button
+              *ngFor="let page of getPagesArray(filteredAndPaginatedRegistrations().totalPages)"
+              (click)="regCurrentPage.set(page)"
+              [class]="regCurrentPage() === page
+                ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
+                : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'"
+            >
+              {{ page }}
+            </button>
+
+            <button
+              [disabled]="regCurrentPage() === filteredAndPaginatedRegistrations().totalPages"
+              (click)="regCurrentPage.set(regCurrentPage() + 1)"
+              class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           MODAL DE VALIDACIÓN DE PAGO (CAJA / TESORERÍA)
+           ========================================== -->
+      <div
+        class="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
+        *ngIf="showPaymentModal()"
+        (click)="showPaymentModal.set(false)"
+      >
+        <div
+          class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-6"
+          (click)="$event.stopPropagation()"
+        >
+          <!-- Top header -->
+          <div class="flex items-center justify-between border-b border-white/10 pb-4">
+            <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <span>💵</span> Registrar y Validar Pago de Inscripción
+            </h3>
+            <button
+              (click)="showPaymentModal.set(false)"
+              class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-sm font-bold"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Form content -->
+          <form (submit)="submitPaymentValidation(); $event.preventDefault()" class="space-y-4 text-left">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Número de Recibo / Operación</label>
+              <input
+                type="text"
+                [(ngModel)]="paymentReceiptNumber"
+                [name]="'paymentReceiptNumber'"
+                placeholder="REC-2026-XXXX"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
+                required
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fecha de Pago</label>
+                <input
+                  type="date"
+                  [(ngModel)]="paymentDate"
+                  [name]="'paymentDate'"
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Monto Pagado (S/.)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="paymentAmount"
+                  [name]="'paymentAmount'"
+                  placeholder="0.00"
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subir Foto o Escaneo de Recibo</label>
+              <div class="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-2xl p-4 bg-white/[0.01] hover:bg-white/[0.03] transition-all relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onReceiptFileChange($event)"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                <div class="text-center space-y-1 z-0">
+                  <span class="text-2xl">📸</span>
+                  <p class="text-xs text-slate-300 font-semibold">Haga clic o arrastre su archivo aquí</p>
+                  <p class="text-[10px] text-slate-500">Formatos permitidos: JPG, PNG (máx. 4MB)</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Uploaded Image -->
+            <div *ngIf="paymentImage" class="mt-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Vista Previa del Recibo:</p>
+              <img
+                [src]="paymentImage"
+                alt="Preview Recibo"
+                class="max-h-36 rounded-xl mx-auto border border-white/10 object-contain shadow-md"
+              />
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-white/10">
+              <button
+                type="button"
+                (click)="showPaymentModal.set(false)"
+                class="px-5 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white shadow-lg transition-all cursor-pointer"
+              >
+                ✓ Validar y Registrar Pago
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -670,15 +1076,21 @@
                     <span *ngIf="s.alreadyHasCert" class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                       Emitido
                     </span>
-                    <span *ngIf="!s.alreadyHasCert" class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                      Pendiente Emisión
+                    <span *ngIf="!s.alreadyHasCert && s.isPaymentValidated" class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Apto para Emisión
+                    </span>
+                    <span *ngIf="!s.alreadyHasCert && !s.isPaymentValidated" class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      ⚠️ Pago Pendiente
                     </span>
                   </td>
                   <td class="py-3.5 text-right">
                     <button
                       (click)="issueCert(s.userDni, s.eventId)"
-                      [disabled]="s.alreadyHasCert"
-                      class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      [disabled]="s.alreadyHasCert || !s.isPaymentValidated"
+                      [class]="s.isPaymentValidated 
+                        ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer'
+                        : 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-50'"
+                      [title]="!s.isPaymentValidated ? 'No se puede emitir el certificado porque no se ha validado el pago de este alumno' : 'Emitir Certificado Oficial'"
                     >
                       🎓 Emitir Certificado
                     </button>
@@ -692,22 +1104,115 @@
         <!-- 2. Registro histórico de certificados emitidos (Solo Admin) -->
         <div *ngIf="user.role === 'Administrador'" class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
           <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
-            <span>📜</span> Registro General de Diplomas Emitidos
+            <span>🎓</span> Registro General de Certificados Emitidos
           </h3>
+
+          <!-- Datatable Controls Row -->
+          <div class="flex flex-col gap-3 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mb-4">
+
+            <!-- Fila 1: Filtros (Año + Curso + Buscador + Limpiar) -->
+            <div class="flex items-center gap-2 flex-wrap">
+
+              <!-- Select: Año -->
+              <select
+                [ngModel]="certFilterYear()"
+                (ngModelChange)="certFilterYear.set($event); certCurrentPage.set(1)"
+                class="bg-slate-900 border border-white/10 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500/60 font-semibold cursor-pointer transition-all min-w-[100px]"
+              >
+                <option value="">📅 Año</option>
+                <option *ngFor="let y of certAvailableYears()" [value]="y">{{ y }}</option>
+              </select>
+
+              <!-- Select: Curso -->
+              <select
+                [ngModel]="certFilterCourse()"
+                (ngModelChange)="certFilterCourse.set($event); certCurrentPage.set(1)"
+                class="bg-slate-900 border border-white/10 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500/60 font-semibold cursor-pointer transition-all max-w-[220px]"
+              >
+                <option value="">🎓 Curso</option>
+                <option *ngFor="let c of certAvailableCourses()" [value]="c">{{ c }}</option>
+              </select>
+
+              <!-- Buscador general -->
+              <div class="relative flex-1 min-w-[180px]">
+                <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
+                <input
+                  type="text"
+                  [ngModel]="certSearchQuery()"
+                  (ngModelChange)="certSearchQuery.set($event); certCurrentPage.set(1)"
+                  placeholder="Buscar certificados..."
+                  class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all"
+                />
+              </div>
+
+              <!-- Botón limpiar filtros (visible si hay algún filtro activo) -->
+              <button
+                *ngIf="certFilterYear() || certFilterCourse() || certSearchQuery()"
+                (click)="certFilterYear.set(''); certFilterCourse.set(''); certSearchQuery.set(''); certCurrentPage.set(1)"
+                class="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-[10px] font-bold cursor-pointer transition-all whitespace-nowrap"
+                title="Limpiar todos los filtros"
+              >
+                ✕ Limpiar
+              </button>
+            </div>
+
+            <!-- Fila 2: Mostrar N registros -->
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span>Mostrar</span>
+              <select
+                [ngModel]="certPageSize()"
+                (ngModelChange)="certPageSize.set(+$event); certCurrentPage.set(1)"
+                class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer"
+              >
+                <option [value]="5">5</option>
+                <option [value]="10">10</option>
+                <option [value]="25">25</option>
+                <option [value]="50">50</option>
+              </select>
+              <span>registros</span>
+            </div>
+
+          </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
               <thead>
                 <tr class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-white/5 pb-2">
-                  <th class="pb-3">Código</th>
-                  <th class="pb-3">Alumno / DNI</th>
-                  <th class="pb-3">Evento</th>
-                  <th class="pb-3 text-center">Estado</th>
+                  <th (click)="changeCertSort('code')" class="pb-3 cursor-pointer hover:text-white transition-colors select-none">
+                    Código
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ certSortColumn() === 'code' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeCertSort('fullName')" class="pb-3 cursor-pointer hover:text-white transition-colors select-none">
+                    Alumno / DNI
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ certSortColumn() === 'fullName' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeCertSort('eventTitle')" class="pb-3 cursor-pointer hover:text-white transition-colors select-none">
+                    Evento
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ certSortColumn() === 'eventTitle' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
+                  <th (click)="changeCertSort('status')" class="pb-3 text-center cursor-pointer hover:text-white transition-colors select-none">
+                    Estado
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">
+                      {{ certSortColumn() === 'status' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                    </span>
+                  </th>
                   <th class="pb-3 text-right">Controles</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-white/5">
-                <tr *ngFor="let c of platformService.certificates()" class="hover:bg-white/[0.01]">
+                <!-- Fallback: no results found -->
+                <tr *ngIf="filteredAndPaginatedCertificates().items.length === 0">
+                  <td colspan="5" class="text-center py-8 text-slate-500 text-xs">
+                    No se encontraron certificados emitidos coincidentes.
+                  </td>
+                </tr>
+                <tr *ngFor="let c of filteredAndPaginatedCertificates().items" class="hover:bg-white/[0.01]">
                   <td class="py-3.5 font-mono font-bold text-amber-300">{{ c.code }}</td>
                   <td class="py-3.5">
                     <div class="font-bold text-slate-200">{{ c.fullName }}</div>
@@ -744,6 +1249,43 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Datatable Pagination Row -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4">
+            <div class="text-xs text-slate-400 font-medium">
+              Mostrando registros del {{ filteredAndPaginatedCertificates().items.length === 0 ? 0 : (certCurrentPage() - 1) * certPageSize() + 1 }} al 
+              {{ getMinRecord(certCurrentPage(), certPageSize(), filteredAndPaginatedCertificates().totalItems) }} de un total de 
+              {{ filteredAndPaginatedCertificates().totalItems }} registros
+            </div>
+
+            <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedCertificates().totalPages > 1">
+              <button
+                [disabled]="certCurrentPage() === 1"
+                (click)="certCurrentPage.set(certCurrentPage() - 1)"
+                class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Anterior
+              </button>
+
+              <button
+                *ngFor="let page of getPagesArray(filteredAndPaginatedCertificates().totalPages)"
+                (click)="certCurrentPage.set(page)"
+                [class]="certCurrentPage() === page
+                  ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
+                  : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'"
+              >
+                {{ page }}
+              </button>
+
+              <button
+                [disabled]="certCurrentPage() === filteredAndPaginatedCertificates().totalPages"
+                (click)="certCurrentPage.set(certCurrentPage() + 1)"
+                class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1025,6 +1567,107 @@
       </div>
 
       <!-- ==========================================
+           TAB: INVESTIGACIÓN — GESTIÓN DE PROYECTOS (ADMIN)
+           ========================================== -->
+      <div *ngIf="activeTab() === 'projects'" class="space-y-6 animate-fade-in">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold text-white">Proyectos de Investigación Institucional</h2>
+          <button
+            (click)="openAddProject()"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white transition-all cursor-pointer shadow-lg shadow-indigo-500/10"
+          >
+            <span>＋</span> Nuevo Proyecto
+          </button>
+        </div>
+
+        <!-- KPIs de Investigación -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-center">
+            <div class="text-2xl font-black text-indigo-300">3</div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">En Ejecución</div>
+          </div>
+          <div class="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-center">
+            <div class="text-2xl font-black text-amber-300">2</div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">En Formulación</div>
+          </div>
+          <div class="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-center">
+            <div class="text-2xl font-black text-emerald-300">5</div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Concluidos</div>
+          </div>
+          <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-center">
+            <div class="text-2xl font-black text-rose-300">1</div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Suspendidos</div>
+          </div>
+        </div>
+
+        <!-- Tabla de Proyectos -->
+        <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden shadow-xl">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">🔬 Registro de Proyectos</h3>
+            <input
+              type="text"
+              placeholder="Buscar proyecto..."
+              class="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 text-xs w-48 transition-all"
+            />
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-white/[0.02] border-b border-white/5">
+                <tr>
+                  <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Código</th>
+                  <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Título del Proyecto</th>
+                  <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Responsable</th>
+                  <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Línea</th>
+                  <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Inicio</th>
+                  <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-center">Estado</th>
+                  <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/[0.03]">
+                <!-- Fallback: no results found -->
+                <tr *ngIf="projectsList().length === 0">
+                  <td colspan="7" class="text-center py-8 text-slate-500 text-xs">
+                    No se encontraron proyectos registrados.
+                  </td>
+                </tr>
+                <!-- Iteración de proyectos reales -->
+                <tr *ngFor="let p of projectsList()" class="hover:bg-white/[0.02] transition-colors">
+                  <td class="px-6 py-4 font-mono text-indigo-400 font-bold">PROJ-2026-00{{ p.id }}</td>
+                  <td class="px-6 py-4 text-slate-200 font-semibold max-w-[220px]">{{ p.title }}</td>
+                  <td class="px-6 py-4 text-slate-400">{{ p.instructor }}</td>
+                  <td class="px-6 py-4 text-slate-400">Línea de Inv.</td>
+                  <td class="px-6 py-4 font-mono text-slate-400">{{ p.date }}</td>
+                  <td class="px-6 py-4 text-center">
+                    <span [class]="p.status === 'activo'
+                      ? 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20'">
+                      {{ p.status === 'activo' ? 'En Ejecución' : 'Concluido' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                      <button (click)="openEditEvent(p)" class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[10px] font-bold cursor-pointer transition-all">Editar</button>
+                      <button (click)="deleteEvent(p.id)" class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold cursor-pointer transition-all">Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Pie de tabla -->
+          <div class="px-6 py-3 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+            <span>Mostrando {{ projectsList().length }} proyectos registrados</span>
+            <div class="flex items-center gap-1">
+              <button class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 cursor-pointer transition-all">‹</button>
+              <button class="px-2 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold cursor-pointer">1</button>
+              <button class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 cursor-pointer transition-all">2</button>
+              <button class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 cursor-pointer transition-all">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
            TAB: INSCRIBIRSE A CURSOS (PARTICIPANTE)
            ========================================== -->
       <div *ngIf="activeTab() === 'register-new-events'" class="space-y-6 animate-fade-in">
@@ -1196,14 +1839,23 @@
           </select>
         </div>
 
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">Contraseña</label>
+        <!-- Contraseña: solo visible al editar un usuario existente -->
+        <div *ngIf="isEditing()">
+          <label class="block text-xs text-slate-400 mb-1">Nueva Contraseña</label>
           <input
             type="password"
             [(ngModel)]="userForm.password"
             class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
-            placeholder="Contraseña de acceso"
+            placeholder="Dejar vacío para mantener la actual"
           />
+        </div>
+
+        <!-- Aviso al crear nuevo usuario -->
+        <div *ngIf="!isEditing()" class="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+          <span class="text-amber-400 text-base shrink-0 mt-0.5">📧</span>
+          <p class="text-[11px] text-amber-300/80 leading-relaxed">
+            Se generará una contraseña segura automáticamente y se enviará junto al usuario al correo electrónico registrado.
+          </p>
         </div>
       </div>
 
@@ -1255,6 +1907,7 @@
             <option value="Curso">Curso</option>
             <option value="Taller">Taller</option>
             <option value="Seminario">Seminario</option>
+            <option value="Repositorio">Proyecto de Investigación</option>
           </select>
         </div>
 
@@ -1746,4 +2399,6 @@
     </div>
   </div>
 
-</div>
+
+
+

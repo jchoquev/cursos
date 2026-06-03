@@ -1,7 +1,8 @@
+<ng-container *ngIf="isPublicRoute()">
 <!-- HEADER PRINCIPAL DE ALTA GAMA (GLASSMORPHIC MODERNIZED - WINE PALETTE & OFFICIAL EMBLEM) -->
-<header class="bg-[#0e0205]/85 backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-50 print:hidden select-none shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all duration-500">
+<header class="lp-header bg-[#0e0205]/85 backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-50 print:hidden select-none shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all duration-500">
   <!-- Glowing Accent Underline (Wine Ray Gradient) -->
-  <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#be123c]/50 to-transparent animate-pulse"></div>
+  <div class="lp-accent-line absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#be123c]/50 to-transparent animate-pulse"></div>
 
   <div class="max-w-[1400px] mx-auto px-4 lg:px-6">
     <div class="flex items-center justify-between h-16">
@@ -14,26 +15,26 @@
             <img src="/logo-chojata.png" alt="IESTP Chojata" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(190,18,60,0.35)] transition-transform group-hover:scale-105 duration-500" />
             
             <div class="flex flex-col text-left leading-none ml-1">
-              <span class="text-sm font-black tracking-wider text-white group-hover:text-[#f43f5e] transition-colors uppercase">
-                IESTP Chojata
+              <span class="lp-brand-name text-sm font-black tracking-wider text-white group-hover:text-[#f43f5e] transition-colors uppercase">
+                Cursos e Investigación
               </span>
-              <span class="text-[9px] font-bold text-slate-500 font-mono tracking-widest mt-0.5">MOQUEGUA</span>
+              <span class="lp-brand-sub text-[9px] font-bold text-slate-500 font-mono tracking-widest mt-0.5">IESTP CHOJATA</span>
             </div>
           </div>
         </a>
       </div>
 
       <!-- MENÚ DE NAVEGACIÓN PRINCIPAL (CENTRO) - 3 MODULES -->
-      <div class="hidden lg:flex items-center gap-2 bg-white/[0.02] border border-white/5 px-2 py-1.5 rounded-xl backdrop-blur-md">
-        <a routerLink="/" routerLinkActive="bg-[#be123c]/15 text-[#f43f5e] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]" [routerLinkActiveOptions]="{ exact: true }" class="text-[13px] font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] px-3.5 py-1.5 rounded-lg no-underline transition-all duration-300">
+      <div class="lp-nav-pill hidden lg:flex items-center gap-2 bg-white/[0.02] border border-white/5 px-2 py-1.5 rounded-xl backdrop-blur-md">
+        <a routerLink="/" routerLinkActive="lp-nav-link-active bg-[#be123c]/15 text-[#f43f5e] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]" [routerLinkActiveOptions]="{ exact: true }" class="lp-nav-link text-[13px] font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] px-3.5 py-1.5 rounded-lg no-underline transition-all duration-300">
           Inicio
         </a>
         
-        <a routerLink="/buscar-certificados" routerLinkActive="bg-[#be123c]/15 text-[#f43f5e] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]" class="text-[13px] font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] px-3.5 py-1.5 rounded-lg no-underline transition-all duration-300">
+        <a routerLink="/buscar-certificados" routerLinkActive="lp-nav-link-active bg-[#be123c]/15 text-[#f43f5e] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]" class="lp-nav-link text-[13px] font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] px-3.5 py-1.5 rounded-lg no-underline transition-all duration-300">
           Buscar Certificados
         </a>
 
-        <a routerLink="/" [queryParams]="{ category: 'Repositorio' }" class="text-[13px] font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] px-3.5 py-1.5 rounded-lg no-underline transition-all duration-300">
+        <a routerLink="/" [queryParams]="{ category: 'Repositorio' }" class="lp-nav-link text-[13px] font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] px-3.5 py-1.5 rounded-lg no-underline transition-all duration-300">
           Repositorio Institucional
         </a>
       </div>
@@ -52,16 +53,25 @@
             type="text"
             placeholder="Buscar..."
             (click)="openSearchOverlay()"
-            class="w-56 bg-[#1a050a]/40 border border-white/5 hover:border-[#be123c]/40 hover:shadow-[0_0_15px_rgba(190,18,60,0.12)] text-white rounded-xl py-1.5 pl-9 pr-14 text-xs focus:outline-none cursor-pointer transition-all duration-300 font-medium placeholder-slate-500"
+            class="lp-search-input w-56 bg-[#1a050a]/40 border border-white/5 hover:border-[#be123c]/40 hover:shadow-[0_0_15px_rgba(190,18,60,0.12)] text-white rounded-xl py-1.5 pl-9 pr-14 text-xs focus:outline-none cursor-pointer transition-all duration-300 font-medium placeholder-slate-500"
             readonly
           />
-          <span class="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-lg bg-[#271015] border border-white/10 text-[9px] font-semibold text-slate-400 tracking-wide font-mono shadow-sm">
+          <span class="lp-search-kbd absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-lg bg-[#271015] border border-white/10 text-[9px] font-semibold text-slate-400 tracking-wide font-mono shadow-sm">
             Ctrl+K
           </span>
         </div>
 
         <!-- Separador vertical -->
-        <div class="hidden xl:block h-6 w-px bg-white/15 mx-1"></div>
+        <div class="lp-separator hidden xl:block h-6 w-px bg-white/15 mx-1"></div>
+
+        <!-- Theme Toggle Button (☀️ / 🌙) -->
+        <button
+          (click)="toggleTheme()"
+          class="theme-toggle-btn w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center cursor-pointer transition-all text-sm"
+          [title]="themeMode() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        >
+          {{ themeMode() === 'dark' ? '☀️' : '🌙' }}
+        </button>
 
         <!-- Botón de Sesión (Inicia sesión en tonos Vino a juego con Intranet) -->
         <div class="flex items-center gap-3">
@@ -69,13 +79,13 @@
           <!-- Si el usuario no está logueado -->
           <a *ngIf="!platformService.isLoggedIn()"
              routerLink="/intranet"
-             class="rounded-lg bg-[#be123c]/10 border border-[#be123c]/35 hover:bg-[#be123c]/20 px-4 py-1.5 text-[13px] font-bold text-[#f43f5e] no-underline transition-all duration-300 shadow-[0_0_15px_rgba(190,18,60,0.08)] hover:shadow-[0_0_20px_rgba(190,18,60,0.15)]">
+             class="lp-login-btn rounded-lg bg-[#be123c]/10 border border-[#be123c]/35 hover:bg-[#be123c]/20 px-4 py-1.5 text-[13px] font-bold text-[#f43f5e] no-underline transition-all duration-300 shadow-[0_0_15px_rgba(190,18,60,0.08)] hover:shadow-[0_0_20px_rgba(190,18,60,0.15)]">
             Inicia sesión
           </a>
 
           <!-- Si el usuario ya inició sesión -->
           <div *ngIf="platformService.isLoggedIn()" class="flex items-center gap-3">
-            <div class="flex items-center gap-2 bg-white/[0.04] border border-white/10 pl-2 pr-3 py-1 rounded-lg">
+            <div class="lp-user-chip flex items-center gap-2 bg-white/[0.04] border border-white/10 pl-2 pr-3 py-1 rounded-lg">
               <!-- Avatar Circular Dinámico -->
               <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#be123c] to-rose-500 flex items-center justify-center text-[10px] font-bold text-white shadow-md uppercase">
                 {{ platformService.currentUser()?.name?.charAt(0) }}
@@ -95,7 +105,7 @@
           </div>
 
           <!-- Hamburger Button (Mobile & Tablet) -->
-          <button (click)="showMobileMenu.set(true)" class="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white bg-white/5 border border-white/10 transition-all cursor-pointer">
+          <button (click)="showMobileMenu.set(true)" class="lp-hamburger lg:hidden p-2 rounded-lg text-slate-400 hover:text-white bg-white/5 border border-white/10 transition-all cursor-pointer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
             </svg>
@@ -108,9 +118,11 @@
     </div>
   </div>
 </header>
+</ng-container>
 
+<ng-container *ngIf="isPublicRoute()">
 <!-- BARRA DE MÉTRICAS Y REDES (SUB-HEADER GLASSMORPHIC VINO) -->
-<div class="bg-[#130307]/75 backdrop-blur-md border-b border-white/5 py-2.5 print:hidden select-none overflow-hidden transition-all duration-300">
+<div class="lp-subheader bg-[#130307]/75 backdrop-blur-md border-b border-white/5 py-2.5 print:hidden select-none overflow-hidden transition-all duration-300">
   <div class="max-w-[1400px] mx-auto px-4 lg:px-6">
     <div class="flex items-center justify-between gap-6 overflow-x-auto scrollbar-none text-[12px] text-slate-400 font-medium font-sans">
       
@@ -125,28 +137,28 @@
             <img class="w-6 h-6 rounded-full border-2 border-[#130307] object-cover shadow-sm" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Student 3" />
             <img class="w-6 h-6 rounded-full border-2 border-[#130307] object-cover shadow-sm" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80" alt="Student 4" />
           </div>
-          <span class="text-slate-200 font-semibold">+500 mil alumnos</span>
+          <span class="lp-metric-val text-slate-200 font-semibold">+500 mil alumnos</span>
         </div>
 
-        <span class="text-white/10 select-none">|</span>
+        <span class="lp-metric-sep text-white/10 select-none">|</span>
         
         <!-- Empresas -->
         <div class="flex items-center gap-1.5">
-          <span class="text-slate-200 font-semibold">+50 empresas confían en nosotros</span>
+          <span class="lp-metric-val text-slate-200 font-semibold">+50 empresas confían en nosotros</span>
         </div>
 
-        <span class="text-white/10 select-none">|</span>
+        <span class="lp-metric-sep text-white/10 select-none">|</span>
 
         <!-- Cursos count -->
         <div class="flex items-center gap-1.5">
-          <span class="text-slate-200 font-semibold">+250 cursos</span>
+          <span class="lp-metric-val text-slate-200 font-semibold">+250 cursos</span>
         </div>
 
-        <span class="text-white/10 select-none">|</span>
+        <span class="lp-metric-sep text-white/10 select-none">|</span>
 
         <!-- Antigüedad -->
         <div class="flex items-center gap-1.5">
-          <span class="text-slate-200 font-semibold">+10 años</span>
+          <span class="lp-metric-val text-slate-200 font-semibold">+10 años</span>
         </div>
 
       </div>
@@ -181,7 +193,7 @@
             </svg>
           </a>
         </div>
-        <span class="text-[#f43f5e] font-bold text-[10px] tracking-wider bg-[#be123c]/10 border border-[#be123c]/20 px-2.5 py-0.5 rounded-full shadow-sm">
+        <span class="lp-social-badge text-[#f43f5e] font-bold text-[10px] tracking-wider bg-[#be123c]/10 border border-[#be123c]/20 px-2.5 py-0.5 rounded-full shadow-sm">
           +2M en redes
         </span>
       </div>
@@ -189,16 +201,18 @@
     </div>
   </div>
 </div>
+</ng-container>
 
 <!-- CONTENIDO PRINCIPAL DE PÁGINAS -->
-<main class="min-h-[calc(100vh-110px)] relative">
+<main [class.min-h-[calc(100vh-110px)]]="isPublicRoute()" class="relative">
   <router-outlet />
 </main>
 
+<ng-container *ngIf="isPublicRoute()">
 <!-- FOOTER INSTITUCIONAL DE ALTA GAMA (WINE PALETTE) -->
-<footer class="bg-[#090103] border-t border-white/5 py-8 print:hidden select-none relative overflow-hidden">
+<footer class="lp-footer bg-[#090103] border-t border-white/5 py-8 print:hidden select-none relative overflow-hidden">
   <!-- Soft Wine glow effect -->
-  <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(190,18,60,0.04),transparent_60%)] pointer-events-none"></div>
+  <div class="lp-footer-glow absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(190,18,60,0.04),transparent_60%)] pointer-events-none"></div>
   
   <div class="max-w-[1400px] mx-auto px-4 lg:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-medium">
     <div class="flex items-center gap-2">
@@ -213,19 +227,20 @@
     </div>
   </div>
 </footer>
+</ng-container>
 
 
 <!-- ==========================================
      MOBILE DRAWER MENU (WINE ACCENTS)
      ========================================== -->
 <div *ngIf="showMobileMenu()" class="fixed inset-0 z-[100] flex justify-end bg-black/80 backdrop-blur-md transition-all animate-fade-in" (click)="showMobileMenu.set(false)">
-  <div class="bg-[#0e0205]/95 backdrop-blur-2xl border-l border-white/10 w-72 h-full p-6 flex flex-col gap-6 shadow-2xl animate-slide-left" (click)="$event.stopPropagation()">
+  <div class="lp-mobile-drawer bg-[#0e0205]/95 backdrop-blur-2xl border-l border-white/10 w-72 h-full p-6 flex flex-col gap-6 shadow-2xl animate-slide-left" (click)="$event.stopPropagation()">
     
     <!-- Top Identity / Close -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <img src="/logo-chojata.png" alt="IESTP Chojata" class="w-7 h-7 object-contain" />
-        <span class="text-base font-extrabold text-white uppercase tracking-wider">IESTP Chojata</span>
+        <span class="text-base font-extrabold text-white uppercase tracking-wider">Cursos e Investigación</span>
       </div>
       <button (click)="showMobileMenu.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center cursor-pointer transition-all">
         ✕
@@ -243,7 +258,7 @@
         type="text"
         placeholder="Buscar..."
         (click)="openSearchOverlay(); showMobileMenu.set(false)"
-        class="w-full bg-[#1a050a] border border-white/5 hover:border-white/10 text-white rounded-lg py-2.5 pl-9 pr-4 text-xs cursor-pointer focus:outline-none transition-all"
+        class="lp-mobile-search w-full bg-[#1a050a] border border-white/5 hover:border-white/10 text-white rounded-lg py-2.5 pl-9 pr-4 text-xs cursor-pointer focus:outline-none transition-all"
         readonly
       />
     </div>
@@ -260,6 +275,15 @@
         Repositorio Institucional
       </a>
     </nav>
+
+    <!-- Theme Toggle (Mobile) -->
+    <button
+      (click)="toggleTheme()"
+      class="theme-toggle-btn flex items-center gap-3 py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 cursor-pointer transition-all text-sm w-full"
+    >
+      <span>{{ themeMode() === 'dark' ? '☀️' : '🌙' }}</span>
+      <span class="lp-brand-name text-xs font-semibold">{{ themeMode() === 'dark' ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+    </button>
 
     <!-- Login Area in Mobile -->
     <div class="mt-auto pt-6 border-t border-white/10 flex flex-col gap-3">
@@ -294,18 +318,18 @@
      MODAL DE BÚSQUEDA INSTANTÁNEA (SEARCH OVERLAY Ctrl+K - WINE ACCENTS)
      ========================================== -->
 <div
-  class="fixed inset-0 z-[100] flex items-start justify-center bg-black/80 backdrop-blur-md p-4 pt-20 overflow-y-auto"
+  class="lp-search-overlay fixed inset-0 z-[100] flex items-start justify-center bg-black/80 backdrop-blur-md p-4 pt-20 overflow-y-auto"
   *ngIf="showSearchOverlay()"
   (click)="closeSearchOverlay()"
 >
   <div
-    class="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl w-full max-w-2xl p-6 shadow-2xl flex flex-col gap-4 relative animate-fade-in"
+    class="lp-search-overlay-content bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-3xl w-full max-w-2xl p-6 shadow-2xl flex flex-col gap-4 relative animate-fade-in"
     (click)="$event.stopPropagation()"
   >
     <!-- Botón de Cerrar -->
     <button
       (click)="closeSearchOverlay()"
-      class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold"
+      class="lp-modal-close absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold"
     >
       ✕
     </button>
@@ -331,7 +355,7 @@
       <!-- Indicación inicial -->
       <div *ngIf="navbarSearchQuery().trim().length < 2" class="text-center py-8 text-slate-500 text-xs">
         <span class="block text-2xl mb-2">⌨️</span>
-        Ingrese al menos 2 caracteres para iniciar la búsqueda en IESTP Chojata.<br/>
+        Ingrese al menos 2 caracteres para iniciar la búsqueda en Cursos e Investigación.<br/>
         <span class="text-slate-600 font-mono mt-1 block">Pruebe buscando "Choque", "Frontend" o "Docker"...</span>
       </div>
 
@@ -348,11 +372,11 @@
               *ngFor="let course of searchResults().courses"
               routerLink="/"
               (click)="closeSearchOverlay()"
-              class="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-[#be123c]/30 transition-all no-underline text-slate-200"
+              class="lp-search-result-item flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-[#be123c]/30 transition-all no-underline text-slate-200"
             >
               <span class="text-2xl">{{ course.icon }}</span>
               <div class="flex-1 min-w-0">
-                <div class="font-bold text-xs text-white line-clamp-1">{{ course.title }}</div>
+                <div class="lp-card-title font-bold text-xs text-white line-clamp-1">{{ course.title }}</div>
                 <div class="text-[10px] text-slate-500 font-medium">👨‍🏫 Expositor: {{ course.instructor }} | {{ course.hours }} horas</div>
               </div>
               <span class="text-[10px] font-bold text-[#f43f5e] uppercase bg-[#be123c]/20 px-2.5 py-0.5 rounded border border-[#be123c]/40">
@@ -372,7 +396,7 @@
               *ngFor="let cert of searchResults().certificates"
               routerLink="/buscar-certificados"
               (click)="closeSearchOverlay()"
-              class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-[#be123c]/30 transition-all no-underline text-slate-200"
+              class="lp-search-result-item flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] hover:border-[#be123c]/30 transition-all no-underline text-slate-200"
             >
               <div class="flex items-center justify-between gap-3 w-full">
                 <div class="flex items-center gap-3">

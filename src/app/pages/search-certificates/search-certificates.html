@@ -1,19 +1,19 @@
 <div class="search-container max-w-6xl mx-auto px-6 py-12">
   <!-- Cabecera de Página -->
   <div class="text-center mb-12">
-    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
+    <span class="lp-badge-amber inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
       Verificación Pública de Credenciales
     </span>
-    <h1 class="text-4xl font-extrabold tracking-tight text-white mb-4 bg-gradient-to-r from-white via-slate-100 to-amber-200 bg-clip-text text-transparent">
+    <h1 class="lp-search-title text-4xl font-extrabold tracking-tight text-white mb-4 bg-gradient-to-r from-white via-slate-100 to-amber-200 bg-clip-text text-transparent">
       Buscador de Certificados - IESTP Chojata
     </h1>
-    <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+    <p class="lp-search-desc text-slate-400 text-lg max-w-2xl mx-auto">
       Valide de forma rápida e inmediata la autenticidad de los certificados y diplomas emitidos por nuestra institución.
     </p>
   </div>
 
   <!-- Panel del Buscador -->
-  <div class="max-w-3xl mx-auto rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl shadow-2xl mb-12 relative overflow-hidden">
+  <div class="lp-search-panel max-w-3xl mx-auto rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl shadow-2xl mb-12 relative overflow-hidden">
     <div class="absolute -right-16 -top-16 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
     <div class="absolute -left-16 -bottom-16 w-32 h-32 bg-rose-600/10 rounded-full blur-3xl"></div>
 
@@ -51,7 +51,7 @@
           [(ngModel)]="searchQuery"
           [name]="'searchQuery'"
           [placeholder]="searchType() === 'dni' ? 'Ingrese el número de DNI (ej: 73549281)' : 'Ingrese el código (ej: CERT-2026-001)'"
-          class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all font-medium"
+          class="lp-search-input-field w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all font-medium"
         />
       </div>
       <button
@@ -70,7 +70,7 @@
       </button>
     </form>
     
-    <div class="mt-4 text-center text-xs text-slate-500">
+    <div class="lp-search-footer-text mt-4 text-center text-xs text-slate-500">
       * La consulta pública devuelve únicamente registros oficiales autorizados por secretaría académica.
     </div>
   </div>
@@ -79,7 +79,7 @@
   <div class="results-wrapper max-w-5xl mx-auto" *ngIf="hasSearched()">
     
     <!-- Sin Resultados -->
-    <div *ngIf="results().length === 0" class="text-center p-12 rounded-3xl border border-white/5 bg-white/[0.01] backdrop-blur-md">
+    <div *ngIf="results().length === 0" class="lp-empty-state text-center p-12 rounded-3xl border border-white/5 bg-white/[0.01] backdrop-blur-md">
       <div class="text-5xl mb-4">⚠️</div>
       <h3 class="text-xl font-bold text-slate-200 mb-2">No se encontraron registros</h3>
       <p class="text-slate-400 max-w-md mx-auto">
@@ -88,20 +88,20 @@
     </div>
 
     <!-- Resultados Encontrados -->
-    <div *ngIf="results().length > 0" class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden shadow-xl backdrop-blur-md">
-      <div class="p-6 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
+    <div *ngIf="results().length > 0" class="lp-results-card rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden shadow-xl backdrop-blur-md">
+      <div class="lp-results-header p-6 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
         <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
           <span>📜</span> Registros Encontrados ({{ results().length }})
         </h3>
-        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          Sincronizado con Reristros Oficiales
+        <span class="lp-badge-emerald px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          Sincronizado con Registros Oficiales
         </span>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
+            <tr class="lp-table-header bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
               <th class="px-6 py-4">Código</th>
               <th class="px-6 py-4">Participante / DNI</th>
               <th class="px-6 py-4">Curso o Evento</th>
@@ -111,30 +111,30 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5 text-sm">
-            <tr *ngFor="let cert of results()" class="hover:bg-white/[0.02] transition-colors">
+            <tr *ngFor="let cert of results()" class="lp-table-row hover:bg-white/[0.02] transition-colors">
               <!-- Código -->
-              <td class="px-6 py-4 font-mono font-semibold text-amber-300">
+              <td class="px-6 py-4 font-mono font-semibold lp-table-code text-amber-300">
                 {{ cert.code }}
               </td>
               <!-- Nombre y DNI -->
               <td class="px-6 py-4">
-                <div class="font-bold text-slate-100">{{ cert.fullName }}</div>
-                <div class="text-xs text-slate-400 font-mono">DNI: {{ cert.dni }}</div>
+                <div class="font-bold lp-table-text-primary text-slate-100">{{ cert.fullName }}</div>
+                <div class="text-xs lp-table-text-secondary text-slate-400 font-mono">DNI: {{ cert.dni }}</div>
               </td>
               <!-- Curso/Evento -->
               <td class="px-6 py-4">
-                <div class="font-medium text-slate-300">{{ cert.eventTitle }}</div>
-                <div class="text-xs text-slate-500">{{ cert.hours }} horas académicas</div>
+                <div class="font-medium lp-table-text-medium text-slate-300">{{ cert.eventTitle }}</div>
+                <div class="text-xs lp-table-text-muted text-slate-500">{{ cert.hours }} horas académicas</div>
               </td>
               <!-- Fecha -->
-              <td class="px-6 py-4 text-slate-400">
+              <td class="px-6 py-4 lp-table-text-secondary text-slate-400">
                 {{ cert.issueDate }}
               </td>
               <!-- Estado -->
               <td class="px-6 py-4 text-center">
                 <span [class]="cert.status === 'Válido' 
-                  ? 'inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'inline-block px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20'">
+                  ? 'lp-badge-emerald inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : 'lp-badge-rose inline-block px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20'">
                   ● {{ cert.status }}
                 </span>
               </td>
@@ -165,13 +165,13 @@
 
   <!-- MODAL DE VISUALIZACIÓN DEL CERTIFICADO (OPTIMIZADO PARA PANTALLA E IMPRESIÓN) -->
   <div
-    class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
+    class="lp-modal-bg modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
     *ngIf="activeCertificate() as cert"
     (click)="closeCertificateModal()"
   >
     <!-- Contenedor del Modal -->
     <div
-      class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-4xl p-6 shadow-2xl flex flex-col gap-6"
+      class="lp-modal-content modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-4xl p-6 shadow-2xl flex flex-col gap-6"
       (click)="$event.stopPropagation()"
     >
       <!-- Botones de Control Superiores (Ocultos en impresión) -->
@@ -183,7 +183,7 @@
           <button
             *ngIf="showPrintCertModal()"
             (click)="showPrintCertModal.set(false)"
-            class="px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/15 text-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
+            class="lp-modal-btn-ghost px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/15 text-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
           >
             👁️ Ver Panel de Verificación
           </button>
@@ -196,7 +196,7 @@
           </button>
           <button
             (click)="closeCertificateModal()"
-            class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-lg font-bold"
+            class="lp-modal-close w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-lg font-bold"
           >
             ✕
           </button>
@@ -438,12 +438,12 @@
 
   <!-- MODAL DE VISOR OFICIAL DE RESOLUCIÓN DE APROBACIÓN (TIPO PDF DECREE) -->
   <div
-    class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto"
+    class="lp-modal-bg modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto"
     *ngIf="showResolutionModal() && activeCertificate() as cert"
     (click)="closeResolutionPdf()"
   >
     <div
-      class="modal-content relative bg-white text-slate-900 rounded-3xl w-full max-w-3xl p-6 shadow-2xl flex flex-col gap-6"
+      class="lp-modal-content modal-content relative bg-white text-slate-900 rounded-3xl w-full max-w-3xl p-6 shadow-2xl flex flex-col gap-6"
       (click)="$event.stopPropagation()"
     >
       <!-- Close button -->

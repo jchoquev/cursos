@@ -22,7 +22,7 @@ export interface EventItem {
 export interface UserItem {
   email: string;
   name: string;
-  role: 'Administrador' | 'Caja';
+  role: 'Administrador' | 'Caja' | 'Formación Continua' | 'Investigación';
   dni: string;
   password?: string; // stored for mock auth
 }
@@ -36,6 +36,12 @@ export interface Registration {
   eventTitle: string;
   date: string;
   status: 'Pendiente' | 'Aprobado' | 'Rechazado';
+  // Payment Validation fields
+  isPaymentValidated?: boolean;
+  receiptNumber?: string;
+  receiptDate?: string;
+  receiptAmount?: number;
+  receiptImage?: string;
 }
 
 export interface Certificate {
@@ -229,6 +235,20 @@ export class PlatformService {
       dni: '00000002',
       password: 'caja123',
     },
+    {
+      email: 'formacion@institucion.edu',
+      name: 'Unidad de Formación Continua',
+      role: 'Formación Continua',
+      dni: '00000003',
+      password: 'formacion123',
+    },
+    {
+      email: 'investigacion@institucion.edu',
+      name: 'Unidad de Investigación',
+      role: 'Investigación',
+      dni: '00000004',
+      password: 'investigacion123',
+    },
   ]);
 
   // 3. Registrations Store
@@ -242,6 +262,12 @@ export class PlatformService {
       eventTitle: 'Desarrollo Frontend con Angular Avanzado',
       date: '2026-05-10',
       status: 'Aprobado',
+      // Preloaded with a validated payment
+      isPaymentValidated: true,
+      receiptNumber: 'REC-2026-0091',
+      receiptDate: '2026-05-10',
+      receiptAmount: 150.00,
+      receiptImage: 'https://images.unsplash.com/photo-1554416278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80',
     },
     {
       id: 2,
@@ -262,6 +288,8 @@ export class PlatformService {
       eventTitle: 'Desarrollo Frontend con Angular Avanzado',
       date: '2026-05-15',
       status: 'Aprobado',
+      // Approved but payment has not been validated
+      isPaymentValidated: false,
     },
     {
       id: 4,
@@ -428,6 +456,31 @@ export class PlatformService {
   updateRegistrationStatus(regId: number, status: 'Aprobado' | 'Rechazado'): void {
     this.registrations.update((list) =>
       list.map((r) => (r.id === regId ? { ...r, status } : r))
+    );
+  }
+
+  // Payment Validation & Approval Method
+  validatePaymentAndApprove(
+    regId: number,
+    receiptNumber: string,
+    receiptDate: string,
+    receiptAmount: number,
+    receiptImage: string
+  ): void {
+    this.registrations.update((list) =>
+      list.map((r) =>
+        r.id === regId
+          ? {
+              ...r,
+              status: 'Aprobado',
+              isPaymentValidated: true,
+              receiptNumber,
+              receiptDate,
+              receiptAmount,
+              receiptImage,
+            }
+          : r
+      )
     );
   }
 

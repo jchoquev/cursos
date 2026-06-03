@@ -32,6 +32,134 @@
 }
 
 /* ==========================================
+   LIGHT MODE — SEARCH CERTIFICATES PAGE ONLY
+   ========================================== */
+
+body.light-mode .lp-badge-amber {
+  background-color: rgba(217, 119, 6, 0.08) !important;
+  color: #d97706 !important;
+  border-color: rgba(217, 119, 6, 0.15) !important;
+}
+
+body.light-mode .lp-search-title {
+  background-image: linear-gradient(to right, #5c0a1e, #be123c) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+}
+
+body.light-mode .lp-search-desc {
+  color: #475569 !important;
+}
+
+body.light-mode .lp-search-panel {
+  background-color: #ffffff !important;
+  border-color: rgba(0,0,0,0.08) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04) !important;
+}
+
+body.light-mode .lp-search-panel button[type="button"]:not(.bg-gradient-to-r) {
+  color: #475569 !important;
+}
+
+body.light-mode .lp-search-panel button[type="button"]:not(.bg-gradient-to-r):hover {
+  color: #1e293b !important;
+  background-color: rgba(0,0,0,0.04) !important;
+}
+
+body.light-mode .lp-search-input-field {
+  background-color: rgba(0,0,0,0.03) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: #1e293b !important;
+}
+
+body.light-mode .lp-search-input-field::placeholder {
+  color: #94a3b8 !important;
+}
+
+body.light-mode .lp-search-footer-text {
+  color: #64748b !important;
+}
+
+body.light-mode .lp-results-card {
+  background-color: #ffffff !important;
+  border-color: rgba(0,0,0,0.08) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04) !important;
+}
+
+body.light-mode .lp-results-header {
+  border-bottom-color: rgba(0,0,0,0.06) !important;
+  background-color: #f8fafc !important;
+}
+
+body.light-mode .lp-results-header h3 {
+  color: #1e293b !important;
+}
+
+body.light-mode .lp-badge-emerald {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  color: #059669 !important;
+  border-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+body.light-mode .lp-badge-rose {
+  background-color: rgba(244, 63, 94, 0.08) !important;
+  color: #e11d48 !important;
+  border-color: rgba(244, 63, 94, 0.15) !important;
+}
+
+body.light-mode .lp-table-header {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-bottom-color: rgba(0,0,0,0.08) !important;
+}
+
+body.light-mode .lp-table-row {
+  border-bottom-color: rgba(0,0,0,0.05) !important;
+}
+
+body.light-mode .lp-table-row:hover {
+  background-color: rgba(0,0,0,0.01) !important;
+}
+
+body.light-mode .lp-table-code {
+  color: #b45309 !important;
+}
+
+body.light-mode .lp-table-text-primary {
+  color: #1e293b !important;
+}
+
+body.light-mode .lp-table-text-secondary {
+  color: #475569 !important;
+}
+
+body.light-mode .lp-table-text-medium {
+  color: #334155 !important;
+}
+
+body.light-mode .lp-table-text-muted {
+  color: #64748b !important;
+}
+
+body.light-mode .lp-modal-content .p-4.rounded-2xl {
+  background-color: #f8fafc !important;
+  border-color: rgba(0,0,0,0.06) !important;
+}
+
+body.light-mode .lp-modal-content .p-4.rounded-2xl span.text-slate-100 {
+  color: #1e293b !important;
+}
+
+body.light-mode .lp-modal-content .p-4.rounded-2xl span.text-amber-300 {
+  color: #be123c !important;
+}
+
+body.light-mode .lp-modal-content .p-4.rounded-2xl span.text-slate-200 {
+  color: #334155 !important;
+}
+
+/* ==========================================
    ESTILOS OPTIMIZADOS PARA IMPRESIÓN (PDF)
    ========================================== */
 @media print {
