@@ -373,26 +373,40 @@ export class IntranetComponent {
 
   handleLogin(): void {
     this.loginError = '';
-    const success = this.platformService.login(this.emailInput, this.passwordInput);
-    if (success) {
-      this.emailInput = '';
-      this.passwordInput = '';
-      this.updateDefaultTab();
-    } else {
-      this.loginError = 'Credenciales incorrectas. Intente nuevamente.';
-    }
+    this.platformService.login(this.emailInput, this.passwordInput).subscribe({
+      next: (success) => {
+        if (success) {
+          this.emailInput = '';
+          this.passwordInput = '';
+          this.updateDefaultTab();
+        } else {
+          this.loginError = 'Credenciales incorrectas. Intente nuevamente.';
+        }
+      },
+      error: () => {
+        this.loginError = 'Error al conectar con el servidor. Intente más tarde.';
+      }
+    });
   }
 
   quickLogin(role: 'admin' | 'caja' | 'formacion' | 'investigacion'): void {
     this.loginError = '';
     let email = '';
-    if (role === 'admin') email = 'admin@institucion.edu';
-    else if (role === 'caja') email = 'caja@institucion.edu';
-    else if (role === 'formacion') email = 'formacion@institucion.edu';
-    else if (role === 'investigacion') email = 'investigacion@institucion.edu';
+    let password = '';
+    if (role === 'admin') { email = 'admin@institucion.edu'; password = 'admin123'; }
+    else if (role === 'caja') { email = 'caja@institucion.edu'; password = 'caja123'; }
+    else if (role === 'formacion') { email = 'formacion@institucion.edu'; password = 'formacion123'; }
+    else if (role === 'investigacion') { email = 'investigacion@institucion.edu'; password = 'investigacion123'; }
 
-    this.platformService.login(email);
-    this.updateDefaultTab();
+    this.platformService.login(email, password).subscribe({
+      next: (success) => {
+        if (success) {
+          this.updateDefaultTab();
+        } else {
+          this.loginError = 'Error al realizar el login rápido.';
+        }
+      }
+    });
   }
 
   handleLogout(): void {

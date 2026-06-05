@@ -1,4 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 export interface EventItem {
   id: number;
@@ -67,6 +70,8 @@ export interface AttendanceRecord {
   providedIn: 'root',
 })
 export class PlatformService {
+  private readonly http = inject(HttpClient);
+
   // --- MOCK STORES USING SIGNALS ---
 
   // 1. Events Store
@@ -372,27 +377,46 @@ export class PlatformService {
   ]);
 
   // --- SESSION STATE ---
-  readonly currentUser = signal<UserItem | null>(null);
+  readonly currentUser = signal<UserItem | null>(
+    (typeof window !== 'undefined' && localStorage.getItem('auth_user'))
+      ? JSON.parse(localStorage.getItem('auth_user')!)
+      : null
+  );
   readonly isLoggedIn = computed(() => this.currentUser() !== null);
   readonly userRole = computed(() => this.currentUser()?.role || null);
 
   // --- METHODS ---
 
   // Authentication
-  login(email: string, password?: string): boolean {
-    // Standard and autologin cases
-    const user = this.users().find(
-      (u) => u.email === email && (!password || u.password === password)
+  login(email: string, password?: string): Observable<boolean> {
+    return this.http.post<{ status: string; user: UserItem; token: string }>('http://localhost:8000/login', {
+      email,
+      password: password || ''
+    }).pipe(
+      map((res) => {
+        if (res && res.status === 'success' && res.user) {
+          this.currentUser.set(res.user);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('auth_token', res.token);
+            localStorage.setItem('auth_user', JSON.stringify(res.user));
+          }
+          return true;
+        }
+        return false;
+      }),
+      catchError((err) => {
+        console.error('Login error:', err);
+        return of(false);
+      })
     );
-    if (user) {
-      this.currentUser.set(user);
-      return true;
-    }
-    return false;
   }
 
   logout(): void {
     this.currentUser.set(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+    }
   }
 
   // Registration Flow
