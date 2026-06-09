@@ -134,10 +134,9 @@ export class IntranetComponent implements OnInit, OnDestroy {
     });
 
     effect(() => {
-      // Trigger effect when these signals change:
+      // Trigger effect when pagination/sort signals change (NOT search — search triggers on Enter)
       this.internalCurrentPage();
       this.internalPageSize();
-      this.internalSearchQuery();
       this.internalSortColumn();
       this.internalSortDirection();
       const activeTab = this.activeTab();
@@ -157,6 +156,9 @@ export class IntranetComponent implements OnInit, OnDestroy {
     if (this.platformService.isLoggedIn()) {
       this.platformService.loadEvents();
       this.loadInternalData();
+      if (this.platformService.userRole() === 'Administrador') {
+        this.platformService.loadUsers();
+      }
     }
   }
 
@@ -464,6 +466,14 @@ export class IntranetComponent implements OnInit, OnDestroy {
     }
     this.internalCurrentPage.set(1);
     this.loadInternalData();
+  }
+
+  onInternalSearchQueryChange(query: string): void {
+    this.internalSearchQuery.set(query);
+    if (!query) {
+      this.internalCurrentPage.set(1);
+      this.loadInternalData();
+    }
   }
 
   getPagesArray(totalPages: number): number[] {

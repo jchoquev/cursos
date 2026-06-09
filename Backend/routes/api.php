@@ -7,6 +7,8 @@ use App\Http\Controllers\TipoActividadController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\DataInternaController;
 
+use App\Http\Controllers\UserController;
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/tipo-actividades', [TipoActividadController::class, 'index']);
 Route::get('/eventos/{id}/banner-base64', [EventoController::class, 'getBannerBase64']);
@@ -19,6 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
         'data-interna' => 'dni'
     ]);
     Route::post('/data-interna/import', [DataInternaController::class, 'import']);
+    Route::apiResource('users', UserController::class)->parameters([
+        'users' => 'email'
+    ]);
 });
 
 Route::get('/user', function (Request $request) {

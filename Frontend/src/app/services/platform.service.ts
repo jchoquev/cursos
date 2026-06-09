@@ -100,6 +100,9 @@ export class PlatformService {
     if (isPlatformBrowser(this.platformId)) {
       this.loadEvents();
       this.loadActivityTypes();
+      if (this.isLoggedIn() && this.userRole() === 'Administrador') {
+        this.loadUsers();
+      }
     }
   }
 
@@ -587,6 +590,9 @@ export class PlatformService {
               localStorage.setItem('auth_token', res.token);
               localStorage.setItem('auth_user', JSON.stringify(user));
             }
+            if (user.role === 'Administrador') {
+              this.loadUsers();
+            }
             observer.next(true);
           } else {
             this.errorMessage.set(res.message ?? 'Credenciales incorrectas.');
@@ -717,26 +723,59 @@ export class PlatformService {
     this.registrations.update((list) => list.filter((r) => r.eventId !== id));
   }
 
+  loadUsers(): void {
+    if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn() || this.userRole() !== 'Administrador') {
+      return;
+    }
+    this.apiService.get<UserItem[]>('/users').subscribe({
+      next: (data) => {
+        if (Array.isArray(data)) {
+          this.users.set(data);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching users:', err);
+      }
+    });
+  }
+
   // Add / Edit / Delete Users (Admin / Coordinator)
-  addUser(user: UserItem): boolean {
-    const exists = this.users().some((u) => u.email === user.email || u.dni === user.dni);
-    if (exists) return false;
-    this.users.update((curr) => [...curr, user]);
-    return true;
+  addUser(user: UserItem): void {
+    this.apiService.post<any>('/users', user).subscribe({
+      next: (resp) => {
+        this.loadUsers();
+      },
+      error: (err) => {
+        console.error('Error al agregar usuario:', err);
+        alert('❌ Error al registrar el usuario en la base de datos: ' + (err?.error?.message || 'Error de red o duplicado.'));
+      }
+    });
   }
 
   editUser(updated: UserItem, originalEmail: string): void {
-    this.users.update((list) =>
-      list.map((u) => (u.email === originalEmail ? updated : u))
-    );
+    this.apiService.put<any>(`/users/${originalEmail}`, updated).subscribe({
+      next: (resp) => {
+        this.loadUsers();
+        alert('✅ Usuario actualizado correctamente.');
+      },
+      error: (err) => {
+        console.error('Error al editar usuario:', err);
+        alert('❌ Error al actualizar el usuario: ' + (err?.error?.message || 'Error del servidor.'));
+      }
+    });
   }
 
   deleteUser(email: string): void {
-    const user = this.users().find((u) => u.email === email);
-    if (!user) return;
-    this.users.update((list) => list.filter((u) => u.email !== email));
-    // clean up registrations
-    this.registrations.update((list) => list.filter((r) => r.userEmail !== email));
+    this.apiService.delete<any>(`/users/${email}`).subscribe({
+      next: (resp) => {
+        this.loadUsers();
+        alert('✅ Usuario eliminado correctamente.');
+      },
+      error: (err) => {
+        console.error('Error al eliminar usuario:', err);
+        alert('❌ Error al eliminar el usuario: ' + (err?.error?.message || 'Error del servidor.'));
+      }
+    });
   }
 
   // Attendance Check-in
