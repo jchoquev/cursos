@@ -1,12 +1,13 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Observable, of, forkJoin } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { ApiService } from './api.service';
 
 export interface EventItem {
-  id: number;
+  id: any;
   title: string;
-  type: 'Curso' | 'Taller' | 'Seminario' | 'Repositorio';
+  type: string;
   date: string;
   description: string;
   fullDescription: string;
@@ -20,6 +21,10 @@ export interface EventItem {
   authors?: string;
   docType?: 'Thesis' | 'Artículo' | 'Proyecto';
   coverUrl?: string;
+  registrationStartDate?: string;
+  registrationEndDate?: string;
+  courseStartDate?: string;
+  courseEndDate?: string;
 }
 
 export interface UserItem {
@@ -35,7 +40,7 @@ export interface Registration {
   userEmail: string;
   userName: string;
   userDni: string;
-  eventId: number;
+  eventId: any;
   eventTitle: string;
   date: string;
   status: 'Pendiente' | 'Aprobado' | 'Rechazado';
@@ -51,7 +56,7 @@ export interface Certificate {
   code: string;
   fullName: string;
   dni: string;
-  eventId: number;
+  eventId: any;
   eventTitle: string;
   issueDate: string;
   status: 'Válido' | 'Revocado';
@@ -61,7 +66,7 @@ export interface Certificate {
 }
 
 export interface AttendanceRecord {
-  eventId: number;
+  eventId: any;
   sessionDate: string;
   records: { [email: string]: boolean }; // userEmail -> attended (true/false)
 }
@@ -70,7 +75,181 @@ export interface AttendanceRecord {
   providedIn: 'root',
 })
 export class PlatformService {
-  private readonly http = inject(HttpClient);
+  private readonly apiService = inject(ApiService);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  readonly activityTypes = signal<{ id: number; tipActividad: string }[]>([
+    { id: 1, tipActividad: 'Curso' },
+    { id: 2, tipActividad: 'Taller' },
+    { id: 3, tipActividad: 'Seminario' },
+  ]);
+
+  constructor() {
+    // Format all initial hardcoded/mock dates to DD/MM/YYYY
+    this.events.update(list =>
+      list.map(e => ({
+        ...e,
+        date: this.formatDate(e.date),
+        registrationStartDate: e.registrationStartDate ? this.formatDate(e.registrationStartDate) : undefined,
+        registrationEndDate: e.registrationEndDate ? this.formatDate(e.registrationEndDate) : undefined,
+        courseStartDate: e.courseStartDate ? this.formatDate(e.courseStartDate) : undefined,
+        courseEndDate: e.courseEndDate ? this.formatDate(e.courseEndDate) : undefined,
+      }))
+    );
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadEvents();
+      this.loadActivityTypes();
+    }
+  }
+
+  formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '';
+    let yyyymmdd = '';
+    if (dateStr.includes('T')) {
+      yyyymmdd = dateStr.split('T')[0];
+    } else {
+      yyyymmdd = dateStr.substring(0, 10);
+    }
+    if (yyyymmdd.length === 10 && yyyymmdd.includes('-')) {
+      const parts = yyyymmdd.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+    }
+    return yyyymmdd;
+  }
+
+  mapBackendEventoToEventItem(item: any): EventItem {
+    const typeName = item.tipo_actividad?.tipActividad || 'Curso';
+    let gradient = 'from-[#be123c] via-rose-700 to-amber-600';
+    let icon = '🔐';
+    if (typeName === 'Curso') {
+      gradient = 'from-rose-600 via-pink-600 to-red-700';
+      icon = '🅰️';
+    } else if (typeName === 'Taller') {
+      gradient = 'from-amber-500 via-orange-600 to-red-600';
+      icon = '🎨';
+    } else if (typeName === 'Repositorio') {
+      gradient = 'from-indigo-600 via-violet-600 to-purple-700';
+      icon = '🔬';
+    }
+
+    let instructorStr = '';
+    if (item.DonceteExp) {
+      try {
+        const teachers = typeof item.DonceteExp === 'string' ? JSON.parse(item.DonceteExp) : item.DonceteExp;
+        if (Array.isArray(teachers)) {
+          instructorStr = teachers.join(', ');
+        } else {
+          instructorStr = String(item.DonceteExp);
+        }
+      } catch (e) {
+        instructorStr = String(item.DonceteExp);
+      }
+    }
+
+    const coverUrl = item.RBanner ? `http://localhost:8000/storage/${item.RBanner}` : '';
+
+    return {
+      id: item.id,
+      title: item.titulo,
+      type: typeName,
+      date: this.formatDate(item.InCurso),
+      description: item.descripcion,
+      fullDescription: item.descripcion,
+      imageGradient: gradient,
+      icon: icon,
+      status: item.Estado ? 'activo' : 'pasado',
+      hours: Number(item.HAcademica),
+      instructor: instructorStr,
+      capacity: Number(item.CapMaxima),
+      registeredCount: 0,
+      coverUrl: coverUrl,
+      registrationStartDate: this.formatDate(item.InInscripcion),
+      registrationEndDate: this.formatDate(item.FnInscripcion),
+      courseStartDate: this.formatDate(item.InCurso),
+      courseEndDate: this.formatDate(item.FnCurso),
+    };
+  }
+
+  loadEvents(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    this.isLoading.set(true);
+    // Clear previous database events to prevent duplicate/lingering elements during loading
+    this.events.update(list => list.filter(e => e.type === 'Repositorio'));
+
+    this.apiService.get<any[]>('/eventos').subscribe({
+      next: (data) => {
+        if (Array.isArray(data)) {
+          const mapped = data.map(item => this.mapBackendEventoToEventItem(item));
+          
+          const bannerRequests = mapped.map(event => {
+            if (event.id && event.coverUrl) {
+              return this.apiService.get<{ base64: string }>(`/eventos/${event.id}/banner-base64`).pipe(
+                catchError(() => of({ base64: '' })),
+                map(res => {
+                  if (res && res.base64) {
+                    event.coverUrl = res.base64;
+                  }
+                  return event;
+                })
+              );
+            }
+            return of(event);
+          });
+
+          if (bannerRequests.length > 0) {
+            forkJoin(bannerRequests).subscribe({
+              next: (updatedEvents) => {
+                const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
+                this.events.set([...updatedEvents, ...staticRepositorios]);
+                this.isLoading.set(false);
+              },
+              error: (err) => {
+                console.error('Error loading banners:', err);
+                const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
+                this.events.set([...mapped, ...staticRepositorios]);
+                this.isLoading.set(false);
+              }
+            });
+          } else {
+            const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
+            this.events.set([...mapped, ...staticRepositorios]);
+            this.isLoading.set(false);
+          }
+        } else {
+          this.isLoading.set(false);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching events from backend:', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  loadActivityTypes(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    this.apiService.get<any[]>('/tipo-actividades').subscribe({
+      next: (data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          this.activityTypes.set(data);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching activity types from backend:', err);
+      }
+    });
+  }
+
+  // --- ESTADO GLOBAL DE CARGA Y ERROR ---
+  readonly isLoading = signal<boolean>(true);
+  readonly errorMessage = signal<string>('');
 
   // --- MOCK STORES USING SIGNALS ---
 
@@ -378,7 +557,7 @@ export class PlatformService {
 
   // --- SESSION STATE ---
   readonly currentUser = signal<UserItem | null>(
-    (typeof window !== 'undefined' && localStorage.getItem('auth_user'))
+    isPlatformBrowser(inject(PLATFORM_ID)) && localStorage.getItem('auth_user')
       ? JSON.parse(localStorage.getItem('auth_user')!)
       : null
   );
@@ -387,40 +566,55 @@ export class PlatformService {
 
   // --- METHODS ---
 
-  // Authentication
-  login(email: string, password?: string): Observable<boolean> {
-    return this.http.post<{ status: string; user: UserItem; token: string }>('http://localhost:8000/login', {
-      email,
-      password: password || ''
-    }).pipe(
-      map((res) => {
-        if (res && res.status === 'success' && res.user) {
-          this.currentUser.set(res.user);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('auth_token', res.token);
-            localStorage.setItem('auth_user', JSON.stringify(res.user));
+  // Authentication — delega al ApiService (llama al backend real)
+  login(email: string, password: string): Observable<boolean> {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    return new Observable<boolean>((observer) => {
+      this.apiService.login(email, password).subscribe({
+        next: (res) => {
+          this.isLoading.set(false);
+          if (res.status === 'success' && res.user && res.token) {
+            const user: UserItem = {
+              email: res.user.email,
+              name: res.user.name,
+              role: res.user.role as UserItem['role'],
+              dni: res.user.dni,
+            };
+            this.currentUser.set(user);
+            if (isPlatformBrowser(this.platformId)) {
+              localStorage.setItem('auth_token', res.token);
+              localStorage.setItem('auth_user', JSON.stringify(user));
+            }
+            observer.next(true);
+          } else {
+            this.errorMessage.set(res.message ?? 'Credenciales incorrectas.');
+            observer.next(false);
           }
-          return true;
-        }
-        return false;
-      }),
-      catchError((err) => {
-        console.error('Login error:', err);
-        return of(false);
-      })
-    );
+          observer.complete();
+        },
+        error: (err: Error) => {
+          this.isLoading.set(false);
+          this.errorMessage.set(err.message ?? 'Error al conectar con el servidor.');
+          observer.next(false);
+          observer.complete();
+        },
+      });
+    });
   }
 
   logout(): void {
     this.currentUser.set(null);
-    if (typeof window !== 'undefined') {
+    this.errorMessage.set('');
+    if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
     }
   }
 
   // Registration Flow
-  registerToEvent(userDni: string, userName: string, userEmail: string, eventId: number): { success: boolean; message: string } {
+  registerToEvent(userDni: string, userName: string, userEmail: string, eventId: any): { success: boolean; message: string } {
     const event = this.events().find((e) => e.id === eventId);
     if (!event) return { success: false, message: 'Evento no encontrado.' };
 
@@ -509,21 +703,15 @@ export class PlatformService {
   }
 
   // Add / Edit / Delete Events (Admin / Coordinator)
-  addEvent(event: Omit<EventItem, 'id' | 'registeredCount'>): void {
-    const newId = this.events().length > 0 ? Math.max(...this.events().map(e => e.id)) + 1 : 1;
-    const newEvent: EventItem = {
-      ...event,
-      id: newId,
-      registeredCount: 0,
-    };
-    this.events.update((curr) => [newEvent, ...curr]);
+  addEvent(event: EventItem): void {
+    this.events.update((curr) => [event, ...curr]);
   }
 
   editEvent(updated: EventItem): void {
     this.events.update((list) => list.map((e) => (e.id === updated.id ? updated : e)));
   }
 
-  deleteEvent(id: number): void {
+  deleteEvent(id: any): void {
     this.events.update((list) => list.filter((e) => e.id !== id));
     // also remove registrations for this event
     this.registrations.update((list) => list.filter((r) => r.eventId !== id));
@@ -552,7 +740,7 @@ export class PlatformService {
   }
 
   // Attendance Check-in
-  checkAttendance(eventId: number, sessionDate: string, email: string, attended: boolean): void {
+  checkAttendance(eventId: any, sessionDate: string, email: string, attended: boolean): void {
     this.attendances.update((list) => {
       const idx = list.findIndex((a) => a.eventId === eventId && a.sessionDate === sessionDate);
       if (idx !== -1) {
@@ -573,7 +761,7 @@ export class PlatformService {
   }
 
   // Certificate Automatic / Manual Emission
-  emitCertificate(dni: string, eventId: number): { success: boolean; message: string; code?: string } {
+  emitCertificate(dni: string, eventId: any): { success: boolean; message: string; code?: string } {
     const user = this.users().find((u) => u.dni === dni);
     const event = this.events().find((e) => e.id === eventId);
     

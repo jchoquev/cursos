@@ -17,7 +17,7 @@
         <!-- Categorías de Eventos -->
         <div class="flex flex-wrap gap-1">
           <button
-            *ngFor="let cat of ['Todos', 'Curso', 'Taller', 'Seminario', 'Repositorio']"
+            *ngFor="let cat of categories()"
             (click)="selectCategory(cat)"
             [class]="selectedCategory() === cat 
               ? 'px-4 py-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10 transition-all' 
@@ -63,149 +63,198 @@
 
       </div>
 
-      <!-- Grilla de Tarjetas (Cards) de Cursos -->
-      <div *ngIf="filteredEvents().length === 0" class="lp-empty-state text-center py-16 rounded-3xl border border-white/5 bg-white/[0.01]">
-        <div class="text-4xl mb-3">📂</div>
-        <h3 class="text-lg font-bold text-slate-200">No se encontraron eventos</h3>
-        <p class="text-slate-400 text-sm max-w-xs mx-auto mt-1">
-          No hay actividades disponibles en la categoría seleccionada por el momento.
-        </p>
-      </div>
-
-      <div *ngIf="filteredEvents().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <ng-container *ngFor="let ev of filteredEvents()">
-          
-          <!-- Card Individual (Curso, Taller, Seminario) -->
-          <div
-            *ngIf="ev.type !== 'Repositorio'"
-            class="lp-card group rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 flex flex-col justify-between"
-          >
-            <!-- Banner con Gradiente Estético -->
-            <div class="h-40 relative flex items-center justify-center bg-gradient-to-br {{ ev.imageGradient }} overflow-hidden">
-              <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <span class="text-6xl transform group-hover:scale-110 transition-transform duration-300">{{ ev.icon }}</span>
-              
-              <span class="absolute top-4 left-4 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide bg-slate-950/60 text-white backdrop-blur-sm border border-white/10">
-                {{ ev.type }}
-              </span>
-
-              <span *ngIf="ev.status === 'pasado'" class="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide bg-rose-600 text-white shadow-md shadow-rose-600/30">
-                Concluido
-              </span>
-            </div>
-
-            <!-- Contenido de la Card -->
-            <div class="p-6 flex-1 flex flex-col justify-between gap-4">
+      <!-- Skeleton Loader -->
+      <div *ngIf="platformService.isLoading()" class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+        <!-- Card Skeleton 1 -->
+        <div class="lp-card rounded-3xl border border-white/10 bg-white/[0.02] p-6 space-y-6 animate-pulse flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="aspect-video rounded-2xl bg-white/[0.04] w-full"></div>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <div class="h-4 bg-white/[0.04] rounded w-1/4"></div>
+                <div class="h-4 bg-white/[0.04] rounded w-1/4"></div>
+              </div>
+              <div class="h-6 bg-white/[0.04] rounded w-3/4"></div>
               <div class="space-y-2">
-                <div class="lp-card-meta flex items-center justify-between text-xs font-mono text-amber-400 font-bold">
-                  <span>📅 {{ ev.date }}</span>
-                  <span>⏱️ {{ ev.hours }} horas</span>
-                </div>
-                <h3 class="lp-card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition-colors line-clamp-2">
-                  {{ ev.title }}
-                </h3>
-                <p class="lp-card-desc text-xs text-slate-400 leading-relaxed line-clamp-3">
-                  {{ ev.description }}
-                </p>
-              </div>
-
-              <!-- Botones e Información Adicional -->
-              <div class="lp-card-footer pt-4 border-t border-white/5 flex items-center justify-between gap-2">
-                
-                <button
-                  (click)="openEventDetails(ev)"
-                  class="lp-card-btn-outline px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer"
-                >
-                  👁️ Detalles
-                </button>
-
-                <button
-                  *ngIf="ev.status === 'activo'"
-                  (click)="startRegistrationFlow(ev)"
-                  [disabled]="ev.registeredCount >= ev.capacity"
-                  class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 transition-all cursor-pointer hover:shadow-lg hover:shadow-amber-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {{ ev.registeredCount >= ev.capacity ? 'Cupos Agotados' : 'Inscribirse' }}
-                </button>
+                <div class="h-3 bg-white/[0.04] rounded w-full"></div>
+                <div class="h-3 bg-white/[0.04] rounded w-5/6"></div>
               </div>
             </div>
           </div>
-
-          <!-- Card Horizontal Especial (Repositorio de Tesis / Artículos / Proyectos) -->
-          <div
-            *ngIf="ev.type === 'Repositorio'"
-            class="lp-repo-card col-span-1 md:col-span-2 group rounded-3xl border border-[#be123c]/20 hover:border-[#be123c]/40 bg-white/[0.02] hover:bg-white/[0.04] p-5 shadow-xl relative overflow-hidden flex flex-col sm:flex-row gap-6 transition-all duration-300 hover:-translate-y-1"
-          >
-            <!-- Portada del Documento en CSS Puro de Alta Fidelidad -->
-            <div class="w-32 h-44 rounded-xl bg-white flex-shrink-0 flex flex-col justify-between p-2 shadow-lg border border-slate-300/40 relative overflow-hidden select-none">
-              <!-- Top blue stripe -->
-              <div class="absolute top-0 left-0 right-0 h-2 bg-[#0c3c60] flex items-center justify-center">
-                <span class="text-[3px] text-white font-sans tracking-[0.2px] scale-90">IESTP CHOJATA</span>
+          <div class="flex justify-between pt-4 border-t border-white/5">
+            <div class="h-9 bg-white/[0.04] rounded-xl w-1/4"></div>
+            <div class="h-9 bg-white/[0.04] rounded-xl w-1/4"></div>
+          </div>
+        </div>
+        <!-- Card Skeleton 2 -->
+        <div class="lp-card rounded-3xl border border-white/10 bg-white/[0.02] p-6 space-y-6 animate-pulse flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="aspect-video rounded-2xl bg-white/[0.04] w-full"></div>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <div class="h-4 bg-white/[0.04] rounded w-1/4"></div>
+                <div class="h-4 bg-white/[0.04] rounded w-1/4"></div>
               </div>
-              
-              <!-- Logo Chojata en miniatura -->
-              <img src="/logo-chojata.png" alt="Emblema" class="w-8 h-8 object-contain mx-auto mt-2.5 opacity-95" />
-              
-              <!-- Título formal en mayúsculas -->
-              <div class="text-[5.5px] font-black text-slate-800 text-center leading-tight my-1 uppercase px-0.5 line-clamp-4">
-                {{ ev.title }}
-              </div>
-              
-              <!-- Presentado por -->
-              <div class="text-[4px] text-slate-500 font-semibold text-center mt-auto uppercase tracking-wider line-clamp-1 border-t border-slate-100 pt-1">
-                {{ ev.authors?.split(';')?.[0] }}
-              </div>
-              
-              <!-- Ciudad y año -->
-              <div class="text-[4px] text-slate-400 font-bold text-center uppercase tracking-widest font-mono">
-                MOQUEGUA - PERÚ
-              </div>
-            </div>
-
-            <!-- Metadatos de la Tesis (Estilo exacto a tu imagen de referencia) -->
-            <div class="flex-1 flex flex-col justify-between text-left">
-              <div>
-                <!-- Blue badge Thesis -->
-                <span class="px-3 py-1 rounded-full text-[9px] font-black bg-[#0c3c60] text-white uppercase tracking-wider select-none shadow-sm">
-                  {{ ev.docType || 'Thesis' }}
-                </span>
-                
-                <!-- Título del Repositorio -->
-                <h3 class="lp-card-title text-base font-bold text-slate-100 group-hover:text-amber-300 transition-colors mt-3 leading-snug line-clamp-2">
-                  {{ ev.title }}
-                </h3>
-                
-                <!-- Autores / Fecha -->
-                <p class="lp-repo-meta text-xs text-slate-400 font-medium mt-1 leading-normal font-sans">
-                  <span class="text-slate-200">{{ ev.authors }}</span> — <span class="text-amber-400 font-mono font-bold">{{ ev.date }}</span> — <span class="text-slate-500 font-semibold">(IESTP Chojata • Moquegua)</span>
-                </p>
-                
-                <!-- Abstract Resumen -->
-                <p class="lp-card-desc text-xs text-slate-400 leading-relaxed mt-2 line-clamp-3">
-                  {{ ev.description }}
-                </p>
-              </div>
-
-              <!-- Botones de Acción (Resumen & Descarga) -->
-              <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-4">
-                <button
-                  (click)="openEventDetails(ev)"
-                  class="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 bg-transparent border-0 cursor-pointer font-sans"
-                >
-                  <span>🔍</span> Ver Resumen Completo
-                </button>
-                
-                <a href="https://iestpchojata.edu.pe/repositorio/tesis-mock.pdf" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#be123c]/15 border border-[#be123c]/35 hover:bg-[#be123c]/25 text-[#f43f5e] no-underline transition-all shadow-sm">
-                  📥 Descargar PDF
-                </a>
+              <div class="h-6 bg-white/[0.04] rounded w-3/4"></div>
+              <div class="space-y-2">
+                <div class="h-3 bg-white/[0.04] rounded w-full"></div>
+                <div class="h-3 bg-white/[0.04] rounded w-5/6"></div>
               </div>
             </div>
           </div>
-
-        </ng-container>
-
+          <div class="flex justify-between pt-4 border-t border-white/5">
+            <div class="h-9 bg-white/[0.04] rounded-xl w-1/4"></div>
+            <div class="h-9 bg-white/[0.04] rounded-xl w-1/4"></div>
+          </div>
+        </div>
       </div>
+
+      <!-- Grilla de Tarjetas (Cards) de Cursos -->
+      <ng-container *ngIf="!platformService.isLoading()">
+        <div *ngIf="filteredEvents().length === 0" class="lp-empty-state text-center py-16 rounded-3xl border border-white/5 bg-white/[0.01]">
+          <div class="text-4xl mb-3">📂</div>
+          <h3 class="text-lg font-bold text-slate-200">No se encontraron eventos</h3>
+          <p class="text-slate-400 text-sm max-w-xs mx-auto mt-1">
+            No hay actividades disponibles en la categoría seleccionada por el momento.
+          </p>
+        </div>
+
+        <div *ngIf="filteredEvents().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <ng-container *ngFor="let ev of filteredEvents()">
+            
+            <!-- Card Individual (Curso, Taller, Seminario) -->
+            <div
+              *ngIf="ev.type !== 'Repositorio'"
+              class="lp-card group rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 flex flex-col justify-between"
+            >
+              <!-- Banner con Gradiente Estético o Imagen Subida -->
+              <div class="aspect-video relative flex items-center justify-center overflow-hidden bg-slate-950">
+                <img *ngIf="ev.coverUrl" [src]="ev.coverUrl" class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div *ngIf="!ev.coverUrl" class="absolute inset-0 bg-gradient-to-br {{ ev.imageGradient }}"></div>
+                <span *ngIf="!ev.coverUrl" class="text-6xl transform group-hover:scale-110 transition-transform duration-300">{{ ev.icon }}</span>
+                
+                <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <span class="absolute top-4 left-4 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide bg-slate-950/60 text-white backdrop-blur-sm border border-white/10">
+                  {{ ev.type }}
+                </span>
+
+                <span *ngIf="ev.status === 'pasado'" class="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide bg-rose-600 text-white shadow-md shadow-rose-600/30">
+                  Concluido
+                </span>
+              </div>
+
+              <!-- Contenido de la Card -->
+              <div class="p-6 flex-1 flex flex-col justify-between gap-4">
+                <div class="space-y-2">
+                  <div class="lp-card-meta flex items-center justify-between text-xs font-mono text-amber-400 font-bold">
+                    <span>📅 {{ ev.date }}</span>
+                    <span>⏱️ {{ ev.hours }} horas</span>
+                  </div>
+                  <h3 class="lp-card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition-colors line-clamp-2">
+                    {{ ev.title }}
+                  </h3>
+                  <p class="lp-card-desc text-xs text-slate-400 leading-relaxed line-clamp-3" [innerHTML]="ev.description">
+                  </p>
+                </div>
+
+                <!-- Botones e Información Adicional -->
+                <div class="lp-card-footer pt-4 border-t border-white/5 flex items-center justify-between gap-2">
+                  
+                  <button
+                    (click)="openEventDetails(ev)"
+                    class="lp-card-btn-outline px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer"
+                  >
+                    👁️ Detalles
+                  </button>
+
+                  <button
+                    *ngIf="ev.status === 'activo'"
+                    (click)="startRegistrationFlow(ev)"
+                    [disabled]="ev.registeredCount >= ev.capacity"
+                    class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 transition-all cursor-pointer hover:shadow-lg hover:shadow-amber-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ ev.registeredCount >= ev.capacity ? 'Cupos Agotados' : 'Inscribirse' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Horizontal Especial (Repositorio de Tesis / Artículos / Proyectos) -->
+            <div
+              *ngIf="ev.type === 'Repositorio'"
+              class="lp-repo-card col-span-1 md:col-span-2 group rounded-3xl border border-[#be123c]/20 hover:border-[#be123c]/40 bg-white/[0.02] hover:bg-white/[0.04] p-5 shadow-xl relative overflow-hidden flex flex-col sm:flex-row gap-6 transition-all duration-300 hover:-translate-y-1"
+            >
+              <!-- Portada del Documento en CSS Puro de Alta Fidelidad -->
+              <div class="w-32 h-44 rounded-xl bg-white flex-shrink-0 flex flex-col justify-between p-2 shadow-lg border border-slate-300/40 relative overflow-hidden select-none">
+                <!-- Top blue stripe -->
+                <div class="absolute top-0 left-0 right-0 h-2 bg-[#0c3c60] flex items-center justify-center">
+                  <span class="text-[3px] text-white font-sans tracking-[0.2px] scale-90">IESTP CHOJATA</span>
+                </div>
+                
+                <!-- Logo Chojata en miniatura -->
+                <img src="/logo-chojata.png" alt="Emblema" class="w-8 h-8 object-contain mx-auto mt-2.5 opacity-95" />
+                
+                <!-- Título formal en mayúsculas -->
+                <div class="text-[5.5px] font-black text-slate-800 text-center leading-tight my-1 uppercase px-0.5 line-clamp-4">
+                  {{ ev.title }}
+                </div>
+                
+                <!-- Presentado por -->
+                <div class="text-[4px] text-slate-500 font-semibold text-center mt-auto uppercase tracking-wider line-clamp-1 border-t border-slate-100 pt-1">
+                  {{ ev.authors?.split(';')?.[0] }}
+                </div>
+                
+                <!-- Ciudad y año -->
+                <div class="text-[4px] text-slate-400 font-bold text-center uppercase tracking-widest font-mono">
+                  MOQUEGUA - PERÚ
+                </div>
+              </div>
+
+              <!-- Metadatos de la Tesis (Estilo exacto a tu imagen de referencia) -->
+              <div class="flex-1 flex flex-col justify-between text-left">
+                <div>
+                  <!-- Blue badge Thesis -->
+                  <span class="px-3 py-1 rounded-full text-[9px] font-black bg-[#0c3c60] text-white uppercase tracking-wider select-none shadow-sm">
+                    {{ ev.docType || 'Thesis' }}
+                  </span>
+                  
+                  <!-- Título del Repositorio -->
+                  <h3 class="lp-card-title text-base font-bold text-slate-100 group-hover:text-amber-300 transition-colors mt-3 leading-snug line-clamp-2">
+                    {{ ev.title }}
+                  </h3>
+                  
+                  <!-- Autores / Fecha -->
+                  <p class="lp-repo-meta text-xs text-slate-400 font-medium mt-1 leading-normal font-sans">
+                    <span class="text-slate-200">{{ ev.authors }}</span> — <span class="text-amber-400 font-mono font-bold">{{ ev.date }}</span> — <span class="text-slate-500 font-semibold">(IESTP Chojata • Moquegua)</span>
+                  </p>
+                  
+                  <!-- Abstract Resumen -->
+                  <p class="lp-card-desc text-xs text-slate-400 leading-relaxed mt-2 line-clamp-3" [innerHTML]="ev.description">
+                  </p>
+                </div>
+
+                <!-- Botones de Acción (Resumen & Descarga) -->
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-4">
+                  <button
+                    (click)="openEventDetails(ev)"
+                    class="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 bg-transparent border-0 cursor-pointer font-sans"
+                  >
+                    <span>🔍</span> Ver Resumen Completo
+                  </button>
+                  
+                  <a href="https://iestpchojata.edu.pe/repositorio/tesis-mock.pdf" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#be123c]/15 border border-[#be123c]/35 hover:bg-[#be123c]/25 text-[#f43f5e] no-underline transition-all shadow-sm">
+                    📥 Descargar PDF
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </ng-container>
+
+        </div>
+      </ng-container>
 
     </div>
 
@@ -228,14 +277,15 @@
         <form (submit)="handleQuickValidation(); $event.preventDefault()" class="space-y-3">
           <input
             type="text"
-            [(ngModel)]="quickCertCode"
+            [ngModel]="quickCertCode()"
+            (ngModelChange)="quickCertCode.set($event)"
             [name]="'quickCertCode'"
             placeholder="CERT-2026-001"
             class="lp-sidebar-input w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"
           />
           <button
             type="submit"
-            [disabled]="!quickCertCode.trim()"
+            [disabled]="!quickCertCode().trim()"
             class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white text-xs transition-all cursor-pointer shadow-lg shadow-wine-900/30 disabled:opacity-40"
           >
             Verificar Código
@@ -300,16 +350,17 @@
        MODAL: DETALLES DE CURSO / EVENTO
        ========================================== -->
   <div *ngIf="selectedEventForModal() as ev" class="lp-modal-bg fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-    <div class="lp-modal-content bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5">
+    <div class="lp-modal-content bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl p-6 shadow-2xl space-y-6">
       
-      <div class="flex items-start justify-between">
-        <div class="flex items-center gap-3">
-          <span class="text-4xl">{{ ev.icon }}</span>
+      <!-- Encabezado Modal (Título e Icono) -->
+      <div class="flex items-start justify-between border-b border-white/5 pb-3">
+        <div class="flex items-center gap-4">
+          <span class="text-5xl">{{ ev.icon }}</span>
           <div>
             <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
               {{ ev.type }}
             </span>
-            <h3 class="text-xl font-bold text-slate-100 mt-1">{{ ev.title }}</h3>
+            <h3 class="text-2xl font-bold text-slate-100 mt-1 leading-snug">{{ ev.title }}</h3>
           </div>
         </div>
         <button
@@ -320,34 +371,87 @@
         </button>
       </div>
 
-      <div class="lp-modal-info-block grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-2xl border border-white/5 text-xs">
-        <div>
-          <span class="block text-slate-500 font-bold uppercase tracking-wider">Fecha Programada</span>
-          <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">📅 {{ ev.date }}</span>
+      <!-- Grid de Información Técnica -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        
+        <!-- Columna 1: Fechas del Curso -->
+        <div class="bg-white/[0.02] p-4 rounded-2xl border border-white/5 space-y-3">
+          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <span>📅</span> Fechas del Curso
+          </h4>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="block text-slate-500 font-bold uppercase text-[9px]">Inicio</span>
+              <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">{{ ev.courseStartDate || ev.date }}</span>
+            </div>
+            <div>
+              <span class="block text-slate-500 font-bold uppercase text-[9px]">Fin</span>
+              <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">{{ ev.courseEndDate || ev.date }}</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <span class="block text-slate-500 font-bold uppercase tracking-wider">Docente Expositor</span>
-          <span class="text-slate-200 font-medium text-sm mt-0.5 block">👨‍🏫 {{ ev.instructor }}</span>
+
+        <!-- Columna 2: Periodo de Inscripción -->
+        <div class="bg-white/[0.02] p-4 rounded-2xl border border-white/5 space-y-3">
+          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <span>📝</span> Periodo de Inscripción
+          </h4>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="block text-slate-500 font-bold uppercase text-[9px]">Apertura</span>
+              <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">{{ ev.registrationStartDate || 'Abierto' }}</span>
+            </div>
+            <div>
+              <span class="block text-slate-500 font-bold uppercase text-[9px]">Cierre</span>
+              <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">{{ ev.registrationEndDate || 'Cierre' }}</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <span class="block text-slate-500 font-bold uppercase tracking-wider">Duración Lectiva</span>
-          <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">⏱️ {{ ev.hours }} horas</span>
+
+        <!-- Columna 3: Información General -->
+        <div class="bg-white/[0.02] p-4 rounded-2xl border border-white/5 space-y-3">
+          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <span>⏱️</span> Información General
+          </h4>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="block text-slate-500 font-bold uppercase text-[9px]">Horas Académicas</span>
+              <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">{{ ev.hours }} horas</span>
+            </div>
+            <div>
+              <span class="block text-slate-500 font-bold uppercase text-[9px]">Capacidad Máxima</span>
+              <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">{{ ev.capacity }} vacantes</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <span class="block text-slate-500 font-bold uppercase tracking-wider">Capacidad Disponible</span>
-          <span class="text-slate-200 font-medium font-mono text-sm mt-0.5 block">
-            👥 {{ ev.registeredCount }} / {{ ev.capacity }} participantes
-          </span>
+
+        <!-- Columna 4: Lista de Expositores -->
+        <div class="bg-white/[0.02] p-4 rounded-2xl border border-white/5 space-y-3">
+          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <span>👨‍🏫</span> Expositores Académicos
+          </h4>
+          <div class="max-h-24 overflow-y-auto pr-1">
+            <ul class="space-y-1.5 text-slate-200 text-xs font-semibold">
+              <li *ngFor="let name of ev.instructor.split(',')" class="flex items-center gap-2 bg-white/[0.03] px-2.5 py-1 rounded-xl border border-white/5">
+                <span>👨‍🏫</span> <span class="truncate">{{ name.trim() }}</span>
+              </li>
+              <li *ngIf="!ev.instructor" class="text-slate-500 italic text-xs">Sin expositor registrado.</li>
+            </ul>
+          </div>
         </div>
+
       </div>
 
-      <div class="space-y-2">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Acerca de la Actividad</h4>
-        <p class="text-xs text-slate-300 leading-relaxed font-medium">
-          {{ ev.fullDescription }}
+      <!-- Acerca de la Actividad (Descripción) -->
+      <div class="space-y-2 border-t border-white/5 pt-4">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <span>📖</span> Acerca de la Actividad
+        </h4>
+        <p class="text-xs text-slate-300 leading-relaxed font-medium" [innerHTML]="ev.fullDescription || ev.description">
         </p>
       </div>
 
+      <!-- Botones de Acción -->
       <div class="flex items-center gap-3 pt-2">
         <button
           *ngIf="ev.status === 'activo'"
@@ -398,7 +502,8 @@
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500 text-sm">🆔</span>
             <input
               type="text"
-              [(ngModel)]="dniInput"
+              [ngModel]="dniInput()"
+              (ngModelChange)="dniInput.set($event)"
               [name]="'dniInput'"
               placeholder="Ingrese su DNI"
               maxlength="8"
@@ -473,7 +578,7 @@
                 <label class="block text-[11px] text-slate-400 mb-1">Número de DNI</label>
                 <input
                   type="text"
-                  [value]="dniInput"
+                  [value]="dniInput()"
                   disabled
                   class="w-full px-4 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 text-slate-500 font-mono text-xs font-bold"
                 />
@@ -482,7 +587,8 @@
               <div>
                 <label class="block text-[11px] text-slate-400 mb-1">Procedencia</label>
                 <select
-                  [(ngModel)]="provenance"
+                  [ngModel]="provenance()"
+                  (ngModelChange)="provenance.set($event)"
                   [name]="'provenance'"
                   class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold"
                 >
@@ -495,7 +601,8 @@
             <div>
               <label class="block text-[11px] text-slate-400 mb-1">Tipo de Asistente</label>
               <select
-                [(ngModel)]="assistantType"
+                [ngModel]="assistantType()"
+                (ngModelChange)="assistantType.set($event)"
                 [name]="'assistantType'"
                 class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold"
               >
@@ -512,7 +619,8 @@
                 <label class="block text-[11px] text-slate-400 mb-1">Nombres</label>
                 <input
                   type="text"
-                  [(ngModel)]="firstName"
+                  [ngModel]="firstName()"
+                  (ngModelChange)="firstName.set($event)"
                   [name]="'firstName'"
                   placeholder="Ingrese sus nombres"
                   class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
@@ -524,7 +632,8 @@
                 <label class="block text-[11px] text-slate-400 mb-1">Apellidos</label>
                 <input
                   type="text"
-                  [(ngModel)]="lastName"
+                  [ngModel]="lastName()"
+                  (ngModelChange)="lastName.set($event)"
                   [name]="'lastName'"
                   placeholder="Ingrese sus apellidos"
                   class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
@@ -537,7 +646,8 @@
               <label class="block text-[11px] text-slate-400 mb-1">Grado Académico <span class="text-slate-500">(Opcional)</span></label>
               <input
                 type="text"
-                [(ngModel)]="degree"
+                [ngModel]="degree()"
+                (ngModelChange)="degree.set($event)"
                 [name]="'degree'"
                 placeholder="Ej: Bachiller, Licenciado, Magíster..."
                 class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
@@ -556,7 +666,8 @@
                 <label class="block text-[11px] text-slate-400 mb-1">Correo Electrónico</label>
                 <input
                   type="email"
-                  [(ngModel)]="emailInput"
+                  [ngModel]="emailInput()"
+                  (ngModelChange)="emailInput.set($event)"
                   [name]="'emailInput'"
                   placeholder="ejemplo@correo.com"
                   class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
@@ -568,7 +679,8 @@
                 <label class="block text-[11px] text-slate-400 mb-1">Número de Celular</label>
                 <input
                   type="text"
-                  [(ngModel)]="phoneInput"
+                  [ngModel]="phoneInput()"
+                  (ngModelChange)="phoneInput.set($event)"
                   [name]="'phoneInput'"
                   placeholder="987654321"
                   class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono"
@@ -606,7 +718,8 @@
 
                 <input
                   type="text"
-                  [(ngModel)]="captchaUserInput"
+                  [ngModel]="captchaUserInput()"
+                  (ngModelChange)="captchaUserInput.set($event)"
                   [name]="'captchaUserInput'"
                   placeholder="Escriba el código"
                   class="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"

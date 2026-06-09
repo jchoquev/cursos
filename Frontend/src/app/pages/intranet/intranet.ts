@@ -1,23 +1,27 @@
-import { Component, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, computed, inject, OnInit, OnDestroy, PLATFORM_ID, afterNextRender, effect, untracked } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PlatformService, EventItem, UserItem, Registration, Certificate } from '../../services/platform.service';
+import { ApiService } from '../../services/api.service';
 import { SearchCertificates } from '../search-certificates/search-certificates';
+import { NgxEditorModule, Editor, Toolbar } from 'ngx-editor';
 
 @Component({
   selector: 'app-intranet',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgxEditorModule],
   templateUrl: './intranet.html',
   styleUrl: './intranet.css',
 })
-export class IntranetComponent {
+export class IntranetComponent implements OnInit, OnDestroy {
   readonly platformService = inject(PlatformService);
+  private readonly apiService = inject(ApiService);
+  private readonly platformId = inject(PLATFORM_ID);
 
-  // Auth Inputs
-  emailInput = '';
-  passwordInput = '';
-  loginError = '';
+  // Auth Inputs — señales para reactividad completa
+  emailInput = signal<string>('');
+  passwordInput = signal<string>('');
+  loginError = signal<string>('');
 
   // Active view inside dashboard
   activeTab = signal<string>('overview');
@@ -34,6 +38,11 @@ export class IntranetComponent {
   showEventModal = signal<boolean>(false);
   showAttendanceModal = signal<boolean>(false);
 
+  // Event save state
+  savingEvent = signal<boolean>(false);
+  saveEventError = signal<string>('');
+  bannerFile: File | null = null;  // Archivo de imagen real para subir al servidor
+
   // Verification Screen Refinements Signals
   showResolutionModal = signal<boolean>(false);
   showPrintCertModal = signal<boolean>(false);
@@ -41,35 +50,121 @@ export class IntranetComponent {
   // CRUD Forms State
   isEditing = signal<boolean>(false);
 
-  // User form data
-  userForm = {
+  // User form data — como signal para reactividad en plantilla
+  userForm = signal<{
+    email: string;
+    name: string;
+    role: UserItem['role'];
+    dni: string;
+    password: string;
+  }>({
     email: '',
     name: '',
-    role: 'Caja' as UserItem['role'],
+    role: 'Caja',
     dni: '',
     password: '',
-  };
-  originalUserEmail = ''; // for tracking changes
+  });
+  originalUserEmail = signal<string>(''); // para rastrear cambios de email
 
-  // Event form data
-  eventForm = {
+  // Event form data — como signal
+  eventForm = signal<{
+    id: any;
+    title: string;
+    type: EventItem['type'];
+    date: string;
+    description: string;
+    fullDescription: string;
+    imageGradient: string;
+    icon: string;
+    status: EventItem['status'];
+    hours: number;
+    instructor: string;
+    capacity: number;
+    coverUrl?: string;
+    registrationStartDate?: string;
+    registrationEndDate?: string;
+    courseStartDate?: string;
+    courseEndDate?: string;
+  }>({
     id: 0,
     title: '',
-    type: 'Curso' as EventItem['type'],
+    type: 'Curso',
     date: '',
     description: '',
     fullDescription: '',
     imageGradient: 'from-wine-700 to-wine-900',
     icon: '📚',
-    status: 'activo' as EventItem['status'],
+    status: 'activo',
     hours: 20,
     instructor: '',
     capacity: 30,
-  };
+    coverUrl: '',
+    registrationStartDate: '',
+    registrationEndDate: '',
+    courseStartDate: '',
+    courseEndDate: '',
+  });
 
   // Attendance form state
   selectedAttendanceEvent = signal<number>(0);
   selectedAttendanceDate = signal<string>(new Date().toISOString().split('T')[0]);
+
+  // Initial rich text editor content
+  editorInitialContent = '';
+  isBrowser = false;
+
+  editor!: Editor;
+
+  toolbar: Toolbar = [
+    ['bold', 'italic', 'underline'],
+    ['code'],
+    ['link'],
+    ['text_color', 'background_color'],
+    [{ heading: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] }],
+  ];
+
+
+
+  constructor() {
+    // If logged in, set default tab
+    this.updateDefaultTab();
+    afterNextRender(() => {
+      this.isBrowser = true;
+      this.editor = new Editor();
+    });
+
+    effect(() => {
+      // Trigger effect when these signals change:
+      this.internalCurrentPage();
+      this.internalPageSize();
+      this.internalSearchQuery();
+      this.internalSortColumn();
+      this.internalSortDirection();
+      const activeTab = this.activeTab();
+
+      if (this.platformService.isLoggedIn() && activeTab === 'internal-data') {
+        untracked(() => {
+          this.loadInternalData();
+        });
+      }
+    });
+  }
+
+
+
+  ngOnInit(): void {
+    // Fetch events from backend database only if logged in
+    if (this.platformService.isLoggedIn()) {
+      this.platformService.loadEvents();
+      this.loadInternalData();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (isPlatformBrowser(this.platformId) && this.editor) {
+      this.editor.destroy();
+    }
+  }
 
   // SearchCertificates instance for reusing QR code rendering
   private readonly searchCertificatesHelper = new SearchCertificates();
@@ -310,6 +405,67 @@ export class IntranetComponent {
     this.certCurrentPage.set(1);
   }
 
+  // --- SIGNALS FOR DATA INTERNA DATATABLE ---
+  internalDataList = signal<any[]>([]);
+  internalSearchQuery = signal<string>('');
+  internalSortColumn = signal<string>('DNI');
+  internalSortDirection = signal<'asc' | 'desc'>('asc');
+  internalCurrentPage = signal<number>(1);
+  internalPageSize = signal<number>(5);
+  loadingInternalData = signal<boolean>(false);
+  totalInternalItems = signal<number>(0);
+
+  showInternalModal = signal<boolean>(false);
+  showImportModal = signal<boolean>(false);
+  importingCsv = signal<boolean>(false);
+  importError = signal<string>('');
+  importResult = signal<string>('');
+
+  internalForm = signal<{
+    DNI: string;
+    Procedencia: string;
+    TipoAsistente: string;
+    Nombres: string;
+    ApPaterno: string;
+    ApMaterno: string;
+    Grado: string;
+    Correo: string;
+    NumCelular: string;
+  }>({
+    DNI: '',
+    Procedencia: 'Interno',
+    TipoAsistente: 'Estudiante',
+    Nombres: '',
+    ApPaterno: '',
+    ApMaterno: '',
+    Grado: '',
+    Correo: '',
+    NumCelular: '',
+  });
+
+  readonly filteredAndPaginatedInternalData = computed(() => {
+    const items = this.internalDataList();
+    const totalItems = this.totalInternalItems();
+    const size = this.internalPageSize();
+    const totalPages = Math.ceil(totalItems / size) || 1;
+    return {
+      items,
+      totalItems,
+      totalPages
+    };
+  });
+
+  changeInternalSort(column: string): void {
+    if (this.internalSortColumn() === column) {
+      this.internalSortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.internalSortColumn.set(column);
+      this.internalSortDirection.set('asc');
+    }
+    this.internalCurrentPage.set(1);
+    this.loadInternalData();
+  }
+
   getPagesArray(totalPages: number): number[] {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
@@ -320,18 +476,18 @@ export class IntranetComponent {
 
   // --- PAYMENT VALIDATION STATE & METHODS ---
   showPaymentModal = signal<boolean>(false);
-  selectedRegistrationId = 0;
-  paymentReceiptNumber = '';
-  paymentDate = '';
-  paymentAmount = 150.00;
-  paymentImage = '';
+  selectedRegistrationId = signal<number>(0);
+  paymentReceiptNumber = signal<string>('');
+  paymentDate = signal<string>('');
+  paymentAmount = signal<number>(150.00);
+  paymentImage = signal<string>('');
 
   openValidatePayment(reg: Registration): void {
-    this.selectedRegistrationId = reg.id;
-    this.paymentReceiptNumber = '';
-    this.paymentDate = new Date().toISOString().split('T')[0];
-    this.paymentAmount = 150.00;
-    this.paymentImage = '';
+    this.selectedRegistrationId.set(reg.id);
+    this.paymentReceiptNumber.set('');
+    this.paymentDate.set(new Date().toISOString().split('T')[0]);
+    this.paymentAmount.set(150.00);
+    this.paymentImage.set('');
     this.showPaymentModal.set(true);
   }
 
@@ -340,57 +496,58 @@ export class IntranetComponent {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        this.paymentImage = reader.result as string;
+        this.paymentImage.set(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   }
 
   submitPaymentValidation(): void {
-    if (!this.paymentReceiptNumber || !this.paymentDate || !this.paymentAmount) {
+    if (!this.paymentReceiptNumber() || !this.paymentDate() || !this.paymentAmount()) {
       alert('Por favor complete todos los datos del recibo.');
       return;
     }
 
     this.platformService.validatePaymentAndApprove(
-      this.selectedRegistrationId,
-      this.paymentReceiptNumber,
-      this.paymentDate,
-      this.paymentAmount,
-      this.paymentImage || 'https://images.unsplash.com/photo-1554416278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80'
+      this.selectedRegistrationId(),
+      this.paymentReceiptNumber(),
+      this.paymentDate(),
+      this.paymentAmount(),
+      this.paymentImage() || 'https://images.unsplash.com/photo-1554416278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80'
     );
 
     this.showPaymentModal.set(false);
     alert('Pago validado correctamente e inscripción aprobada.');
   }
 
-  constructor() {
-    // If logged in, set default tab
-    this.updateDefaultTab();
-  }
+
 
   // --- AUTH PROCEDURES ---
 
   handleLogin(): void {
-    this.loginError = '';
-    this.platformService.login(this.emailInput, this.passwordInput).subscribe({
+    this.loginError.set('');
+    this.platformService.login(this.emailInput(), this.passwordInput()).subscribe({
       next: (success) => {
         if (success) {
-          this.emailInput = '';
-          this.passwordInput = '';
+          this.emailInput.set('');
+          this.passwordInput.set('');
           this.updateDefaultTab();
+          this.platformService.loadEvents();
+          this.loadInternalData();
         } else {
-          this.loginError = 'Credenciales incorrectas. Intente nuevamente.';
+          this.loginError.set(
+            this.platformService.errorMessage() || 'Credenciales incorrectas. Intente nuevamente.'
+          );
         }
       },
       error: () => {
-        this.loginError = 'Error al conectar con el servidor. Intente más tarde.';
-      }
+        this.loginError.set('Error al conectar con el servidor. Intente más tarde.');
+      },
     });
   }
 
   quickLogin(role: 'admin' | 'caja' | 'formacion' | 'investigacion'): void {
-    this.loginError = '';
+    this.loginError.set('');
     let email = '';
     let password = '';
     if (role === 'admin') { email = 'admin@institucion.edu'; password = 'admin123'; }
@@ -402,10 +559,12 @@ export class IntranetComponent {
       next: (success) => {
         if (success) {
           this.updateDefaultTab();
+          this.platformService.loadEvents();
+          this.loadInternalData();
         } else {
-          this.loginError = 'Error al realizar el login rápido.';
+          this.loginError.set('Error al realizar el login rápido.');
         }
-      }
+      },
     });
   }
 
@@ -465,53 +624,52 @@ export class IntranetComponent {
   // --- USER CRUD ---
   openAddUser(): void {
     this.isEditing.set(false);
-    this.userForm = {
+    this.userForm.set({
       email: '',
       name: '',
       role: 'Caja',
       dni: '',
       password: '',
-    };
+    });
     this.showUserModal.set(true);
   }
 
   openEditUser(user: UserItem): void {
     this.isEditing.set(true);
-    this.originalUserEmail = user.email;
-    this.userForm = {
+    this.originalUserEmail.set(user.email);
+    this.userForm.set({
       email: user.email,
       name: user.name,
       role: user.role,
       dni: user.dni,
       password: user.password || 'part123',
-    };
+    });
     this.showUserModal.set(true);
   }
 
   saveUser(): void {
-    if (!this.userForm.email || !this.userForm.name || !this.userForm.dni) return;
+    const form = this.userForm();
+    if (!form.email || !form.name || !form.dni) return;
 
     if (this.isEditing()) {
       const updatedUser: UserItem = {
-        email: this.userForm.email,
-        name: this.userForm.name,
-        role: this.userForm.role,
-        dni: this.userForm.dni,
-        password: this.userForm.password,
+        email: form.email,
+        name: form.name,
+        role: form.role,
+        dni: form.dni,
+        password: form.password,
       };
-      this.platformService.editUser(updatedUser, this.originalUserEmail);
+      this.platformService.editUser(updatedUser, this.originalUserEmail());
     } else {
-      // Auto-generar contraseña segura (se enviará al correo del usuario)
       const autoPassword = this.generateSecurePassword();
       const newUser: UserItem = {
-        email: this.userForm.email,
-        name: this.userForm.name,
-        role: this.userForm.role,
-        dni: this.userForm.dni,
+        email: form.email,
+        name: form.name,
+        role: form.role,
+        dni: form.dni,
         password: autoPassword,
       };
       this.platformService.addUser(newUser);
-      // Simular notificación de envío por correo
       console.log(`[Correo simulado] → ${newUser.email} | Usuario: ${newUser.email} | Contraseña: ${autoPassword}`);
       alert(`✅ Usuario registrado. Se ha enviado un correo a ${newUser.email} con las credenciales de acceso.`);
     }
@@ -532,13 +690,17 @@ export class IntranetComponent {
   }
 
   // --- EVENT CRUD ---
+  // --- EVENT CRUD ---
   openAddEvent(): void {
     this.isEditing.set(false);
-    this.eventForm = {
+    this.editorInitialContent = '';
+    this.saveEventError.set('');
+    this.savingEvent.set(false);
+    this.eventForm.set({
       id: 0,
       title: '',
       type: 'Curso',
-      date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 10 days in future
+      date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       description: '',
       fullDescription: '',
       imageGradient: 'from-rose-600 via-pink-600 to-red-700',
@@ -547,13 +709,19 @@ export class IntranetComponent {
       hours: 30,
       instructor: '',
       capacity: 35,
-    };
+      coverUrl: '',
+      registrationStartDate: '',
+      registrationEndDate: '',
+      courseStartDate: '',
+      courseEndDate: '',
+    });
     this.showEventModal.set(true);
   }
 
   openAddProject(): void {
     this.isEditing.set(false);
-    this.eventForm = {
+    this.editorInitialContent = '';
+    this.eventForm.set({
       id: 0,
       title: '',
       type: 'Repositorio',
@@ -566,13 +734,19 @@ export class IntranetComponent {
       hours: 0,
       instructor: '',
       capacity: 100,
-    } as EventItem;
+      coverUrl: '',
+      registrationStartDate: '',
+      registrationEndDate: '',
+      courseStartDate: '',
+      courseEndDate: '',
+    });
     this.showEventModal.set(true);
   }
 
   openEditEvent(event: EventItem): void {
     this.isEditing.set(true);
-    this.eventForm = {
+    this.editorInitialContent = event.description || '';
+    this.eventForm.set({
       id: event.id,
       title: event.title,
       type: event.type,
@@ -585,57 +759,222 @@ export class IntranetComponent {
       hours: event.hours,
       instructor: event.instructor,
       capacity: event.capacity,
-    };
+      coverUrl: event.coverUrl || '',
+      registrationStartDate: event.registrationStartDate || '',
+      registrationEndDate: event.registrationEndDate || '',
+      courseStartDate: event.courseStartDate || '',
+      courseEndDate: event.courseEndDate || '',
+    });
     this.showEventModal.set(true);
   }
 
-  saveEvent(): void {
-    if (!this.eventForm.title || !this.eventForm.date || !this.eventForm.instructor) return;
+  onBannerSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      this.bannerFile = file; // Guardar el archivo real para subirlo al servidor
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.eventForm.update(f => ({ ...f, coverUrl: e.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  }
 
-    // Pick a matching gradient and icon automatically based on type for visual perfection
+  getInstructorsList(): string[] {
+    const value = this.eventForm().instructor || '';
+    return value.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  addInstructor(name: string): void {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const current = this.getInstructorsList();
+    if (!current.includes(trimmed)) {
+      current.push(trimmed);
+      this.eventForm.update(f => ({ ...f, instructor: current.join(', ') }));
+    }
+  }
+
+  removeInstructor(name: string): void {
+    const current = this.getInstructorsList().filter(n => n !== name);
+    this.eventForm.update(f => ({ ...f, instructor: current.join(', ') }));
+  }
+
+  onEditorInput(html: string): void {
+    this.eventForm.update(f => ({ ...f, description: html, fullDescription: html }));
+  }
+
+  execFormat(command: string, value: string = ''): void {
+    document.execCommand(command, false, value);
+    const editor = document.querySelector('[contenteditable]');
+    if (editor) {
+      this.onEditorInput(editor.innerHTML);
+    }
+  }
+
+  execLink(): void {
+    const url = prompt('Ingrese la URL del enlace:');
+    if (url) {
+      document.execCommand('createLink', false, url);
+      const editor = document.querySelector('[contenteditable]');
+      if (editor) {
+        this.onEditorInput(editor.innerHTML);
+      }
+    }
+  }
+
+  execUnlink(): void {
+    document.execCommand('unlink', false);
+    const editor = document.querySelector('[contenteditable]');
+    if (editor) {
+      this.onEditorInput(editor.innerHTML);
+    }
+  }
+
+  saveEvent(): void {
+    const form = this.eventForm();
+    this.saveEventError.set('');
+
+    // Validate all required fields
+    const missingFields: string[] = [];
+    if (!form.title) missingFields.push('Título');
+    if (!form.description) missingFields.push('Descripción');
+    if (!form.hours || form.hours <= 0) missingFields.push('Horas Académicas');
+    if (!form.registrationStartDate) missingFields.push('Inicio Inscripción');
+    if (!form.registrationEndDate) missingFields.push('Fin Inscripción');
+    if (!form.courseStartDate) missingFields.push('Inicio Curso');
+    if (!form.courseEndDate) missingFields.push('Fin Curso');
+    if (!form.type) missingFields.push('Tipo de Actividad');
+    if (!form.instructor) missingFields.push('Docentes Expositores');
+    if (!form.capacity || form.capacity <= 0) missingFields.push('Capacidad Máxima');
+
+    if (missingFields.length > 0) {
+      this.saveEventError.set('Campos requeridos faltantes: ' + missingFields.join(', '));
+      return;
+    }
+
+    const eventDate = form.courseStartDate ? form.courseStartDate.split('T')[0] : (form.date || new Date().toISOString().split('T')[0]);
+
     let gradient = 'from-[#be123c] via-rose-700 to-amber-600';
     let icon = '🔐';
-    if (this.eventForm.type === 'Curso') {
+    if (form.type === 'Curso') {
       gradient = 'from-rose-600 via-pink-600 to-red-700';
       icon = '🅰️';
-    } else if (this.eventForm.type === 'Taller') {
+    } else if (form.type === 'Taller') {
       gradient = 'from-amber-500 via-orange-600 to-red-600';
       icon = '🎨';
-    } else if (this.eventForm.type === 'Repositorio') {
+    } else if (form.type === 'Repositorio') {
       gradient = 'from-indigo-600 via-violet-600 to-purple-700';
       icon = '🔬';
     }
 
+    // Map type name to tipo_actividades id
+    const tipoActividad = this.platformService.activityTypes().find(t => t.tipActividad === form.type);
+    const tActividadId = tipoActividad ? tipoActividad.id : 1;
+
+    const instructorsList = this.getInstructorsList();
+
     if (this.isEditing()) {
-      const updated: EventItem = {
-        ...this.eventForm,
-        imageGradient: gradient,
-        icon: icon,
-        registeredCount: this.platformService.events().find(e => e.id === this.eventForm.id)?.registeredCount || 0,
-      };
-      this.platformService.editEvent(updated);
+      // Construir FormData con el archivo de imagen si se seleccionó uno nuevo
+      const formData = new FormData();
+      formData.append('_method', 'PUT'); // Simulación de método PUT en Laravel
+      formData.append('titulo', form.title);
+      if (this.bannerFile) {
+        formData.append('RBanner', this.bannerFile, this.bannerFile.name);
+      }
+      formData.append('descripcion', form.description);
+      formData.append('HAcademica', String(form.hours));
+      formData.append('InInscripcion', form.registrationStartDate || '');
+      formData.append('FnInscripcion', form.registrationEndDate || '');
+      formData.append('InCurso', form.courseStartDate || '');
+      formData.append('FnCurso', form.courseEndDate || '');
+      formData.append('TActividad', String(tActividadId));
+      formData.append('DonceteExp', JSON.stringify(instructorsList));
+      formData.append('CapMaxima', String(form.capacity));
+      formData.append('Estado', form.status === 'activo' ? '1' : '0');
+
+      this.savingEvent.set(true);
+
+      this.apiService.postFormData<any>(`/eventos/${form.id}`, formData).subscribe({
+        next: (resp) => {
+          this.savingEvent.set(false);
+          this.bannerFile = null;
+          const updatedEvent = this.platformService.mapBackendEventoToEventItem(resp.data);
+          this.platformService.editEvent(updatedEvent);
+          this.showEventModal.set(false);
+          alert('✅ Evento académico actualizado correctamente.');
+        },
+        error: (err) => {
+          this.savingEvent.set(false);
+          const backendMsg = err?.error?.message || err?.error?.errors;
+          if (backendMsg && typeof backendMsg === 'object') {
+            const msgs = Object.values(backendMsg).flat().join(' | ');
+            this.saveEventError.set('Error de validación: ' + msgs);
+          } else {
+            this.saveEventError.set(backendMsg || 'Error al actualizar el evento.');
+          }
+        }
+      });
     } else {
-      const newEventData: Omit<EventItem, 'id' | 'registeredCount'> = {
-        title: this.eventForm.title,
-        type: this.eventForm.type,
-        date: this.eventForm.date,
-        description: this.eventForm.description,
-        fullDescription: this.eventForm.fullDescription || this.eventForm.description,
-        imageGradient: gradient,
-        icon: icon,
-        status: this.eventForm.status,
-        hours: this.eventForm.hours,
-        instructor: this.eventForm.instructor,
-        capacity: this.eventForm.capacity,
-      };
-      this.platformService.addEvent(newEventData);
+      // Creating: call backend API
+      // Validar que se haya seleccionado una imagen de banner
+      if (!this.bannerFile) {
+        this.saveEventError.set('Debe seleccionar una imagen de banner.');
+        return;
+      }
+
+      // Construir FormData con el archivo de imagen real
+      const formData = new FormData();
+      formData.append('titulo', form.title);
+      formData.append('RBanner', this.bannerFile, this.bannerFile.name);
+      formData.append('descripcion', form.description);
+      formData.append('HAcademica', String(form.hours));
+      formData.append('InInscripcion', form.registrationStartDate || '');
+      formData.append('FnInscripcion', form.registrationEndDate || '');
+      formData.append('InCurso', form.courseStartDate || '');
+      formData.append('FnCurso', form.courseEndDate || '');
+      formData.append('TActividad', String(tActividadId));
+      formData.append('DonceteExp', JSON.stringify(instructorsList));
+      formData.append('CapMaxima', String(form.capacity));
+      formData.append('Estado', form.status === 'activo' ? '1' : '0');
+
+      this.savingEvent.set(true);
+
+      this.apiService.postFormData<any>('/eventos', formData).subscribe({
+        next: (resp) => {
+          this.savingEvent.set(false);
+          this.bannerFile = null;
+          const createdEvent = this.platformService.mapBackendEventoToEventItem(resp.data);
+          this.platformService.addEvent(createdEvent);
+          this.showEventModal.set(false);
+          alert('✅ Evento académico creado correctamente y guardado en la base de datos.');
+        },
+        error: (err) => {
+          this.savingEvent.set(false);
+          const backendMsg = err?.error?.message || err?.error?.errors;
+          if (backendMsg && typeof backendMsg === 'object') {
+            const msgs = Object.values(backendMsg).flat().join(' | ');
+            this.saveEventError.set('Error de validación: ' + msgs);
+          } else {
+            this.saveEventError.set(backendMsg || 'Error al crear el evento. Verifique que ha iniciado sesión.');
+          }
+        }
+      });
     }
-    this.showEventModal.set(false);
   }
 
-  deleteEvent(id: number): void {
+  deleteEvent(id: any): void {
     if (confirm('¿Está seguro de eliminar este evento? Se eliminarán de forma permanente todos sus registros e inscripciones.')) {
-      this.platformService.deleteEvent(id);
+      this.apiService.delete<any>(`/eventos/${id}`).subscribe({
+        next: (resp) => {
+          this.platformService.deleteEvent(id);
+          alert('✅ Evento eliminado correctamente.');
+        },
+        error: (err) => {
+          console.error('Error deleting event:', err);
+          alert('❌ Error al eliminar el evento de la base de datos.');
+        }
+      });
     }
   }
 
@@ -782,5 +1121,166 @@ export class IntranetComponent {
     const headers = ['Código de Certificado', 'Nombre del Alumno', 'DNI', 'Curso / Evento', 'Fecha de Emisión', 'Estado de Validez'];
     const data = this.platformService.certificates().map(c => [c.code, c.fullName, c.dni, c.eventTitle, c.issueDate, c.status]);
     this.platformService.exportToCsv('Reporte_Certificados_Emitidos', headers, data);
+  }
+
+  private loadDataTimeout: any = null;
+
+  // --- DATA INTERNA CRUD & IMPORT ---
+  loadInternalData(): void {
+    if (!this.platformService.isLoggedIn()) return;
+
+    if (this.loadDataTimeout) {
+      clearTimeout(this.loadDataTimeout);
+    }
+
+    this.loadDataTimeout = setTimeout(() => {
+      this.loadingInternalData.set(true);
+
+      const params = {
+        page: this.internalCurrentPage().toString(),
+        per_page: this.internalPageSize().toString(),
+        search: this.internalSearchQuery(),
+        sort_by: this.internalSortColumn(),
+        sort_dir: this.internalSortDirection()
+      };
+
+      this.apiService.get<any>('/data-interna', params).subscribe({
+        next: (resp) => {
+          this.loadingInternalData.set(false);
+          if (resp && Array.isArray(resp.data)) {
+            this.internalDataList.set(resp.data);
+            this.totalInternalItems.set(resp.total);
+          }
+        },
+        error: (err) => {
+          this.loadingInternalData.set(false);
+          console.error('Error al cargar información interna:', err);
+        }
+      });
+    }, 150);
+  }
+
+  openAddInternal(): void {
+    this.isEditing.set(false);
+    this.internalForm.set({
+      DNI: '',
+      Procedencia: 'Interno',
+      TipoAsistente: 'Estudiante',
+      Nombres: '',
+      ApPaterno: '',
+      ApMaterno: '',
+      Grado: '',
+      Correo: '',
+      NumCelular: '',
+    });
+    this.showInternalModal.set(true);
+  }
+
+  openEditInternal(item: any): void {
+    this.isEditing.set(true);
+    this.internalForm.set({
+      DNI: item.DNI,
+      Procedencia: item.Procedencia,
+      TipoAsistente: item.TipoAsistente,
+      Nombres: item.Nombres,
+      ApPaterno: item.ApPaterno,
+      ApMaterno: item.ApMaterno,
+      Grado: item.Grado || '',
+      Correo: item.Correo || '',
+      NumCelular: item.NumCelular || '',
+    });
+    this.showInternalModal.set(true);
+  }
+
+  saveInternal(): void {
+    const rawForm = this.internalForm();
+    const form = {
+      ...rawForm,
+      DNI: rawForm.DNI.toUpperCase().trim(),
+      Nombres: rawForm.Nombres.toUpperCase().trim(),
+      ApPaterno: rawForm.ApPaterno.toUpperCase().trim(),
+      ApMaterno: rawForm.ApMaterno.toUpperCase().trim(),
+      Grado: rawForm.Grado ? rawForm.Grado.toUpperCase().trim() : '',
+      Correo: rawForm.Correo ? rawForm.Correo.toUpperCase().trim() : '',
+      NumCelular: rawForm.NumCelular ? rawForm.NumCelular.trim() : ''
+    };
+
+    if (!form.DNI || !form.Nombres || !form.ApPaterno || !form.ApMaterno) {
+      alert('DNI, Nombres y Apellidos son obligatorios.');
+      return;
+    }
+
+    if (this.isEditing()) {
+      this.apiService.put<any>(`/data-interna/${form.DNI}`, form).subscribe({
+        next: (resp) => {
+          alert('✅ Registro interno actualizado con éxito.');
+          this.showInternalModal.set(false);
+          this.loadInternalData();
+        },
+        error: (err) => {
+          alert('❌ Error al actualizar el registro: ' + (err?.error?.message || 'Error del servidor'));
+        }
+      });
+    } else {
+      this.apiService.post<any>('/data-interna', form).subscribe({
+        next: (resp) => {
+          alert('✅ Registro interno creado con éxito.');
+          this.showInternalModal.set(false);
+          this.loadInternalData();
+        },
+        error: (err) => {
+          alert('❌ Error al crear el registro: ' + (err?.error?.message || 'El DNI ya existe o error de servidor'));
+        }
+      });
+    }
+  }
+
+  deleteInternal(dni: string): void {
+    if (confirm('¿Está seguro de eliminar este registro interno?')) {
+      this.apiService.delete<any>(`/data-interna/${dni}`).subscribe({
+        next: () => {
+          alert('✅ Registro eliminado correctamente.');
+          this.loadInternalData();
+        },
+        error: (err) => {
+          console.error('Error al eliminar registro:', err);
+          alert('❌ Error al eliminar el registro de la base de datos.');
+        }
+      });
+    }
+  }
+
+  openImportModal(): void {
+    this.importError.set('');
+    this.importResult.set('');
+    this.importingCsv.set(false);
+    this.showImportModal.set(true);
+  }
+
+  onCsvFileSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    this.importingCsv.set(true);
+    this.importError.set('');
+    this.importResult.set('');
+
+    this.apiService.postFormData<any>('/data-interna/import', formData).subscribe({
+      next: (resp) => {
+        this.importingCsv.set(false);
+        this.importResult.set(resp.message);
+        if (resp.errors && resp.errors.length > 0) {
+          this.importError.set('Algunas filas tuvieron advertencias:\n' + resp.errors.join('\n'));
+        }
+        this.loadInternalData();
+      },
+      error: (err) => {
+        this.importingCsv.set(false);
+        this.importError.set(err?.error?.message || 'Error de conexión o de formato en el archivo.');
+      }
+    });
   }
 }

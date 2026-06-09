@@ -1,10 +1,11 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HeroImage } from '../../components/hero-image/hero-image';
 import { PlatformService, EventItem, Certificate } from '../../services/platform.service';
 import { SearchCertificates } from '../search-certificates/search-certificates';
 import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-home',
@@ -16,12 +17,15 @@ import { ActivatedRoute } from '@angular/router';
 export class Home implements OnInit {
   readonly platformService = inject(PlatformService);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly searchCertificatesHelper = new SearchCertificates();
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
+    // takeUntilDestroyed evita memory leaks al destruir el componente
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.selectedCategory.set(params['category'] || 'Todos');
     });
+    this.platformService.loadEvents();
   }
 
   // Filters state
@@ -29,11 +33,16 @@ export class Home implements OnInit {
   selectedStatus = signal<'activo' | 'pasado'>('activo');
   selectedYear = signal<string>('Todos');
 
+  readonly categories = computed(() => {
+    const types = this.platformService.activityTypes().map(t => t.tipActividad);
+    return ['Todos', ...types, 'Repositorio'];
+  });
+
   // Detailed Modal Event
   selectedEventForModal = signal<EventItem | null>(null);
 
-  // Quick Validation sidebar input
-  quickCertCode = '';
+  // Quick Validation sidebar input — ahora como signal
+  quickCertCode = signal<string>('');
   quickValidationResult = signal<{ success: boolean; message: string; cert?: Certificate } | null>(null);
 
   // Verification Screen Refinements Signals
@@ -44,22 +53,22 @@ export class Home implements OnInit {
   activeStep = signal<number>(0); // 0: closed, 1: DNI modal, 2: Form modal, 3: Success modal
   currentRegisterEvent = signal<EventItem | null>(null);
 
-  // Paso 1 State
-  dniInput = '';
+  // Paso 1 State — signal
+  dniInput = signal<string>('');
   dniError = signal<string>('');
 
-  // Paso 2 Form State
-  assistantType = 'Estudiante';
-  provenance = 'Interno';
-  lastName = '';
-  firstName = '';
-  degree = '';
-  emailInput = '';
-  phoneInput = '';
+  // Paso 2 Form State — signals para todos los campos del formulario
+  assistantType = signal<string>('Estudiante');
+  provenance = signal<string>('Interno');
+  lastName = signal<string>('');
+  firstName = signal<string>('');
+  degree = signal<string>('');
+  emailInput = signal<string>('');
+  phoneInput = signal<string>('');
 
-  // Captcha Lógica
+  // Captcha Lógica — signals
   captchaText = signal<string>('');
-  captchaUserInput = '';
+  captchaUserInput = signal<string>('');
   captchaError = signal<string>('');
 
   // Paso 3 Success State
@@ -75,7 +84,8 @@ export class Home implements OnInit {
 
     return list.filter((e) => {
       if (cat === 'Repositorio') {
-        const itemYear = e.date.split('-')[0];
+        const dateParts = e.date.includes('/') ? e.date.split('/') : [];
+        const itemYear = dateParts.length === 3 ? dateParts[2] : e.date.split('-')[0];
         const matchYear = yr === 'Todos' || itemYear === yr;
         return e.type === 'Repositorio' && matchYear;
       } else {
@@ -112,9 +122,9 @@ export class Home implements OnInit {
 
   startRegistrationFlow(event: EventItem): void {
     this.currentRegisterEvent.set(event);
-    this.dniInput = '';
+    this.dniInput.set('');
     this.dniError.set('');
-    this.activeStep.set(1); // Open Paso 1 Modal
+    this.activeStep.set(1);
   }
 
   closeRegistrationFlow(): void {
@@ -124,40 +134,37 @@ export class Home implements OnInit {
 
   // Paso 1: Buscar DNI
   onDniSearch(): void {
-    const dni = this.dniInput.trim();
+    const dni = this.dniInput().trim();
     if (!dni || dni.length !== 8 || isNaN(Number(dni))) {
       this.dniError.set('Ingrese un DNI válido de 8 dígitos numéricos.');
       return;
     }
 
     this.dniError.set('');
-    
-    // Check if user pre-exists in mock database to auto-fill for high UX
+
     const existingUser = this.platformService.users().find(u => u.dni === dni);
-    
+
     if (existingUser) {
       const names = existingUser.name.split(' ');
-      this.firstName = names[0] || '';
-      this.lastName = names.slice(1).join(' ') || '';
-      this.emailInput = existingUser.email;
-      this.phoneInput = '9' + Math.floor(10000000 + Math.random() * 90000000); // mock phone
-      this.degree = existingUser.role === 'Administrador' ? 'Doctorado' : 'Bachiller';
-      this.assistantType = existingUser.role === 'Administrador' ? 'Docente' : 'Público General';
-      this.provenance = 'Interno';
+      this.firstName.set(names[0] || '');
+      this.lastName.set(names.slice(1).join(' ') || '');
+      this.emailInput.set(existingUser.email);
+      this.phoneInput.set('9' + Math.floor(10000000 + Math.random() * 90000000));
+      this.degree.set(existingUser.role === 'Administrador' ? 'Doctorado' : 'Bachiller');
+      this.assistantType.set(existingUser.role === 'Administrador' ? 'Docente' : 'Público General');
+      this.provenance.set('Interno');
     } else {
-      // Clear form for fresh entry
-      this.firstName = '';
-      this.lastName = '';
-      this.emailInput = '';
-      this.phoneInput = '';
-      this.degree = '';
-      this.assistantType = 'Estudiante';
-      this.provenance = 'Externo';
+      this.firstName.set('');
+      this.lastName.set('');
+      this.emailInput.set('');
+      this.phoneInput.set('');
+      this.degree.set('');
+      this.assistantType.set('Estudiante');
+      this.provenance.set('Externo');
     }
 
-    // Generate CAPTCHA and move to Paso 2
     this.generateCaptcha();
-    this.captchaUserInput = '';
+    this.captchaUserInput.set('');
     this.captchaError.set('');
     this.activeStep.set(2);
   }
@@ -174,16 +181,15 @@ export class Home implements OnInit {
 
   // Paso 2: Registrar
   onRegisterSubmit(): void {
-    if (!this.firstName.trim() || !this.lastName.trim() || !this.emailInput.trim() || !this.phoneInput.trim()) {
+    if (!this.firstName().trim() || !this.lastName().trim() || !this.emailInput().trim() || !this.phoneInput().trim()) {
       this.captchaError.set('Por favor, complete todos los campos obligatorios.');
       return;
     }
 
-    // Verify Captcha
-    if (this.captchaUserInput.trim().toUpperCase() !== this.captchaText()) {
+    if (this.captchaUserInput().trim().toUpperCase() !== this.captchaText()) {
       this.captchaError.set('Código CAPTCHA incorrecto. Intente de nuevo.');
       this.generateCaptcha();
-      this.captchaUserInput = '';
+      this.captchaUserInput.set('');
       return;
     }
 
@@ -191,21 +197,19 @@ export class Home implements OnInit {
     const event = this.currentRegisterEvent();
     if (!event) return;
 
-    // Trigger stateful registration in service
-    const fullName = `${this.firstName.trim()} ${this.lastName.trim()}`;
+    const fullName = `${this.firstName().trim()} ${this.lastName().trim()}`;
     const res = this.platformService.registerToEvent(
-      this.dniInput,
+      this.dniInput(),
       fullName,
-      this.emailInput.trim(),
+      this.emailInput().trim(),
       event.id
     );
 
     if (res.success) {
-      // Setup Paso 3 variables
       const registrationCount = this.platformService.registrations().length;
       this.registrationCode.set(`INS-2026-${String(registrationCount).padStart(3, '0')}`);
       this.successFullName.set(fullName);
-      this.activeStep.set(3); // Advance to Paso 3 Success Modal
+      this.activeStep.set(3);
     } else {
       this.captchaError.set(res.message);
     }
@@ -224,9 +228,9 @@ export class Home implements OnInit {
       DATOS DEL PARTICIPANTE:
       ------------------------------------------------------
       Nombre Completo       : ${this.successFullName()}
-      Documento (DNI)       : ${this.dniInput}
-      Tipo de Asistente     : ${this.assistantType}
-      Procedencia           : ${this.provenance}
+      Documento (DNI)       : ${this.dniInput()}
+      Tipo de Asistente     : ${this.assistantType()}
+      Procedencia           : ${this.provenance()}
       
       DATOS DEL EVENTO ACADÉMICO:
       ------------------------------------------------------
@@ -250,7 +254,6 @@ export class Home implements OnInit {
       ======================================================
     `;
 
-    // Download as a .txt file dynamically for high accessibility
     const blob = new Blob([printContent], { type: 'text/plain;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.download !== undefined) {
@@ -266,7 +269,7 @@ export class Home implements OnInit {
 
   // Quick certificate validation by code in sidebar
   handleQuickValidation(): void {
-    const code = this.quickCertCode.trim();
+    const code = this.quickCertCode().trim();
     if (!code) return;
 
     const cert = this.platformService.findCertificateByCode(code);
@@ -284,7 +287,7 @@ export class Home implements OnInit {
         message: 'El código ingresado no coincide con ningún registro oficial.',
       });
     }
-    this.quickCertCode = '';
+    this.quickCertCode.set('');
   }
 
   closeQuickValidation(): void {
