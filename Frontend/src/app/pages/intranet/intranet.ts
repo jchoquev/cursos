@@ -5,6 +5,7 @@ import { PlatformService, EventItem, UserItem, Registration, Certificate } from 
 import { ApiService } from '../../services/api.service';
 import { SearchCertificates } from '../search-certificates/search-certificates';
 import { NgxEditorModule, Editor, Toolbar } from 'ngx-editor';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-intranet',
@@ -17,6 +18,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
   readonly platformService = inject(PlatformService);
   private readonly apiService = inject(ApiService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly sanitizer = inject(DomSanitizer);
 
   // Auth Inputs — señales para reactividad completa
   emailInput = signal<string>('');
@@ -37,15 +39,53 @@ export class IntranetComponent implements OnInit, OnDestroy {
   showUserModal = signal<boolean>(false);
   showEventModal = signal<boolean>(false);
   showAttendanceModal = signal<boolean>(false);
+  showRegistrationModal = signal<boolean>(false);
+
+  // Registration save state
+  savingRegistration = signal<boolean>(false);
+  saveRegistrationError = signal<string>('');
+  registrationForm = signal<{
+    userDni: string;
+    userName: string;
+    userPaternalLastName: string;
+    userMaternalLastName: string;
+    userEmail: string;
+    userPhone: string;
+    userProcedencia: string;
+    userTipoAsistente: number;
+    userGrado: string;
+    eventId: any;
+  }>({
+    userDni: '',
+    userName: '',
+    userPaternalLastName: '',
+    userMaternalLastName: '',
+    userEmail: '',
+    userPhone: '',
+    userProcedencia: 'Interno',
+    userTipoAsistente: 1,
+    userGrado: '',
+    eventId: null,
+  });
 
   // Event save state
   savingEvent = signal<boolean>(false);
   saveEventError = signal<string>('');
   bannerFile: File | null = null;  // Archivo de imagen real para subir al servidor
 
+  // User save state
+  savingUser = signal<boolean>(false);
+  saveUserError = signal<string>('');
+
   // Verification Screen Refinements Signals
   showResolutionModal = signal<boolean>(false);
   showPrintCertModal = signal<boolean>(false);
+
+  // Certificado con Fondo Signals
+  certFondoBase64 = signal<string | null>(null);
+  certDocData = signal<any | null>(null);
+  showCertWithBackground = signal<boolean>(false);
+  certParticipantData = signal<any | null>(null);
 
   // CRUD Forms State
   isEditing = signal<boolean>(false);
@@ -114,6 +154,8 @@ export class IntranetComponent implements OnInit, OnDestroy {
   isBrowser = false;
 
   editor!: Editor;
+  editorTexto01!: Editor;
+  editorTexto02!: Editor;
 
   toolbar: Toolbar = [
     ['bold', 'italic', 'underline'],
@@ -131,6 +173,8 @@ export class IntranetComponent implements OnInit, OnDestroy {
     afterNextRender(() => {
       this.isBrowser = true;
       this.editor = new Editor();
+      this.editorTexto01 = new Editor();
+      this.editorTexto02 = new Editor();
     });
 
     effect(() => {
@@ -155,6 +199,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
     // Fetch events from backend database only if logged in
     if (this.platformService.isLoggedIn()) {
       this.platformService.loadEvents();
+      this.platformService.loadRegistrations();
       this.loadInternalData();
       if (this.platformService.userRole() === 'Administrador') {
         this.platformService.loadUsers();
@@ -163,8 +208,10 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (isPlatformBrowser(this.platformId) && this.editor) {
-      this.editor.destroy();
+    if (isPlatformBrowser(this.platformId)) {
+      if (this.editor) this.editor.destroy();
+      if (this.editorTexto01) this.editorTexto01.destroy();
+      if (this.editorTexto02) this.editorTexto02.destroy();
     }
   }
 
@@ -277,21 +324,96 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   // --- SIGNALS FOR REGISTRATIONS DATATABLE ---
-  regSearchQuery = signal<string>('');
+  tempFilterYear = signal<string>('');
+  tempFilterEventId = signal<any>('');
+  tempRegSearchQuery = signal<string>('');
+
+  appliedFilterYear = signal<string>('');
+  appliedFilterEventId = signal<any>('');
+  appliedRegSearchQuery = signal<string>('');
+
   regSortColumn = signal<string>('userName');
   regSortDirection = signal<'asc' | 'desc'>('asc');
   regCurrentPage = signal<number>(1);
   regPageSize = signal<number>(5);
 
+  readonly availableRegistrationYears = computed(() => {
+    const list = this.platformService.events();
+    const years = list
+      .map(e => {
+        if (e.courseStartDate && e.courseStartDate.includes('/')) {
+          const parts = e.courseStartDate.split('/');
+          return parts[2];
+        }
+        if (e.date && e.date.includes('/')) {
+          const parts = e.date.split('/');
+          return parts[2];
+        }
+        if (e.created_at) {
+          return e.created_at.substring(0, 4);
+        }
+        return '';
+      })
+      .filter((y): y is string => !!y && y.length === 4);
+    return [...new Set(years)].sort((a, b) => b.localeCompare(a));
+  });
+
+  readonly availableEventsForSelectedYear = computed(() => {
+    const list = this.platformService.events().filter(e => e.type !== 'Repositorio');
+    const selectedY = this.tempFilterYear();
+    if (!selectedY) {
+      return list;
+    }
+    return list.filter(e => {
+      let year = '';
+      if (e.courseStartDate && e.courseStartDate.includes('/')) {
+        year = e.courseStartDate.split('/')[2];
+      } else if (e.date && e.date.includes('/')) {
+        year = e.date.split('/')[2];
+      } else if (e.created_at) {
+        year = e.created_at.substring(0, 4);
+      }
+      return year === selectedY;
+    });
+  });
+
+  applyRegistrationFilters(): void {
+    this.appliedFilterYear.set(this.tempFilterYear());
+    this.appliedFilterEventId.set(this.tempFilterEventId());
+    this.appliedRegSearchQuery.set(this.tempRegSearchQuery());
+    this.regCurrentPage.set(1);
+  }
+
   readonly filteredAndPaginatedRegistrations = computed(() => {
-    const query = this.regSearchQuery().toLowerCase().trim();
+    const query = this.appliedRegSearchQuery().toLowerCase().trim();
+    const appliedEvent = this.appliedFilterEventId();
+    const appliedYear = this.appliedFilterYear();
     const sortCol = this.regSortColumn();
     const sortDir = this.regSortDirection();
     const page = this.regCurrentPage();
     const size = this.regPageSize();
 
-    let list = this.platformService.registrations().filter(r => r.status === 'Pendiente');
+    let list = [...this.platformService.registrations()].filter(r => !r.isPaymentValidated);
 
+    // 1. Filter by event or year
+    if (appliedEvent) {
+      list = list.filter(r => String(r.eventId) === String(appliedEvent));
+    } else if (appliedYear) {
+      const eventsInYear = this.platformService.events().filter(e => {
+        let year = '';
+        if (e.courseStartDate && e.courseStartDate.includes('/')) {
+          year = e.courseStartDate.split('/')[2];
+        } else if (e.date && e.date.includes('/')) {
+          year = e.date.split('/')[2];
+        } else if (e.created_at) {
+          year = e.created_at.substring(0, 4);
+        }
+        return year === appliedYear;
+      }).map(e => String(e.id));
+      list = list.filter(r => eventsInYear.includes(String(r.eventId)));
+    }
+
+    // 2. Filter by search query
     if (query) {
       list = list.filter(r =>
         r.userName.toLowerCase().includes(query) ||
@@ -328,60 +450,106 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   // --- SIGNALS FOR CERTIFICATES DATATABLE ---
-  certSearchQuery = signal<string>('');
-  certFilterYear = signal<string>('');
-  certFilterCourse = signal<string>('');
+  tempCertFilterYear = signal<string>('');
+  tempCertFilterEventId = signal<any>('');
+  tempCertSearchQuery = signal<string>('');
+
+  appliedCertFilterYear = signal<string>('');
+  appliedCertFilterEventId = signal<any>('');
+  appliedCertSearchQuery = signal<string>('');
+
   certSortColumn = signal<string>('code');
   certSortDirection = signal<'asc' | 'desc'>('asc');
   certCurrentPage = signal<number>(1);
   certPageSize = signal<number>(5);
 
-  /** Años únicos extraídos de los certificados emitidos */
+  /** Años únicos extraídos de los eventos activos */
   readonly certAvailableYears = computed(() => {
-    const years = this.platformService.certificates()
-      .map(c => c.issueDate?.substring(0, 4))
-      .filter((y): y is string => !!y);
+    const list = this.platformService.events().filter(e => e.type !== 'Repositorio');
+    const years = list
+      .map(e => {
+        if (e.courseStartDate && e.courseStartDate.includes('/')) {
+          return e.courseStartDate.split('/')[2];
+        }
+        if (e.date && e.date.includes('/')) {
+          return e.date.split('/')[2];
+        }
+        if (e.created_at) {
+          return e.created_at.substring(0, 4);
+        }
+        return '';
+      })
+      .filter((y): y is string => !!y && y.length === 4);
     return [...new Set(years)].sort((a, b) => b.localeCompare(a));
   });
 
-  /** Cursos/eventos únicos extraídos de los certificados */
-  readonly certAvailableCourses = computed(() => {
-    const courses = this.platformService.certificates()
-      .map(c => c.eventTitle)
-      .filter((e): e is string => !!e);
-    return [...new Set(courses)].sort();
+  /** Eventos filtrados por el año seleccionado */
+  readonly availableCertEventsForSelectedYear = computed(() => {
+    const list = this.platformService.events().filter(e => e.type !== 'Repositorio');
+    const selectedY = this.tempCertFilterYear();
+    if (!selectedY) {
+      return list;
+    }
+    return list.filter(e => {
+      let year = '';
+      if (e.courseStartDate && e.courseStartDate.includes('/')) {
+        year = e.courseStartDate.split('/')[2];
+      } else if (e.date && e.date.includes('/')) {
+        year = e.date.split('/')[2];
+      } else if (e.created_at) {
+        year = e.created_at.substring(0, 4);
+      }
+      return year === selectedY;
+    });
   });
 
+  applyCertificateFilters(): void {
+    this.appliedCertFilterYear.set(this.tempCertFilterYear());
+    this.appliedCertFilterEventId.set(this.tempCertFilterEventId());
+    this.appliedCertSearchQuery.set(this.tempCertSearchQuery());
+    this.certCurrentPage.set(1);
+  }
+
   readonly filteredAndPaginatedCertificates = computed(() => {
-    const query = this.certSearchQuery().toLowerCase().trim();
-    const filterYear = this.certFilterYear();
-    const filterCourse = this.certFilterCourse();
+    const query = this.appliedCertSearchQuery().toLowerCase().trim();
+    const filterYear = this.appliedCertFilterYear();
+    const filterEventId = this.appliedCertFilterEventId();
     const sortCol = this.certSortColumn();
     const sortDir = this.certSortDirection();
     const page = this.certCurrentPage();
     const size = this.certPageSize();
 
-    let list = [...this.platformService.certificates()];
+    // Show registrations with validated payment
+    let list = [...this.platformService.registrations()].filter(r => r.isPaymentValidated);
 
-    if (filterYear) {
-      list = list.filter(c => c.issueDate?.startsWith(filterYear));
-    }
-
-    if (filterCourse) {
-      list = list.filter(c => c.eventTitle === filterCourse);
+    if (filterEventId) {
+      list = list.filter(r => String(r.eventId) === String(filterEventId));
+    } else if (filterYear) {
+      const eventsInYear = this.platformService.events().filter(e => {
+        let year = '';
+        if (e.courseStartDate && e.courseStartDate.includes('/')) {
+          year = e.courseStartDate.split('/')[2];
+        } else if (e.date && e.date.includes('/')) {
+          year = e.date.split('/')[2];
+        } else if (e.created_at) {
+          year = e.created_at.substring(0, 4);
+        }
+        return year === filterYear;
+      }).map(e => String(e.id));
+      list = list.filter(r => eventsInYear.includes(String(r.eventId)));
     }
 
     if (query) {
-      list = list.filter(c =>
-        c.code.toLowerCase().includes(query) ||
-        c.fullName.toLowerCase().includes(query) ||
-        c.dni.includes(query) ||
-        c.eventTitle.toLowerCase().includes(query) ||
-        c.status.toLowerCase().includes(query)
+      list = list.filter(r =>
+        r.userName.toLowerCase().includes(query) ||
+        r.userDni.includes(query) ||
+        r.eventTitle.toLowerCase().includes(query) ||
+        (r.documentCode && r.documentCode.toLowerCase().includes(query))
       );
     }
 
     list.sort((a: any, b: any) => {
+      // Allow sorting on mapped properties dynamically
       const valA = a[sortCol] || '';
       const valB = b[sortCol] || '';
       return sortDir === 'asc'
@@ -405,6 +573,21 @@ export class IntranetComponent implements OnInit, OnDestroy {
       this.certSortDirection.set('asc');
     }
     this.certCurrentPage.set(1);
+  }
+
+  getCertificateObject(r: Registration): Certificate {
+    return {
+      code: r.documentCode || '',
+      fullName: r.userName,
+      dni: r.userDni,
+      eventId: r.eventId,
+      eventTitle: r.eventTitle,
+      issueDate: r.date,
+      status: r.documentIssued ? 'Válido' : 'Revocado',
+      hours: 30,
+      signatureName: 'Director General del IESTP Chojata',
+      signatureRole: 'Autoridad del Instituto',
+    };
   }
 
   // --- SIGNALS FOR DATA INTERNA DATATABLE ---
@@ -489,15 +672,17 @@ export class IntranetComponent implements OnInit, OnDestroy {
   selectedRegistrationId = signal<number>(0);
   paymentReceiptNumber = signal<string>('');
   paymentDate = signal<string>('');
-  paymentAmount = signal<number>(150.00);
+  paymentAmount = signal<number | null>(null);
   paymentImage = signal<string>('');
+  paymentIsFree = signal<boolean>(false);
 
   openValidatePayment(reg: Registration): void {
     this.selectedRegistrationId.set(reg.id);
     this.paymentReceiptNumber.set('');
-    this.paymentDate.set(new Date().toISOString().split('T')[0]);
-    this.paymentAmount.set(150.00);
+    this.paymentDate.set('');
+    this.paymentAmount.set(null);
     this.paymentImage.set('');
+    this.paymentIsFree.set(false);
     this.showPaymentModal.set(true);
   }
 
@@ -513,21 +698,33 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   submitPaymentValidation(): void {
-    if (!this.paymentReceiptNumber() || !this.paymentDate() || !this.paymentAmount()) {
-      alert('Por favor complete todos los datos del recibo.');
+    const isFree = this.paymentIsFree();
+
+    if (!isFree && (!this.paymentReceiptNumber() || !this.paymentDate() || !this.paymentAmount())) {
+      alert('Por favor complete todos los datos del recibo o marque como Inscripción Gratuita.');
       return;
     }
 
-    this.platformService.validatePaymentAndApprove(
-      this.selectedRegistrationId(),
-      this.paymentReceiptNumber(),
-      this.paymentDate(),
-      this.paymentAmount(),
-      this.paymentImage() || 'https://images.unsplash.com/photo-1554416278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80'
-    );
+    const payload = isFree
+      ? { EsGratuito: true }
+      : {
+          EsGratuito: false,
+          NumRecibo: this.paymentReceiptNumber(),
+          FechaPago: this.paymentDate(),
+          MontoPago: this.paymentAmount(),
+        };
 
-    this.showPaymentModal.set(false);
-    alert('Pago validado correctamente e inscripción aprobada.');
+    this.apiService.patch<any>(`/matriculas/${this.selectedRegistrationId()}/validar-pago`, payload).subscribe({
+      next: (resp) => {
+        this.showPaymentModal.set(false);
+        alert('✅ Pago validado correctamente e inscripción aprobada.');
+        this.platformService.loadRegistrations(); // reload registrations from database
+      },
+      error: (err) => {
+        console.error('Error al validar el pago:', err);
+        alert('❌ Error al validar el pago: ' + (err?.error?.message || 'Error del servidor.'));
+      }
+    });
   }
 
 
@@ -543,6 +740,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
           this.passwordInput.set('');
           this.updateDefaultTab();
           this.platformService.loadEvents();
+          this.platformService.loadRegistrations();
           this.loadInternalData();
         } else {
           this.loginError.set(
@@ -570,6 +768,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
         if (success) {
           this.updateDefaultTab();
           this.platformService.loadEvents();
+          this.platformService.loadRegistrations();
           this.loadInternalData();
         } else {
           this.loginError.set('Error al realizar el login rápido.');
@@ -603,7 +802,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
     const certs = this.platformService.certificates();
     const usrs = this.platformService.users();
 
-    const pendingRegs = regs.filter(r => r.status === 'Pendiente').length;
+    const pendingRegs = regs.filter(r => !r.isPaymentValidated).length;
     const activeEvents = evs.filter(e => e.status === 'activo').length;
 
     // Attendance rate mock calculation
@@ -634,6 +833,8 @@ export class IntranetComponent implements OnInit, OnDestroy {
   // --- USER CRUD ---
   openAddUser(): void {
     this.isEditing.set(false);
+    this.savingUser.set(false);
+    this.saveUserError.set('');
     this.userForm.set({
       email: '',
       name: '',
@@ -646,6 +847,8 @@ export class IntranetComponent implements OnInit, OnDestroy {
 
   openEditUser(user: UserItem): void {
     this.isEditing.set(true);
+    this.savingUser.set(false);
+    this.saveUserError.set('');
     this.originalUserEmail.set(user.email);
     this.userForm.set({
       email: user.email,
@@ -661,6 +864,9 @@ export class IntranetComponent implements OnInit, OnDestroy {
     const form = this.userForm();
     if (!form.email || !form.name || !form.dni) return;
 
+    this.savingUser.set(true);
+    this.saveUserError.set('');
+
     if (this.isEditing()) {
       const updatedUser: UserItem = {
         email: form.email,
@@ -669,7 +875,17 @@ export class IntranetComponent implements OnInit, OnDestroy {
         dni: form.dni,
         password: form.password,
       };
-      this.platformService.editUser(updatedUser, this.originalUserEmail());
+      this.platformService.editUser(updatedUser, this.originalUserEmail()).subscribe({
+        next: () => {
+          this.savingUser.set(false);
+          this.showUserModal.set(false);
+          alert('✅ Datos de usuario actualizados correctamente.');
+        },
+        error: (err) => {
+          this.savingUser.set(false);
+          this.saveUserError.set(err?.error?.message || 'Error al actualizar el usuario.');
+        }
+      });
     } else {
       const autoPassword = this.generateSecurePassword();
       const newUser: UserItem = {
@@ -679,12 +895,18 @@ export class IntranetComponent implements OnInit, OnDestroy {
         dni: form.dni,
         password: autoPassword,
       };
-      this.platformService.addUser(newUser);
-      console.log(`[Correo simulado] → ${newUser.email} | Usuario: ${newUser.email} | Contraseña: ${autoPassword}`);
-      alert(`✅ Usuario registrado. Se ha enviado un correo a ${newUser.email} con las credenciales de acceso.`);
+      this.platformService.addUser(newUser).subscribe({
+        next: () => {
+          this.savingUser.set(false);
+          this.showUserModal.set(false);
+          alert(`✅ Usuario registrado. Se ha enviado un correo a ${newUser.email} con las credenciales de acceso.`);
+        },
+        error: (err) => {
+          this.savingUser.set(false);
+          this.saveUserError.set(err?.error?.message || 'Error al registrar el usuario.');
+        }
+      });
     }
-
-    this.showUserModal.set(false);
   }
 
   /** Genera una contraseña aleatoria segura para nuevos usuarios */
@@ -994,7 +1216,77 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   rejectReg(regId: number): void {
-    this.platformService.updateRegistrationStatus(regId, 'Rechazado');
+    if (confirm('¿Está seguro de rechazar y eliminar permanentemente esta inscripción?')) {
+      this.apiService.delete<any>(`/matriculas/${regId}`).subscribe({
+        next: (resp) => {
+          alert('✅ Inscripción eliminada correctamente.');
+          this.platformService.loadRegistrations(); // reload registrations from database
+        },
+        error: (err) => {
+          console.error('Error al eliminar inscripción:', err);
+          alert('❌ Error al eliminar la inscripción de la base de datos.');
+        }
+      });
+    }
+  }
+
+  openAddRegistration(): void {
+    this.saveRegistrationError.set('');
+    this.savingRegistration.set(false);
+    this.registrationForm.set({
+      userDni: '',
+      userName: '',
+      userPaternalLastName: '',
+      userMaternalLastName: '',
+      userEmail: '',
+      userPhone: '',
+      userProcedencia: 'Interno',
+      userTipoAsistente: 1,
+      userGrado: '',
+      eventId: this.platformService.events().find(e => e.status === 'activo' && e.type !== 'Repositorio')?.id || null,
+    });
+    this.showRegistrationModal.set(true);
+  }
+
+  saveRegistration(): void {
+    const form = this.registrationForm();
+    if (!form.userDni || !form.userName || !form.userPaternalLastName || !form.userMaternalLastName || !form.userEmail || !form.userPhone || !form.eventId) {
+      this.saveRegistrationError.set('Todos los campos obligatorios deben completarse.');
+      return;
+    }
+
+    this.savingRegistration.set(true);
+    this.saveRegistrationError.set('');
+
+    const payload = {
+      DNI:           form.userDni.trim(),
+      Nombres:       form.userName.trim(),
+      ApPaterno:     form.userPaternalLastName.trim(),
+      ApMaterno:     form.userMaternalLastName.trim(),
+      Correo:        form.userEmail.trim(),
+      NumCelular:    form.userPhone.trim(),
+      Procedencia:   form.userProcedencia,
+      TipoAsistente: form.userTipoAsistente,
+      GradAcademico: form.userGrado.trim() || null,
+      evento_id:     form.eventId,
+    };
+
+    this.apiService.post<any>('/matriculas', payload).subscribe({
+      next: (resp) => {
+        this.savingRegistration.set(false);
+        if (resp.status === 'success') {
+          this.showRegistrationModal.set(false);
+          alert('✅ Inscripción registrada correctamente. Se ha enviado el correo de confirmación al participante.');
+        } else {
+          this.saveRegistrationError.set(resp.message || 'Error al registrar la inscripción.');
+        }
+      },
+      error: (err) => {
+        this.savingRegistration.set(false);
+        const msg = err?.error?.message || 'Error al conectar con el servidor.';
+        this.saveRegistrationError.set(msg);
+      }
+    });
   }
 
   // --- ATTENDANCE SYSTEM (TEACHER / COORD) ---
@@ -1033,18 +1325,68 @@ export class IntranetComponent implements OnInit, OnDestroy {
     const certs = this.platformService.certificates();
 
     return regs.map((r) => {
-      const alreadyHasCert = certs.some((c) => c.dni === r.userDni && c.eventId === r.eventId);
+      const cert = certs.find((c) => c.dni === r.userDni && c.eventId === r.eventId);
+      const alreadyHasCert = !!cert;
       return {
         ...r,
         alreadyHasCert,
+        cert,
         isPaymentValidated: r.isPaymentValidated === true,
       };
     });
   });
 
-  issueCert(dni: string, eventId: number): void {
-    const result = this.platformService.emitCertificate(dni, eventId);
-    alert(result.message + (result.code ? ` Código generado: ${result.code}` : ''));
+  loadFondoAndShowCert(eventId: any, tipoAsistenteId: number, participantData: any): void {
+    this.apiService.get<any>('/e-documentos/fondo-base64', { 
+      evento_id: eventId, 
+      tipo_asistente: tipoAsistenteId 
+    }).subscribe({
+      next: (resp) => {
+        if (resp && resp.status === 'success') {
+          this.certFondoBase64.set(resp.fondo_base64 || null);
+          this.certDocData.set(resp.e_documento || null);
+        } else {
+          this.certFondoBase64.set(null);
+          this.certDocData.set(null);
+        }
+        this.certParticipantData.set(participantData);
+        this.showCertWithBackground.set(true);
+      },
+      error: (err) => {
+        console.warn('No se pudo cargar el fondo del certificado:', err);
+        this.certFondoBase64.set(null);
+        this.certDocData.set(null);
+        this.certParticipantData.set(participantData);
+        this.showCertWithBackground.set(true);
+      }
+    });
+  }
+
+  issueCert(regId: number): void {
+    this.apiService.patch<any>(`/matriculas/${regId}/emitir-certificado`, {}).subscribe({
+      next: (resp) => {
+        alert('🎓 Certificado emitido correctamente.');
+        this.platformService.loadRegistrations(); // refresh list
+        
+        // Find the registration from current list to get details
+        const reg = this.platformService.registrations().find(r => r.id === regId);
+        if (reg) {
+          const participantData = {
+            code: resp.documento?.Id_Documento || reg.documentCode || 'No asignado',
+            fullName: reg.userName,
+            dni: reg.userDni,
+            eventId: reg.eventId,
+            eventTitle: reg.eventTitle,
+            issueDate: new Date().toISOString().split('T')[0],
+          };
+          this.loadFondoAndShowCert(reg.eventId, reg.tipoAsistenteId || 1, participantData);
+        }
+      },
+      error: (err) => {
+        console.error('Error al emitir certificado:', err);
+        alert('❌ Error al emitir el certificado.');
+      }
+    });
   }
 
   toggleCertStatus(code: string): void {
@@ -1082,7 +1424,37 @@ export class IntranetComponent implements OnInit, OnDestroy {
   viewCertificate(cert: Certificate): void {
     this.showPrintCertModal.set(false);
     this.showResolutionModal.set(false);
-    this.activeCertificate.set(cert);
+    
+    const reg = this.platformService.registrations().find(
+      r => r.userDni === cert.dni && r.eventId === cert.eventId
+    );
+    const tipoAsistenteId = reg ? reg.tipoAsistenteId : 1;
+    
+    this.apiService.get<any>('/e-documentos/fondo-base64', { 
+      evento_id: cert.eventId, 
+      tipo_asistente: tipoAsistenteId 
+    }).subscribe({
+      next: (resp) => {
+        if (resp && resp.status === 'success' && resp.fondo_base64) {
+          this.certFondoBase64.set(resp.fondo_base64);
+          this.certDocData.set(resp.e_documento);
+          this.certParticipantData.set({
+            code: cert.code,
+            fullName: cert.fullName,
+            dni: cert.dni,
+            eventId: cert.eventId,
+            eventTitle: cert.eventTitle,
+            issueDate: cert.issueDate
+          });
+          this.showCertWithBackground.set(true);
+        } else {
+          this.activeCertificate.set(cert);
+        }
+      },
+      error: (err) => {
+        this.activeCertificate.set(cert);
+      }
+    });
   }
 
   closeCertificateModal(): void {
@@ -1094,11 +1466,70 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   viewAndDownload(cert: Certificate): void {
-    this.viewCertificate(cert);
-    this.showPrintCertModal.set(true); // force diploma view for printing
-    setTimeout(() => {
-      this.downloadCertificate();
-    }, 200);
+    const reg = this.platformService.registrations().find(
+      r => r.userDni === cert.dni && r.eventId === cert.eventId
+    );
+    const tipoAsistenteId = reg ? reg.tipoAsistenteId : 1;
+    
+    this.apiService.get<any>('/e-documentos/fondo-base64', { 
+      evento_id: cert.eventId, 
+      tipo_asistente: tipoAsistenteId 
+    }).subscribe({
+      next: (resp) => {
+        if (resp && resp.status === 'success' && resp.fondo_base64) {
+          this.certFondoBase64.set(resp.fondo_base64);
+          this.certDocData.set(resp.e_documento);
+          this.certParticipantData.set({
+            code: cert.code,
+            fullName: cert.fullName,
+            dni: cert.dni,
+            eventId: cert.eventId,
+            eventTitle: cert.eventTitle,
+            issueDate: cert.issueDate
+          });
+          this.showCertWithBackground.set(true);
+          setTimeout(() => {
+            this.downloadCertificate();
+          }, 1000);
+        } else {
+          this.activeCertificate.set(cert);
+          this.showPrintCertModal.set(true);
+          setTimeout(() => {
+            this.downloadCertificate();
+          }, 1000);
+        }
+      },
+      error: (err) => {
+        this.activeCertificate.set(cert);
+        this.showPrintCertModal.set(true);
+        setTimeout(() => {
+          this.downloadCertificate();
+        }, 1000);
+      }
+    });
+  }
+
+  formatDateForCertificate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '';
+    try {
+      let dateObj: Date;
+      if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        dateObj = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+      } else {
+        dateObj = new Date(dateStr);
+      }
+      if (isNaN(dateObj.getTime())) {
+        return dateStr;
+      }
+      const months = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      return `${dateObj.getDate()} de ${months[dateObj.getMonth()]} de ${dateObj.getFullYear()}`;
+    } catch (e) {
+      return dateStr;
+    }
   }
 
   // Resolution modal controls
@@ -1110,8 +1541,10 @@ export class IntranetComponent implements OnInit, OnDestroy {
     this.showResolutionModal.set(false);
   }
 
-  getQrCodeSvg(code: string): string {
-    return this.searchCertificatesHelper.getQrCodeSvg(code);
+  getQrCodeSvg(code: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(
+      this.searchCertificatesHelper.getQrCodeSvgRaw(code)
+    );
   }
 
   // --- MOCK EXPORT TO EXCEL ---
@@ -1290,6 +1723,273 @@ export class IntranetComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.importingCsv.set(false);
         this.importError.set(err?.error?.message || 'Error de conexión o de formato en el archivo.');
+      }
+    });
+  }
+
+  // --- RESOLUTION & DIPLOMA TEMPLATE SYSTEM (e_documentos) ---
+  selectedCourseForDocs = signal<EventItem | null>(null);
+  showDocsConfigModal = signal<boolean>(false);
+  loadingDocsConfig = signal<boolean>(false);
+  savingDocsConfig = signal<boolean>(false);
+  docsConfigList = signal<any[]>([]); // holds EDocumento array for current event
+
+  docsForm = signal<{
+    id?: string;
+    pdfResolucion?: string;
+    Fondo?: string;
+    Resolucion: string;
+    Tipo: string;
+    Texto01: string;
+    Texto02: string;
+    FechEmision: string;
+    Firma01: string;
+    Firma02: string;
+    Firma03: string;
+    TipoAsistente: number;
+  }>({
+    Resolucion: '',
+    pdfResolucion: '',
+    Fondo: '',
+    Tipo: '',
+    Texto01: '',
+    Texto02: '',
+    FechEmision: '',
+    Firma01: '',
+    Firma02: '',
+    Firma03: '',
+    TipoAsistente: 1
+  });
+
+  enableFirma01 = signal<boolean>(false);
+  enableFirma02 = signal<boolean>(false);
+  enableFirma03 = signal<boolean>(false);
+
+  toggleFirma01(val: boolean): void {
+    this.enableFirma01.set(val);
+    if (!val) {
+      this.docsForm.update(f => ({ ...f, Firma01: '' }));
+    }
+  }
+
+  toggleFirma02(val: boolean): void {
+    this.enableFirma02.set(val);
+    if (!val) {
+      this.docsForm.update(f => ({ ...f, Firma02: '' }));
+    }
+  }
+
+  toggleFirma03(val: boolean): void {
+    this.enableFirma03.set(val);
+    if (!val) {
+      this.docsForm.update(f => ({ ...f, Firma03: '' }));
+    }
+  }
+
+  selectedPdfFile = signal<File | null>(null);
+  selectedFondoFile = signal<File | null>(null);
+
+  onPdfFileChange(event: any): void {
+    const file = event.target?.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        alert('❌ Por favor, seleccione un archivo PDF válido.');
+        event.target.value = '';
+        return;
+      }
+      this.selectedPdfFile.set(file);
+    }
+  }
+
+  onFondoFileChange(event: any): void {
+    const file = event.target?.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('❌ Por favor, seleccione una imagen válida para el fondo.');
+        event.target.value = '';
+        return;
+      }
+      this.selectedFondoFile.set(file);
+    }
+  }
+
+  resetDocsForm(tipoAsistenteId: number = 1): void {
+    this.docsForm.set({
+      Resolucion: '',
+      pdfResolucion: '',
+      Fondo: '',
+      Tipo: '',
+      Texto01: '',
+      Texto02: '',
+      FechEmision: '',
+      Firma01: '',
+      Firma02: '',
+      Firma03: '',
+      TipoAsistente: tipoAsistenteId
+    });
+    this.enableFirma01.set(false);
+    this.enableFirma02.set(false);
+    this.enableFirma03.set(false);
+    
+    // Clear files
+    this.selectedPdfFile.set(null);
+    this.selectedFondoFile.set(null);
+    const pdfInput = document.getElementById('resolucionPdfInput') as HTMLInputElement;
+    if (pdfInput) pdfInput.value = '';
+    const fondoInput = document.getElementById('docsFondoInput') as HTMLInputElement;
+    if (fondoInput) fondoInput.value = '';
+  }
+
+  selectCourseForDocs(event: EventItem): void {
+    this.selectedCourseForDocs.set(event);
+    this.resetDocsForm(1);
+    this.loadCourseDocsConfig(event.id, false);
+    this.showDocsConfigModal.set(true);
+  }
+
+  loadCourseDocsConfig(eventId: any, autoLoadForm: boolean = true): void {
+    this.loadingDocsConfig.set(true);
+    this.apiService.get<any[]>('/e-documentos', { evento_id: eventId }).subscribe({
+      next: (data) => {
+        this.loadingDocsConfig.set(false);
+        if (Array.isArray(data)) {
+          this.docsConfigList.set(data);
+          if (autoLoadForm) {
+            // Auto select Assistant Type config if it exists
+            this.selectAsistenteTypeForDocs(this.docsForm().TipoAsistente);
+          }
+        }
+      },
+      error: (err) => {
+        this.loadingDocsConfig.set(false);
+        console.error('Error al cargar configuración de documentos:', err);
+      }
+    });
+  }
+
+  selectAsistenteTypeForDocs(tipoId: number): void {
+    // Clear selected files when switching assistant types
+    this.selectedPdfFile.set(null);
+    this.selectedFondoFile.set(null);
+    
+    const pdfInput = document.getElementById('resolucionPdfInput') as HTMLInputElement;
+    if (pdfInput) pdfInput.value = '';
+    
+    const fondoInput = document.getElementById('docsFondoInput') as HTMLInputElement;
+    if (fondoInput) fondoInput.value = '';
+
+    // Update selected TipoAsistente in form
+    this.docsForm.update(f => ({ ...f, TipoAsistente: tipoId }));
+
+    // Check if configuration exists in the loaded list
+    const existing = this.docsConfigList().find(c => Number(c.TipoAsistente) === Number(tipoId));
+    if (existing) {
+      this.docsForm.set({
+        id: existing.id,
+        pdfResolucion: existing.pdfResolucion || '',
+        Fondo: existing.Fondo || '',
+        Resolucion: existing.Resolucion || '',
+        Tipo: existing.Tipo || '',
+        Texto01: existing.Texto01 || '',
+        Texto02: existing.Texto02 || '',
+        FechEmision: existing.FechEmision ? existing.FechEmision.substring(0, 10) : '',
+        Firma01: existing.Firma01 || '',
+        Firma02: existing.Firma02 || '',
+        Firma03: existing.Firma03 || '',
+        TipoAsistente: tipoId
+      });
+      this.enableFirma01.set(!!existing.Firma01);
+      this.enableFirma02.set(!!existing.Firma02);
+      this.enableFirma03.set(!!existing.Firma03);
+    } else {
+      // Load defaults
+      this.docsForm.set({
+        Resolucion: '',
+        pdfResolucion: '',
+        Fondo: '',
+        Tipo: '',
+        Texto01: '',
+        Texto02: '',
+        FechEmision: '',
+        Firma01: '',
+        Firma02: '',
+        Firma03: '',
+        TipoAsistente: tipoId
+      });
+      this.enableFirma01.set(false);
+      this.enableFirma02.set(false);
+      this.enableFirma03.set(false);
+    }
+  }
+
+  saveDocsConfig(): void {
+    const course = this.selectedCourseForDocs();
+    if (!course) return;
+
+    this.savingDocsConfig.set(true);
+    const form = this.docsForm();
+
+    const formData = new FormData();
+    if (form.id) {
+      formData.append('id', form.id);
+    }
+    formData.append('Id_evento', course.id);
+    formData.append('TipoAsistente', String(form.TipoAsistente));
+    formData.append('Resolucion', form.Resolucion || '');
+    formData.append('Tipo', form.Tipo || '');
+    formData.append('Texto01', form.Texto01 || '');
+    formData.append('Texto02', form.Texto02 || '');
+    formData.append('FechEmision', form.FechEmision || '');
+    formData.append('Firma01', form.Firma01 || '');
+    formData.append('Firma02', form.Firma02 || '');
+    formData.append('Firma03', form.Firma03 || '');
+
+    const pdfFile = this.selectedPdfFile();
+    if (pdfFile) {
+      formData.append('pdfResolucion', pdfFile);
+    }
+
+    const fondoFile = this.selectedFondoFile();
+    if (fondoFile) {
+      formData.append('Fondo', fondoFile);
+    }
+
+    this.apiService.postFormData<any>('/e-documentos', formData).subscribe({
+      next: (resp) => {
+        this.savingDocsConfig.set(false);
+        alert('✅ Configuración del documento guardada con éxito.');
+        // Reset form to empty state
+        this.resetDocsForm(form.TipoAsistente);
+        // Refresh local list without reloading the form
+        this.loadCourseDocsConfig(course.id, false);
+      },
+      error: (err) => {
+        this.savingDocsConfig.set(false);
+        console.error('Error al guardar configuración:', err);
+        alert('❌ Error al guardar la configuración: ' + (err?.error?.message || 'Error de servidor'));
+      }
+    });
+  }
+
+  deleteDocsConfig(config: any): void {
+    if (!confirm(`¿Está seguro de eliminar la configuración para el rol "${config.tipo_asistente_rel?.AsigTipo || 'ASISTENTE'}"?`)) {
+      return;
+    }
+
+    const course = this.selectedCourseForDocs();
+    if (!course) return;
+
+    this.apiService.delete<any>(`/e-documentos/${config.id}`).subscribe({
+      next: (resp) => {
+        alert('✅ Configuración eliminada con éxito.');
+        // Reset form to empty state in case it was loading the deleted config
+        this.resetDocsForm(this.docsForm().TipoAsistente);
+        // Refresh local list without reloading the form
+        this.loadCourseDocsConfig(course.id, false);
+      },
+      error: (err) => {
+        console.error('Error al eliminar configuración:', err);
+        alert('❌ Error al eliminar la configuración: ' + (err?.error?.message || 'Error de servidor'));
       }
     });
   }

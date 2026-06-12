@@ -338,3 +338,90 @@ body.light-mode .lp-repo-card button {
 body.light-mode .lp-repo-card button:hover {
   color: #e11d48 !important;
 }
+
+/* ==========================================================================
+   ESTILOS DE IMPRESIÓN OFICIALES PARA CERTIFICADOS (A4 LANDSCAPE BORDERLESS)
+   ========================================================================== */
+@media print {
+  /* Ocultar elementos de la intranet e interfaz en la impresión */
+  body, html, .dashboard-shell-layout, .dashboard-sidebar, .dashboard-topbar, .dashboard-body, .modal-backdrop, .modal-content, .print\:hidden, nav, footer {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    overflow: hidden !important;
+  }
+
+  /* El modal backdrop se vuelve el contenedor principal visible */
+  .modal-backdrop {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: hidden !important;
+    z-index: 99999 !important;
+  }
+
+  .modal-content {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+  }
+
+  /* Certificado con fondo */
+  #landscape-certificate-print-area.landscape-certificate-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background-color: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    background-size: 100% 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Certificado antiguo */
+  #certificate-print-area.certificate-sheet {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) scale(1.1) !important;
+    margin: 0 !important;
+    border: 12px double #5c0a1e !important;
+    background-color: #0b071a !important;
+    color: #e2e8f0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+}
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+

@@ -496,3 +496,87 @@ table th {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
+
+/* ==========================================
+   ESTILOS PREMIUM PARA EL CERTIFICADO CON FONDO (LANDSCAPE)
+   ========================================== */
+.landscape-certificate-sheet {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.landscape-certificate-sheet .recipient-name {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 32px;
+  font-weight: bold;
+  color: #1e293b;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================
+   ESTILOS OPTIMIZADOS PARA IMPRESIÓN DEL CERTIFICADO CON FONDO (LANDSCAPE A4)
+   ========================================== */
+@media print {
+  /* Ocultar elementos de la intranet e interfaz en la impresión */
+  body, html, .dashboard-shell-layout, .dashboard-sidebar, .dashboard-topbar, .dashboard-body, .modal-backdrop, .modal-content, .print\:hidden, nav, footer {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* El modal backdrop se vuelve el contenedor principal visible */
+  .modal-backdrop {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    z-index: 99999 !important;
+  }
+
+  .modal-content {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
+
+  /* Ajuste de escala e impresión a pantalla completa para el certificado con fondo */
+  #landscape-certificate-print-area.landscape-certificate-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background-color: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    background-size: 100% 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+}
+

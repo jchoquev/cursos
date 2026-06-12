@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HeroImage } from '../../components/hero-image/hero-image';
 import { PlatformService, EventItem, Certificate } from '../../services/platform.service';
+import { ApiService } from '../../services/api.service';
 import { SearchCertificates } from '../search-certificates/search-certificates';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-home',
@@ -16,8 +18,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class Home implements OnInit {
   readonly platformService = inject(PlatformService);
+  private readonly apiService = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly searchCertificatesHelper = new SearchCertificates();
 
   ngOnInit(): void {
@@ -56,11 +60,13 @@ export class Home implements OnInit {
   // Paso 1 State — signal
   dniInput = signal<string>('');
   dniError = signal<string>('');
+  isDniFound = signal<boolean>(false);
 
   // Paso 2 Form State — signals para todos los campos del formulario
-  assistantType = signal<string>('Estudiante');
+  assistantType = signal<number>(1);
   provenance = signal<string>('Interno');
-  lastName = signal<string>('');
+  paternalLastName = signal<string>('');
+  maternalLastName = signal<string>('');
   firstName = signal<string>('');
   degree = signal<string>('');
   emailInput = signal<string>('');
@@ -124,6 +130,7 @@ export class Home implements OnInit {
     this.currentRegisterEvent.set(event);
     this.dniInput.set('');
     this.dniError.set('');
+    this.isDniFound.set(false);
     this.activeStep.set(1);
   }
 
@@ -131,6 +138,8 @@ export class Home implements OnInit {
     this.activeStep.set(0);
     this.currentRegisterEvent.set(null);
   }
+
+  isSearchingDni = signal<boolean>(false);
 
   // Paso 1: Buscar DNI
   onDniSearch(): void {
@@ -141,28 +150,54 @@ export class Home implements OnInit {
     }
 
     this.dniError.set('');
+    this.isSearchingDni.set(true);
 
-    const existingUser = this.platformService.users().find(u => u.dni === dni);
+    this.apiService.get<any>('/consulta-dni/' + dni).subscribe({
+      next: (resp) => {
+        this.isSearchingDni.set(false);
+        const data = resp.data;
+        if (data) {
+          this.isDniFound.set(true);
+          this.firstName.set(data.Nombres || '');
+          this.paternalLastName.set(data.ApPaterno || '');
+          this.maternalLastName.set(data.ApMaterno || '');
+          this.emailInput.set(data.Correo || '');
+          this.phoneInput.set(data.NumCelular || '');
+          this.degree.set(data.Grado || '');
+          // Map to database TipoAsistente IDs: 1 = ASISTENTE, 2 = PONENTE, 3 = ORGANIZADOR
+          let tipoId = 1;
+          if (data.TipoAsistente === 'Docente') {
+            tipoId = 2; // PONENTE
+          }
+          this.assistantType.set(tipoId);
+          this.provenance.set(data.Procedencia || 'Interno');
+        } else {
+          this.setExternoForm();
+        }
+        this.goToStep2();
+      },
+      error: (err) => {
+        this.isSearchingDni.set(false);
+        // DNI not found, so it is Externo
+        this.setExternoForm();
+        this.goToStep2();
+      }
+    });
+  }
 
-    if (existingUser) {
-      const names = existingUser.name.split(' ');
-      this.firstName.set(names[0] || '');
-      this.lastName.set(names.slice(1).join(' ') || '');
-      this.emailInput.set(existingUser.email);
-      this.phoneInput.set('9' + Math.floor(10000000 + Math.random() * 90000000));
-      this.degree.set(existingUser.role === 'Administrador' ? 'Doctorado' : 'Bachiller');
-      this.assistantType.set(existingUser.role === 'Administrador' ? 'Docente' : 'Público General');
-      this.provenance.set('Interno');
-    } else {
-      this.firstName.set('');
-      this.lastName.set('');
-      this.emailInput.set('');
-      this.phoneInput.set('');
-      this.degree.set('');
-      this.assistantType.set('Estudiante');
-      this.provenance.set('Externo');
-    }
+  private setExternoForm(): void {
+    this.isDniFound.set(false);
+    this.firstName.set('');
+    this.paternalLastName.set('');
+    this.maternalLastName.set('');
+    this.emailInput.set('');
+    this.phoneInput.set('');
+    this.degree.set('');
+    this.assistantType.set(1);
+    this.provenance.set('Externo');
+  }
 
+  private goToStep2(): void {
     this.generateCaptcha();
     this.captchaUserInput.set('');
     this.captchaError.set('');
@@ -181,7 +216,7 @@ export class Home implements OnInit {
 
   // Paso 2: Registrar
   onRegisterSubmit(): void {
-    if (!this.firstName().trim() || !this.lastName().trim() || !this.emailInput().trim() || !this.phoneInput().trim()) {
+    if (!this.firstName().trim() || !this.paternalLastName().trim() || !this.maternalLastName().trim() || !this.emailInput().trim() || !this.phoneInput().trim()) {
       this.captchaError.set('Por favor, complete todos los campos obligatorios.');
       return;
     }
@@ -197,22 +232,51 @@ export class Home implements OnInit {
     const event = this.currentRegisterEvent();
     if (!event) return;
 
-    const fullName = `${this.firstName().trim()} ${this.lastName().trim()}`;
-    const res = this.platformService.registerToEvent(
-      this.dniInput(),
-      fullName,
-      this.emailInput().trim(),
-      event.id
-    );
+    const fullName = `${this.firstName().trim()} ${this.paternalLastName().trim()} ${this.maternalLastName().trim()}`;
+    
+    const payload = {
+      DNI: this.dniInput(),
+      Procedencia: this.provenance(),
+      Nombres: this.firstName().trim(),
+      ApPaterno: this.paternalLastName().trim(),
+      ApMaterno: this.maternalLastName().trim(),
+      GradAcademico: this.degree().trim() || null,
+      Correo: this.emailInput().trim(),
+      NumCelular: this.phoneInput().trim(),
+      TipoAsistente: this.assistantType(),
+      evento_id: event.id
+    };
 
-    if (res.success) {
-      const registrationCount = this.platformService.registrations().length;
-      this.registrationCode.set(`INS-2026-${String(registrationCount).padStart(3, '0')}`);
-      this.successFullName.set(fullName);
-      this.activeStep.set(3);
-    } else {
-      this.captchaError.set(res.message);
-    }
+    this.apiService.post<any>('/matriculas', payload).subscribe({
+      next: (resp) => {
+        if (resp.status === 'success' && resp.data) {
+          // Update the local mock store as well so it propagates to intranet stats immediately
+          const newReg = {
+            id: resp.data.id,
+            userEmail: payload.Correo,
+            userName: fullName,
+            userDni: payload.DNI,
+            eventId: payload.evento_id,
+            eventTitle: event.title,
+            date: new Date().toISOString().split('T')[0],
+            status: 'Pendiente' as const,
+            tipoAsistente: this.platformService.tipoAsistentes().find(t => t.id === payload.TipoAsistente)?.AsigTipo || 'ASISTENTE'
+          };
+          this.platformService.registrations.update(curr => [...curr, newReg]);
+
+          this.registrationCode.set(`INS-2026-${String(resp.data.id).padStart(3, '0')}`);
+          this.successFullName.set(fullName);
+          this.activeStep.set(3);
+        } else {
+          this.captchaError.set(resp.message || 'Error al procesar la inscripción.');
+        }
+      },
+      error: (err) => {
+        console.error('Error al registrar matricula:', err);
+        const errMsg = err?.error?.message || 'Error al conectar con el servidor para registrar la inscripción.';
+        this.captchaError.set(errMsg);
+      }
+    });
   }
 
   // Paso 3: Descargar Constancia de Matrícula (Print / PDF)
@@ -229,7 +293,7 @@ export class Home implements OnInit {
       ------------------------------------------------------
       Nombre Completo       : ${this.successFullName()}
       Documento (DNI)       : ${this.dniInput()}
-      Tipo de Asistente     : ${this.assistantType()}
+      Tipo de Asistente     : ${this.platformService.tipoAsistentes().find(t => t.id === this.assistantType())?.AsigTipo || 'ASISTENTE'}
       Procedencia           : ${this.provenance()}
       
       DATOS DEL EVENTO ACADÉMICO:
@@ -307,7 +371,9 @@ export class Home implements OnInit {
     this.showResolutionModal.set(false);
   }
 
-  getQrCodeSvg(code: string): string {
-    return this.searchCertificatesHelper.getQrCodeSvg(code);
+  getQrCodeSvg(code: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(
+      this.searchCertificatesHelper.getQrCodeSvgRaw(code)
+    );
   }
 }

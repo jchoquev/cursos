@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Observable, of, forkJoin } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 
 export interface EventItem {
@@ -25,6 +25,7 @@ export interface EventItem {
   registrationEndDate?: string;
   courseStartDate?: string;
   courseEndDate?: string;
+  created_at?: string;
 }
 
 export interface UserItem {
@@ -50,6 +51,10 @@ export interface Registration {
   receiptDate?: string;
   receiptAmount?: number;
   receiptImage?: string;
+  documentCode?: string;
+  documentIssued?: boolean;
+  tipoAsistente?: string;
+  tipoAsistenteId?: number;
 }
 
 export interface Certificate {
@@ -84,6 +89,12 @@ export class PlatformService {
     { id: 3, tipActividad: 'Seminario' },
   ]);
 
+  readonly tipoAsistentes = signal<{ id: number; AsigTipo: string }[]>([
+    { id: 1, AsigTipo: 'ASISTENTE' },
+    { id: 2, AsigTipo: 'PONENTE' },
+    { id: 3, AsigTipo: 'ORGANIZADOR' }
+  ]);
+
   constructor() {
     // Format all initial hardcoded/mock dates to DD/MM/YYYY
     this.events.update(list =>
@@ -98,10 +109,23 @@ export class PlatformService {
     );
 
     if (isPlatformBrowser(this.platformId)) {
+      const savedUser = localStorage.getItem('auth_user');
+      if (savedUser) {
+        try {
+          this.currentUser.set(JSON.parse(savedUser));
+        } catch (e) {
+          console.error('Error parsing auth_user from localStorage', e);
+        }
+      }
+
       this.loadEvents();
       this.loadActivityTypes();
-      if (this.isLoggedIn() && this.userRole() === 'Administrador') {
-        this.loadUsers();
+      this.loadTipoAsistentes();
+      if (this.isLoggedIn()) {
+        this.loadRegistrations();
+        if (this.userRole() === 'Administrador') {
+          this.loadUsers();
+        }
       }
     }
   }
@@ -173,6 +197,7 @@ export class PlatformService {
       registrationEndDate: this.formatDate(item.FnInscripcion),
       courseStartDate: this.formatDate(item.InCurso),
       courseEndDate: this.formatDate(item.FnCurso),
+      created_at: item.created_at,
     };
   }
 
@@ -246,6 +271,22 @@ export class PlatformService {
       },
       error: (err) => {
         console.error('Error fetching activity types from backend:', err);
+      }
+    });
+  }
+
+  loadTipoAsistentes(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    this.apiService.get<any[]>('/tipo-asistentes').subscribe({
+      next: (data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          this.tipoAsistentes.set(data);
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching assistant types from backend:', err);
       }
     });
   }
@@ -439,56 +480,7 @@ export class PlatformService {
   ]);
 
   // 3. Registrations Store
-  readonly registrations = signal<Registration[]>([
-    {
-      id: 1,
-      userEmail: 'participante@institucion.edu',
-      userName: 'Estudiante Juan Choque Vega',
-      userDni: '73549281',
-      eventId: 1,
-      eventTitle: 'Desarrollo Frontend con Angular Avanzado',
-      date: '2026-05-10',
-      status: 'Aprobado',
-      // Preloaded with a validated payment
-      isPaymentValidated: true,
-      receiptNumber: 'REC-2026-0091',
-      receiptDate: '2026-05-10',
-      receiptAmount: 150.00,
-      receiptImage: 'https://images.unsplash.com/photo-1554416278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80',
-    },
-    {
-      id: 2,
-      userEmail: 'participante@institucion.edu',
-      userName: 'Estudiante Juan Choque Vega',
-      userDni: '73549281',
-      eventId: 2,
-      eventTitle: 'Diseño de Interfaces Web Premium y UX/UI',
-      date: '2026-05-11',
-      status: 'Pendiente',
-    },
-    {
-      id: 3,
-      userEmail: 'maria.lopez@institucion.edu',
-      userName: 'María López Gutiérrez',
-      userDni: '44556677',
-      eventId: 1,
-      eventTitle: 'Desarrollo Frontend con Angular Avanzado',
-      date: '2026-05-15',
-      status: 'Aprobado',
-      // Approved but payment has not been validated
-      isPaymentValidated: false,
-    },
-    {
-      id: 4,
-      userEmail: 'maria.lopez@institucion.edu',
-      userName: 'María López Gutiérrez',
-      userDni: '44556677',
-      eventId: 2,
-      eventTitle: 'Diseño de Interfaces Web Premium y UX/UI',
-      date: '2026-05-16',
-      status: 'Pendiente',
-    },
-  ]);
+  readonly registrations = signal<Registration[]>([]);
 
   // 4. Certificates Store
   readonly certificates = signal<Certificate[]>([
@@ -559,11 +551,7 @@ export class PlatformService {
   ]);
 
   // --- SESSION STATE ---
-  readonly currentUser = signal<UserItem | null>(
-    isPlatformBrowser(inject(PLATFORM_ID)) && localStorage.getItem('auth_user')
-      ? JSON.parse(localStorage.getItem('auth_user')!)
-      : null
-  );
+  readonly currentUser = signal<UserItem | null>(null);
   readonly isLoggedIn = computed(() => this.currentUser() !== null);
   readonly userRole = computed(() => this.currentUser()?.role || null);
 
@@ -593,6 +581,7 @@ export class PlatformService {
             if (user.role === 'Administrador') {
               this.loadUsers();
             }
+            this.loadRegistrations();
             observer.next(true);
           } else {
             this.errorMessage.set(res.message ?? 'Credenciales incorrectas.');
@@ -727,42 +716,88 @@ export class PlatformService {
     if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn() || this.userRole() !== 'Administrador') {
       return;
     }
+    this.isLoading.set(true);
     this.apiService.get<UserItem[]>('/users').subscribe({
       next: (data) => {
         if (Array.isArray(data)) {
           this.users.set(data);
         }
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Error fetching users:', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  loadRegistrations(): void {
+    if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn()) {
+      return;
+    }
+    this.isLoading.set(true);
+    this.apiService.get<any[]>('/matriculas', { all: 'true' }).subscribe({
+      next: (data) => {
+        if (Array.isArray(data)) {
+          const mapped = data.map((item) => {
+            const userName = `${item.Nombres} ${item.ApPaterno} ${item.ApMaterno}`;
+            const isPaymentValidated = !!item.Pago;
+            const receipt = item.DatoPago || {};
+            return {
+              id: item.id,
+              userEmail: item.Correo,
+              userName: userName,
+              userDni: item.DNI,
+              eventId: item.evento_id,
+              eventTitle: item.evento_titulo || item.evento?.titulo || 'Evento Académico',
+              date: this.formatDate(item.created_at),
+              status: (isPaymentValidated ? 'Aprobado' : 'Pendiente') as 'Aprobado' | 'Pendiente' | 'Rechazado',
+              isPaymentValidated: isPaymentValidated,
+              receiptNumber: receipt.NumRecibo || '',
+              receiptDate: receipt.FechaPago ? this.formatDate(receipt.FechaPago) : '',
+              receiptAmount: receipt.MontoPago ? Number(receipt.MontoPago) : undefined,
+              documentCode: item.documento ? item.documento.Id_Documento : '',
+              documentIssued: item.documento ? !!item.documento.Estado : false,
+              tipoAsistente: item.tipo_asistente_rel ? item.tipo_asistente_rel.AsigTipo : 'ASISTENTE',
+              tipoAsistenteId: item.TipoAsistente,
+            };
+          });
+          this.registrations.set(mapped);
+        }
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Error fetching registrations:', err);
+        this.isLoading.set(false);
       }
     });
   }
 
   // Add / Edit / Delete Users (Admin / Coordinator)
-  addUser(user: UserItem): void {
-    this.apiService.post<any>('/users', user).subscribe({
-      next: (resp) => {
+  addUser(user: UserItem): Observable<any> {
+    this.isLoading.set(true);
+    return this.apiService.post<any>('/users', user).pipe(
+      tap(() => {
         this.loadUsers();
-      },
-      error: (err) => {
-        console.error('Error al agregar usuario:', err);
-        alert('❌ Error al registrar el usuario en la base de datos: ' + (err?.error?.message || 'Error de red o duplicado.'));
-      }
-    });
+      }),
+      catchError((err) => {
+        this.isLoading.set(false);
+        throw err;
+      })
+    );
   }
 
-  editUser(updated: UserItem, originalEmail: string): void {
-    this.apiService.put<any>(`/users/${originalEmail}`, updated).subscribe({
-      next: (resp) => {
+  editUser(updated: UserItem, originalEmail: string): Observable<any> {
+    this.isLoading.set(true);
+    return this.apiService.put<any>(`/users/${originalEmail}`, updated).pipe(
+      tap(() => {
         this.loadUsers();
-        alert('✅ Usuario actualizado correctamente.');
-      },
-      error: (err) => {
-        console.error('Error al editar usuario:', err);
-        alert('❌ Error al actualizar el usuario: ' + (err?.error?.message || 'Error del servidor.'));
-      }
-    });
+      }),
+      catchError((err) => {
+        this.isLoading.set(false);
+        throw err;
+      })
+    );
   }
 
   deleteUser(email: string): void {

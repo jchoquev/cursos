@@ -22,13 +22,16 @@ export class App implements OnInit {
   // Theme toggle (light / dark) — persisted to localStorage
   themeMode = signal<'light' | 'dark'>('dark');
 
+  // Identifica si estamos en el cliente para evitar Hydration Mismatch
+  isBrowser = signal<boolean>(false);
+
   constructor() {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         // Ocultar navbar/footer en rutas que inicien con /intranet
         const isIntranet = event.urlAfterRedirects.startsWith('/intranet');
         this.isPublicRoute.set(!isIntranet);
-
+ 
         if (isPlatformBrowser(this.platformId)) {
           // En intranet siempre quitar light-mode del body
           if (isIntranet) {
@@ -40,9 +43,10 @@ export class App implements OnInit {
       }
     });
   }
-
+ 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.isBrowser.set(true);
       // Leer tema guardado del localStorage
       const saved = localStorage.getItem('app-theme') as 'light' | 'dark' | null;
       if (saved) {

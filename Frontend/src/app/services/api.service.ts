@@ -116,6 +116,12 @@ export class ApiService {
       .pipe(catchError((err) => throwError(() => err)));
   }
 
+  patch<T>(path: string, body: unknown): Observable<T> {
+    return this.http
+      .patch<T>(`${this.baseUrl}${path}`, body, { headers: this.getAuthHeaders() })
+      .pipe(catchError((err) => throwError(() => err)));
+  }
+
   delete<T>(path: string): Observable<T> {
     return this.http
       .delete<T>(`${this.baseUrl}${path}`, { headers: this.getAuthHeaders() })

@@ -299,4 +299,22 @@ class DataInternaController extends Controller
             'errors' => $errors
         ]);
     }
+
+    /**
+     * Public search by DNI.
+     */
+    public function consultaDni($dni)
+    {
+        $record = DataInterna::where('DNI', $dni)->first();
+        if (!$record) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'DNI no registrado en el sistema'
+            ], 404);
+        }
+        return response()->json([
+            'status' => 'success',
+            'data' => $record
+        ]);
+    }
 }

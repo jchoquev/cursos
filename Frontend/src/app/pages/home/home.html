@@ -524,9 +524,10 @@
         <div class="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            class="flex-1 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10"
+            [disabled]="isSearchingDni()"
+            class="flex-1 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🔍 Buscar
+            {{ isSearchingDni() ? '⌛ Buscando...' : '🔍 Buscar' }}
           </button>
           <button
             type="button"
@@ -590,7 +591,8 @@
                   [ngModel]="provenance()"
                   (ngModelChange)="provenance.set($event)"
                   [name]="'provenance'"
-                  class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold"
+                  [disabled]="isDniFound()"
+                  class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="Interno">Interno</option>
                   <option value="Externo">Externo</option>
@@ -602,15 +604,13 @@
               <label class="block text-[11px] text-slate-400 mb-1">Tipo de Asistente</label>
               <select
                 [ngModel]="assistantType()"
-                (ngModelChange)="assistantType.set($event)"
+                (ngModelChange)="assistantType.set(+$event)"
                 [name]="'assistantType'"
                 class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold"
               >
-                <option value="Estudiante">Estudiante</option>
-                <option value="Egresado">Egresado</option>
-                <option value="Docente">Docente</option>
-                <option value="Administrativo">Administrativo</option>
-                <option value="Público General">Público General</option>
+                <option *ngFor="let t of platformService.tipoAsistentes()" [value]="t.id">
+                  {{ t.AsigTipo }}
+                </option>
               </select>
             </div>
 
@@ -629,29 +629,44 @@
               </div>
 
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1">Apellidos</label>
+                <label class="block text-[11px] text-slate-400 mb-1">Apellido Paterno</label>
                 <input
                   type="text"
-                  [ngModel]="lastName()"
-                  (ngModelChange)="lastName.set($event)"
-                  [name]="'lastName'"
-                  placeholder="Ingrese sus apellidos"
+                  [ngModel]="paternalLastName()"
+                  (ngModelChange)="paternalLastName.set($event)"
+                  [name]="'paternalLastName'"
+                  placeholder="Apellido Paterno"
                   class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
                   required
                 />
               </div>
             </div>
 
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Grado Académico <span class="text-slate-500">(Opcional)</span></label>
-              <input
-                type="text"
-                [ngModel]="degree()"
-                (ngModelChange)="degree.set($event)"
-                [name]="'degree'"
-                placeholder="Ej: Bachiller, Licenciado, Magíster..."
-                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
-              />
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Apellido Materno</label>
+                <input
+                  type="text"
+                  [ngModel]="maternalLastName()"
+                  (ngModelChange)="maternalLastName.set($event)"
+                  [name]="'maternalLastName'"
+                  placeholder="Apellido Materno"
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Grado Académico <span class="text-slate-500">(Opcional)</span></label>
+                <input
+                  type="text"
+                  [ngModel]="degree()"
+                  (ngModelChange)="degree.set($event)"
+                  [name]="'degree'"
+                  placeholder="Ej: Bachiller, Licenciado..."
+                  class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                />
+              </div>
             </div>
           </div>
 
@@ -794,12 +809,6 @@
 
       <!-- Botones de Acción Paso 3 -->
       <div class="flex flex-col gap-2 pt-2">
-        <button
-          (click)="downloadConstancia()"
-          class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg"
-        >
-          📥 Descargar Constancia
-        </button>
         <button
           (click)="closeRegistrationFlow()"
           class="w-full py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer"

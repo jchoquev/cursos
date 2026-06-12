@@ -223,9 +223,4 @@ body.light-mode .lp-modal-content .p-4.rounded-2xl span.text-slate-200 {
     page-break-after: avoid !important;
   }
 
-  /* Configuración de página horizontal */
-  @page {
-    size: A4 landscape;
-    margin: 0;
-  }
 }

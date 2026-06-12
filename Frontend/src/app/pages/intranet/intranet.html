@@ -127,24 +127,15 @@
     <!-- Navigation Menu -->
     <nav class="sidebar-nav flex-1 px-3 pb-6 overflow-y-auto space-y-4 text-left">
       <!-- Grupo: Navegación -->
-      <div *ngIf="user.role === 'Administrador' || user.role === 'Caja'" class="space-y-1">
+      <!-- Grupo: Navegación -->
+      <div *ngIf="user.role === 'Administrador'" class="space-y-1">
         <span
           class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Navegación</span>
 
-        <button *ngIf="user.role === 'Administrador'" (click)="activeTab.set('overview')"
+        <button (click)="activeTab.set('overview')"
           [class]="activeTab() === 'overview' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'">
           <span class="sidebar-btn-icon">📊</span>
           <span class="sidebar-btn-text">Resumen General</span>
-        </button>
-
-        <button *ngIf="user.role === 'Administrador' || user.role === 'Caja'" (click)="activeTab.set('registrations')"
-          [class]="activeTab() === 'registrations' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'">
-          <span class="sidebar-btn-icon">📥</span>
-          <span class="sidebar-btn-text">{{ user.role === 'Administrador' ? 'Inscripciones' : 'Validar Pagos' }}</span>
-          <span *ngIf="stats().pendingRegistrations > 0"
-            class="sidebar-btn-badge ml-auto px-1.5 py-0.5 rounded-full text-[8px] bg-[#f43f5e] text-white font-bold font-mono">
-            {{ stats().pendingRegistrations }}
-          </span>
         </button>
       </div>
 
@@ -161,25 +152,35 @@
       </div>
 
       <!-- Grupo: Formación Continua -->
-      <div *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'"
+      <div *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua' || user.role === 'Caja'"
         class="space-y-1 pt-2 border-t border-white/5">
         <span
           class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Formación
           Continua</span>
 
-        <button (click)="activeTab.set('events')"
+        <button *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua' || user.role === 'Caja'" (click)="activeTab.set('registrations')"
+          [class]="activeTab() === 'registrations' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'">
+          <span class="sidebar-btn-icon">📥</span>
+          <span class="sidebar-btn-text">{{ user.role === 'Administrador' || user.role === 'Formación Continua' ? 'Inscripciones' : 'Validar Pagos' }}</span>
+          <span *ngIf="stats().pendingRegistrations > 0"
+            class="sidebar-btn-badge ml-auto px-1.5 py-0.5 rounded-full text-[8px] bg-[#f43f5e] text-white font-bold font-mono">
+            {{ stats().pendingRegistrations }}
+          </span>
+        </button>
+
+        <button *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'" (click)="activeTab.set('events')"
           [class]="activeTab() === 'events' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'">
           <span class="sidebar-btn-icon">📅</span>
           <span class="sidebar-btn-text">Gestión de Cursos</span>
         </button>
 
-        <button (click)="activeTab.set('certificates')"
+        <button *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'" (click)="activeTab.set('certificates')"
           [class]="activeTab() === 'certificates' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'">
           <span class="sidebar-btn-icon">🎓</span>
           <span class="sidebar-btn-text">Emisión de Certificados</span>
         </button>
 
-        <button (click)="activeTab.set('internal-data')"
+        <button *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'" (click)="activeTab.set('internal-data')"
           [class]="activeTab() === 'internal-data' ? 'sidebar-btn-active' : 'sidebar-btn-inactive'">
           <span class="sidebar-btn-icon">📥</span>
           <span class="sidebar-btn-text">Información Interna</span>
@@ -313,7 +314,7 @@
       </div>
 
       <!-- 3 TARJETAS DE MÉTRICAS KPI (ESTILO DATTA ABLE CON PROGRESO Y COLORES SOPHISTICATED) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5" *ngIf="activeTab() !== 'internal-data'">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5" *ngIf="activeTab() !== 'internal-data' && activeTab() !== 'users' && activeTab() !== 'events' && activeTab() !== 'registrations' && activeTab() !== 'certificates'">
         <!-- Card 1: Usuarios Registrados (Estilo Daily Sales) -->
         <div class="kpi-metric-card relative overflow-hidden">
           <div class="flex justify-between items-start">
@@ -394,10 +395,10 @@
       </div>
 
       <!-- GRILLA GENERAL: CONTENIDO IZQUIERDO Y WIDGET TIPO EARNINGS A LA DERECHA -->
-      <div [class]="activeTab() === 'internal-data' ? 'grid grid-cols-1 gap-6 items-start' : 'grid grid-cols-1 xl:grid-cols-3 gap-6 items-start'">
+      <div [class]="(activeTab() === 'internal-data' || activeTab() === 'users' || activeTab() === 'events' || activeTab() === 'registrations' || activeTab() === 'certificates') ? 'grid grid-cols-1 gap-6 items-start' : 'grid grid-cols-1 xl:grid-cols-3 gap-6 items-start'">
 
         <!-- COLUMNA IZQUIERDA ANCHA (70%): CONTENIDO DE LA SECCIÓN ACTIVA -->
-        <div [class]="activeTab() === 'internal-data' ? 'space-y-6 min-w-0' : 'xl:col-span-2 space-y-6 min-w-0'">
+        <div [class]="(activeTab() === 'internal-data' || activeTab() === 'users' || activeTab() === 'events' || activeTab() === 'registrations' || activeTab() === 'certificates') ? 'space-y-6 min-w-0' : 'xl:col-span-2 space-y-6 min-w-0'">
 
           <!-- ==========================================
            TAB: OVERVIEW / ESTADÍSTICAS (ADMIN / COORD)
@@ -478,8 +479,7 @@
            TAB: GESTIÓN DE USUARIOS (ADMIN / COORD)
            ========================================== -->
           <div *ngIf="activeTab() === 'users'" class="space-y-6 animate-fade-in">
-            <div class="flex items-center justify-between">
-              <h2 class="text-2xl font-bold text-white">Gestión General de Usuarios</h2>
+            <div class="flex items-center justify-end">
               <button (click)="openAddUser()"
                 class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
                 ➕ Registrar Nuevo Usuario
@@ -541,40 +541,67 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-white/5 text-sm">
-                    <!-- Fallback: no results found -->
-                    <tr *ngIf="filteredAndPaginatedUsers().items.length === 0">
-                      <td colspan="4" class="text-center py-8 text-slate-500 text-xs">
-                        No se encontraron usuarios coincidentes.
-                      </td>
-                    </tr>
-                    <tr *ngFor="let u of filteredAndPaginatedUsers().items" class="hover:bg-white/[0.02]">
-                      <td class="px-6 py-4">
-                        <div class="font-bold text-slate-100">{{ u.name }}</div>
-                        <div class="text-xs text-slate-400 font-mono">{{ u.email }}</div>
-                      </td>
-                      <td class="px-6 py-4 font-mono text-slate-300">{{ u.dni }}</td>
-                      <td class="px-6 py-4">
-                        <span [class]="'px-3 py-1 rounded-full text-[10px] font-bold border ' + 
-                      (u.role === 'Administrador' ? 'bg-[#be123c]/10 text-[#f43f5e] border-[#be123c]/20' : 
-                       'bg-amber-500/10 text-amber-400 border-amber-500/20')">
-                          {{ u.role }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                          <button (click)="openEditUser(u)"
-                            class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer text-xs"
-                            title="Editar">
-                            ✏️
-                          </button>
-                          <button (click)="deleteUser(u.email)" [disabled]="u.email === 'admin@institucion.edu'"
-                            class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 transition-all cursor-pointer text-xs disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Eliminar">
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                    <!-- Loading Skeleton Rows -->
+                    <ng-container *ngIf="platformService.isLoading()">
+                      <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+                        <td class="px-6 py-4">
+                          <div class="space-y-2">
+                            <div class="h-4 bg-white/10 rounded w-48"></div>
+                            <div class="h-3 bg-white/10 rounded w-32"></div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="h-4 bg-white/10 rounded w-24"></div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="h-5 bg-white/10 rounded-full w-20"></div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                          <div class="flex justify-end gap-2">
+                            <div class="w-8 h-8 bg-white/10 rounded-lg"></div>
+                            <div class="w-8 h-8 bg-white/10 rounded-lg"></div>
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-container>
+
+                    <!-- Real Data -->
+                    <ng-container *ngIf="!platformService.isLoading()">
+                      <!-- Fallback: no results found -->
+                      <tr *ngIf="filteredAndPaginatedUsers().items.length === 0">
+                        <td colspan="4" class="text-center py-8 text-slate-500 text-xs">
+                          No se encontraron usuarios coincidentes.
+                        </td>
+                      </tr>
+                      <tr *ngFor="let u of filteredAndPaginatedUsers().items" class="hover:bg-white/[0.02]">
+                        <td class="px-6 py-4">
+                          <div class="font-bold text-slate-100">{{ u.name }}</div>
+                          <div class="text-xs text-slate-400 font-mono">{{ u.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-slate-300">{{ u.dni }}</td>
+                        <td class="px-6 py-4">
+                          <span [class]="'px-3 py-1 rounded-full text-[10px] font-bold border ' + 
+                        (u.role === 'Administrador' ? 'bg-[#be123c]/10 text-[#f43f5e] border-[#be123c]/20' : 
+                         'bg-amber-500/10 text-amber-400 border-amber-500/20')">
+                            {{ u.role }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                          <div class="flex items-center justify-end gap-2">
+                            <button (click)="openEditUser(u)"
+                              class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer text-xs"
+                              title="Editar">
+                              ✏️
+                            </button>
+                            <button (click)="deleteUser(u.email)" [disabled]="u.email === 'admin@institucion.edu'"
+                              class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 transition-all cursor-pointer text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Eliminar">
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-container>
                   </tbody>
                 </table>
               </div>
@@ -618,8 +645,7 @@
            TAB: GESTIÓN DE EVENTOS (ADMIN / COORD)
            ========================================== -->
           <div *ngIf="activeTab() === 'events'" class="space-y-6 animate-fade-in">
-            <div class="flex items-center justify-between">
-              <h2 class="text-2xl font-bold text-white">Gestión General de Eventos</h2>
+            <div class="flex items-center justify-end">
               <button (click)="openAddEvent()"
                 class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
                 ➕ Agregar Nuevo Evento
@@ -769,6 +795,11 @@
                               title="Editar">
                               ✏️
                             </button>
+                            <button (click)="selectCourseForDocs(e)"
+                              class="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/10 transition-all cursor-pointer text-xs"
+                              title="Configurar Diploma y Resolución">
+                              📄
+                            </button>
                             <button (click)="deleteEvent(e.id)"
                               class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 transition-all cursor-pointer text-xs"
                               title="Eliminar">
@@ -821,7 +852,58 @@
            TAB: INSCRIPCIONES PENDIENTES (ADMIN / COORD)
            ========================================== -->
           <div *ngIf="activeTab() === 'registrations'" class="space-y-6 animate-fade-in">
-            <h2 class="text-2xl font-bold text-white">Control de Inscripciones Pendientes</h2>
+            <div class="flex items-center justify-end">
+              <button (click)="openAddRegistration()"
+                class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
+                ➕ Agregar Nuevo Inscrito
+              </button>
+            </div>
+
+            <!-- PANEL DE FILTROS AVANZADOS (AÑO, EVENTO, BUSCAR + BOTÓN) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end bg-white/[0.03] border border-white/10 p-5 rounded-3xl backdrop-blur-xl">
+              <!-- Filtro de Año -->
+              <div class="space-y-2 text-left">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Año del Evento</label>
+                <select [ngModel]="tempFilterYear()" 
+                  (ngModelChange)="tempFilterYear.set($event); tempFilterEventId.set(''); applyRegistrationFilters()"
+                  class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+                  <option value="">Todos los años</option>
+                  <option *ngFor="let y of availableRegistrationYears()" [value]="y">{{ y }}</option>
+                </select>
+              </div>
+
+              <!-- Filtro de Evento -->
+              <div class="space-y-2 text-left">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Seleccionar Evento / Curso</label>
+                <select [ngModel]="tempFilterEventId()" 
+                  (ngModelChange)="tempFilterEventId.set($event); applyRegistrationFilters()"
+                  class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+                  <option value="">Todos los eventos / cursos</option>
+                  <option *ngFor="let e of availableEventsForSelectedYear()" [value]="e.id">
+                    {{ e.title }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Entrada de Búsqueda -->
+              <div class="space-y-2 text-left">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Buscar por Alumno / DNI</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+                  <input type="text" [ngModel]="tempRegSearchQuery()"
+                    (ngModelChange)="tempRegSearchQuery.set($event)"
+                    (keyup.enter)="applyRegistrationFilters()"
+                    placeholder="DNI, Nombres, Correo..."
+                    class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-2.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+                </div>
+              </div>
+
+              <!-- Botón Buscar -->
+              <button (click)="applyRegistrationFilters()"
+                class="w-full px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10 flex items-center justify-center gap-1.5 h-[38px] border-none font-sans">
+                <span>Buscar</span>
+              </button>
+            </div>
 
             <!-- Datatable Controls Row -->
             <div
@@ -837,26 +919,17 @@
                 </select>
                 <span>registros</span>
               </div>
-
-              <div class="relative w-full sm:w-72">
-                <span
-                  class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
-                <input type="text" [ngModel]="regSearchQuery()"
-                  (ngModelChange)="regSearchQuery.set($event); regCurrentPage.set(1)"
-                  placeholder="Buscar solicitudes..."
-                  class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
-              </div>
             </div>
 
             <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
 
-              <div *ngIf="stats().pendingRegistrations === 0" class="text-center p-12 text-slate-400">
+              <div *ngIf="platformService.registrations().length === 0" class="text-center p-12 text-slate-400">
                 <span class="text-3xl">🎉</span>
-                <h3 class="text-base font-bold text-slate-200 mt-2">No hay inscripciones pendientes</h3>
-                <p class="text-xs text-slate-500 mt-1">Todos los alumnos se encuentran correctamente gestionados.</p>
+                <h3 class="text-base font-bold text-slate-200 mt-2">No hay inscripciones</h3>
+                <p class="text-xs text-slate-500 mt-1">No se encuentran solicitudes de matrícula en la base de datos.</p>
               </div>
 
-              <div *ngIf="stats().pendingRegistrations > 0" class="overflow-x-auto">
+              <div *ngIf="platformService.registrations().length > 0" class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                   <thead>
                     <tr
@@ -882,34 +955,50 @@
                           {{ regSortColumn() === 'date' ? (regSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
                         </span>
                       </th>
+                      <th class="px-6 py-4 text-center">Estado Pago</th>
                       <th class="px-6 py-4 text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-white/5 text-sm">
                     <!-- Fallback: no results found -->
                     <tr *ngIf="filteredAndPaginatedRegistrations().items.length === 0">
-                      <td colspan="4" class="text-center py-8 text-slate-500 text-xs">
-                        No se encontraron solicitudes pendientes coincidentes.
+                      <td colspan="5" class="text-center py-8 text-slate-500 text-xs">
+                        No se encontraron solicitudes coincidentes.
                       </td>
                     </tr>
                     <tr *ngFor="let r of filteredAndPaginatedRegistrations().items" class="hover:bg-white/[0.02]">
                       <td class="px-6 py-4">
-                        <div class="font-bold text-slate-100">{{ r.userName }}</div>
+                        <div class="font-bold text-slate-100 flex items-center gap-2">
+                          {{ r.userName }}
+                          <span class="inline-block px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] text-slate-400 uppercase font-black">
+                            {{ r.tipoAsistente }}
+                          </span>
+                        </div>
                         <div class="text-xs text-slate-400 font-mono">DNI: {{ r.userDni }} | {{ r.userEmail }}</div>
                       </td>
                       <td class="px-6 py-4">
                         <div class="font-medium text-slate-200">{{ r.eventTitle }}</div>
                       </td>
                       <td class="px-6 py-4 font-mono text-slate-400">{{ r.date }}</td>
+                      <td class="px-6 py-4 text-center">
+                        <span *ngIf="r.isPaymentValidated"
+                          class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          ✓ Validado
+                        </span>
+                        <span *ngIf="!r.isPaymentValidated"
+                          class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          ⏳ Pendiente
+                        </span>
+                      </td>
                       <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                          <button (click)="openValidatePayment(r)"
+                          <button *ngIf="!r.isPaymentValidated" (click)="openValidatePayment(r)"
                             class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
                             ✓ Validar Pago
                           </button>
-                          <button (click)="rejectReg(r.id)"
+                          <button *ngIf="!r.isPaymentValidated" (click)="rejectReg(r.id)"
                             class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all cursor-pointer">
-                            ✕ Rechazar
+                            🗑️ Rechazar
                           </button>
                         </div>
                       </td>
@@ -922,7 +1011,7 @@
             <!-- Datatable Pagination Row -->
             <div
               class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4"
-              *ngIf="stats().pendingRegistrations > 0">
+              *ngIf="platformService.registrations().length > 0">
               <div class="text-xs text-slate-400 font-medium">
                 Mostrando registros del {{ filteredAndPaginatedRegistrations().items.length === 0 ? 0 :
                 (regCurrentPage() - 1) * regPageSize() + 1 }} al
@@ -976,14 +1065,24 @@
 
               <!-- Form content -->
               <form (submit)="submitPaymentValidation(); $event.preventDefault()" class="space-y-4 text-left">
+                <!-- Checkbox ¿Es Gratuito? -->
+                <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                  <input type="checkbox" id="paymentIsFree" [ngModel]="paymentIsFree()" (ngModelChange)="paymentIsFree.set($event)" [name]="'paymentIsFree'"
+                    class="w-4 h-4 rounded border-white/10 text-amber-500 bg-slate-900 focus:ring-amber-500 focus:ring-2 cursor-pointer" />
+                  <label for="paymentIsFree" class="text-xs font-bold text-slate-300 cursor-pointer uppercase select-none flex items-center gap-1.5">
+                    🎁 ¿El evento es gratuito?
+                  </label>
+                </div>
+
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Número de Recibo /
                     Operación</label>
                   <input type="text" [ngModel]="paymentReceiptNumber()"
                     (ngModelChange)="paymentReceiptNumber.set($event)" [name]="'paymentReceiptNumber'"
                     placeholder="REC-2026-XXXX"
-                    class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
-                    required />
+                    class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                    [disabled]="paymentIsFree()"
+                    [required]="!paymentIsFree()" />
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -992,20 +1091,22 @@
                       Pago</label>
                     <input type="date" [ngModel]="paymentDate()" (ngModelChange)="paymentDate.set($event)"
                       [name]="'paymentDate'"
-                      class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
-                      required />
+                      class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                      [disabled]="paymentIsFree()"
+                      [required]="!paymentIsFree()" />
                   </div>
                   <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Monto Pagado
                       (S/.)</label>
                     <input type="number" step="0.01" [ngModel]="paymentAmount()"
-                      (ngModelChange)="paymentAmount.set(+$event)" [name]="'paymentAmount'" placeholder="0.00"
-                      class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
-                      required />
+                      (ngModelChange)="paymentAmount.set($event ? +$event : null)" [name]="'paymentAmount'" placeholder="0.00"
+                      class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                      [disabled]="paymentIsFree()"
+                      [required]="!paymentIsFree()" />
                   </div>
                 </div>
 
-                <div>
+                <div *ngIf="!paymentIsFree()">
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subir Foto o
                     Escaneo de Recibo</label>
                   <div
@@ -1021,7 +1122,7 @@
                 </div>
 
                 <!-- Preview Uploaded Image -->
-                <div *ngIf="paymentImage()" class="mt-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                <div *ngIf="!paymentIsFree() && paymentImage()" class="mt-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
                   <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Vista Previa del Recibo:
                   </p>
                   <img [src]="paymentImage()" alt="Preview Recibo"
@@ -1042,56 +1143,146 @@
             </div>
           </div>
 
-          <!-- ==========================================
-           TAB: EMISIÓN DE CERTIFICADOS (ADMIN / COORD / DOCENTE)
-           ========================================== -->
           <div *ngIf="activeTab() === 'certificates'" class="space-y-6 animate-fade-in">
-            <h2 class="text-2xl font-bold text-white">Módulo de Emisión y Control de Certificaciones</h2>
 
-            <!-- 1. Alumnos aptos para emitir -->
-            <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
-              <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
-                <span>✨</span> Participantes Aptos para Emisión
-              </h3>
+            <!-- PANEL DE FILTROS AVANZADOS (AÑO, EVENTO, BUSCAR + BOTÓN) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end bg-white/[0.03] border border-white/10 p-5 rounded-3xl backdrop-blur-xl">
+              <!-- Filtro de Año -->
+              <div class="space-y-2 text-left">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Año del Evento</label>
+                <select [ngModel]="tempCertFilterYear()" 
+                  (ngModelChange)="tempCertFilterYear.set($event); tempCertFilterEventId.set(''); applyCertificateFilters()"
+                  class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+                  <option value="">Todos los años</option>
+                  <option *ngFor="let y of certAvailableYears()" [value]="y">{{ y }}</option>
+                </select>
+              </div>
 
+              <!-- Filtro de Evento -->
+              <div class="space-y-2 text-left">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Seleccionar Evento / Curso</label>
+                <select [ngModel]="tempCertFilterEventId()" 
+                  (ngModelChange)="tempCertFilterEventId.set($event); applyCertificateFilters()"
+                  class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+                  <option value="">Todos los eventos / cursos</option>
+                  <option *ngFor="let e of availableCertEventsForSelectedYear()" [value]="e.id">
+                    {{ e.title }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Entrada de Búsqueda -->
+              <div class="space-y-2 text-left">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Buscar por Alumno / DNI</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+                  <input type="text" [ngModel]="tempCertSearchQuery()"
+                    (ngModelChange)="tempCertSearchQuery.set($event)"
+                    (keyup.enter)="applyCertificateFilters()"
+                    placeholder="DNI, Nombres, Correo..."
+                    class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-2.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+                </div>
+              </div>
+
+              <!-- Botón Buscar -->
+              <button (click)="applyCertificateFilters()"
+                class="w-full px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10 flex items-center justify-center gap-1.5 h-[38px] border-none font-sans">
+                <span>Buscar</span>
+              </button>
+            </div>
+
+            <!-- Datatable Controls Row -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+              <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span>Mostrar</span>
+                <select [ngModel]="certPageSize()" (ngModelChange)="certPageSize.set(+$event); certCurrentPage.set(1)"
+                  class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+                  <option [value]="5">5</option>
+                  <option [value]="10">10</option>
+                  <option [value]="25">25</option>
+                  <option [value]="50">50</option>
+                </select>
+                <span>registros</span>
+              </div>
+            </div>
+
+            <!-- Tabla de Emisión Unificada -->
+            <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
               <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
+                <table class="w-full text-left border-collapse">
                   <thead>
-                    <tr class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-white/5 pb-2">
-                      <th class="pb-3 text-left">Participante</th>
-                      <th class="pb-3 text-left">Evento Aprobado</th>
-                      <th class="pb-3 text-center">Estado Documento</th>
-                      <th class="pb-3 text-right">Acción</th>
+                    <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
+                      <th (click)="changeCertSort('documentCode')"
+                        class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                        Código Documento
+                        <span class="text-[9px] font-bold text-slate-400 ml-1">
+                          {{ certSortColumn() === 'documentCode' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                        </span>
+                      </th>
+                      <th (click)="changeCertSort('userName')"
+                        class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                        Participante / DNI
+                        <span class="text-[9px] font-bold text-slate-400 ml-1">
+                          {{ certSortColumn() === 'userName' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                        </span>
+                      </th>
+                      <th (click)="changeCertSort('eventTitle')"
+                        class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+                        Curso / Evento
+                        <span class="text-[9px] font-bold text-slate-400 ml-1">
+                          {{ certSortColumn() === 'eventTitle' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                        </span>
+                      </th>
+                      <th (click)="changeCertSort('documentIssued')"
+                        class="px-6 py-4 text-center cursor-pointer hover:text-white transition-colors select-none">
+                        Estado Documento
+                        <span class="text-[9px] font-bold text-slate-400 ml-1">
+                          {{ certSortColumn() === 'documentIssued' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
+                        </span>
+                      </th>
+                      <th class="px-6 py-4 text-right">Acción</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-white/5">
-                    <tr *ngFor="let s of studentsEligibleForCertificate()" class="hover:bg-white/[0.01]">
-                      <td class="py-3.5">
-                        <div class="font-bold text-slate-200">{{ s.userName }}</div>
-                        <div class="text-xs font-mono text-slate-400">DNI: {{ s.userDni }}</div>
+                  <tbody class="divide-y divide-white/5 text-sm">
+                    <!-- Fallback: no results found -->
+                    <tr *ngIf="filteredAndPaginatedCertificates().items.length === 0">
+                      <td colspan="5" class="text-center py-8 text-slate-500 text-xs">
+                        No se encontraron registros de certificados coincidentes.
                       </td>
-                      <td class="py-3.5 text-slate-300 font-medium">{{ s.eventTitle }}</td>
-                      <td class="py-3.5 text-center">
-                        <span *ngIf="s.alreadyHasCert"
-                          class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          Emitido
+                    </tr>
+                    <tr *ngFor="let r of filteredAndPaginatedCertificates().items" class="hover:bg-white/[0.02]">
+                      <td class="px-6 py-4 font-mono font-bold text-amber-300">
+                        {{ r.documentCode || 'No asignado' }}
+                      </td>
+                      <td class="px-6 py-4">
+                        <div class="font-bold text-slate-100">{{ r.userName }}</div>
+                        <div class="text-xs font-mono text-slate-400">DNI: {{ r.userDni }} | {{ r.userEmail }}</div>
+                      </td>
+                      <td class="px-6 py-4 text-slate-200 font-medium">{{ r.eventTitle }}</td>
+                      <td class="px-6 py-4 text-center">
+                        <span *ngIf="r.documentIssued"
+                          class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Válido
                         </span>
-                        <span *ngIf="!s.alreadyHasCert && s.isPaymentValidated"
-                          class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <span *ngIf="!r.documentIssued"
+                          class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                           Apto para Emisión
                         </span>
-                        <span *ngIf="!s.alreadyHasCert && !s.isPaymentValidated"
-                          class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                          ⚠️ Pago Pendiente
-                        </span>
                       </td>
-                      <td class="py-3.5 text-right">
-                        <button (click)="issueCert(s.userDni, s.eventId)"
-                          [disabled]="s.alreadyHasCert || !s.isPaymentValidated"
-                          [class]="s.isPaymentValidated 
-                        ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer'
-                        : 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-50'"
-                          [title]="!s.isPaymentValidated ? 'No se puede emitir el certificado porque no se ha validado el pago de este alumno' : 'Emitir Certificado Oficial'">
+                      <td class="px-6 py-4 text-right">
+                        <!-- If already issued, show Ver and PDF action buttons -->
+                        <div class="flex items-center justify-end gap-2" *ngIf="r.documentIssued">
+                          <button (click)="viewCertificate(getCertificateObject(r))"
+                            class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs cursor-pointer">
+                            👁️ Ver
+                          </button>
+                          <button (click)="viewAndDownload(getCertificateObject(r))"
+                            class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs cursor-pointer">
+                            📥 PDF
+                          </button>
+                        </div>
+                        <button *ngIf="!r.documentIssued" (click)="issueCert(r.id)"
+                          class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
                           🎓 Emitir Certificado
                         </button>
                       </td>
@@ -1101,175 +1292,35 @@
               </div>
             </div>
 
-            <!-- 2. Registro histórico de certificados emitidos (Solo Admin) -->
-            <div *ngIf="user.role === 'Administrador'"
-              class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
-              <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
-                <span>🎓</span> Registro General de Certificados Emitidos
-              </h3>
-
-              <!-- Datatable Controls Row -->
-              <div class="flex flex-col gap-3 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mb-4">
-
-                <!-- Fila 1: Filtros (Año + Curso + Buscador + Limpiar) -->
-                <div class="flex items-center gap-2 flex-wrap">
-
-                  <!-- Select: Año -->
-                  <select [ngModel]="certFilterYear()"
-                    (ngModelChange)="certFilterYear.set($event); certCurrentPage.set(1)"
-                    class="bg-slate-900 border border-white/10 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500/60 font-semibold cursor-pointer transition-all min-w-[100px]">
-                    <option value="">📅 Año</option>
-                    <option *ngFor="let y of certAvailableYears()" [value]="y">{{ y }}</option>
-                  </select>
-
-                  <!-- Select: Curso -->
-                  <select [ngModel]="certFilterCourse()"
-                    (ngModelChange)="certFilterCourse.set($event); certCurrentPage.set(1)"
-                    class="bg-slate-900 border border-white/10 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500/60 font-semibold cursor-pointer transition-all max-w-[220px]">
-                    <option value="">🎓 Curso</option>
-                    <option *ngFor="let c of certAvailableCourses()" [value]="c">{{ c }}</option>
-                  </select>
-
-                  <!-- Buscador general -->
-                  <div class="relative flex-1 min-w-[180px]">
-                    <span
-                      class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 text-xs">🔍</span>
-                    <input type="text" [ngModel]="certSearchQuery()"
-                      (ngModelChange)="certSearchQuery.set($event); certCurrentPage.set(1)"
-                      placeholder="Buscar certificados..."
-                      class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
-                  </div>
-
-                  <!-- Botón limpiar filtros (visible si hay algún filtro activo) -->
-                  <button *ngIf="certFilterYear() || certFilterCourse() || certSearchQuery()"
-                    (click)="certFilterYear.set(''); certFilterCourse.set(''); certSearchQuery.set(''); certCurrentPage.set(1)"
-                    class="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-[10px] font-bold cursor-pointer transition-all whitespace-nowrap"
-                    title="Limpiar todos los filtros">
-                    ✕ Limpiar
-                  </button>
-                </div>
-
-                <!-- Fila 2: Mostrar N registros -->
-                <div class="flex items-center gap-2 text-xs text-slate-400">
-                  <span>Mostrar</span>
-                  <select [ngModel]="certPageSize()" (ngModelChange)="certPageSize.set(+$event); certCurrentPage.set(1)"
-                    class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
-                    <option [value]="5">5</option>
-                    <option [value]="10">10</option>
-                    <option [value]="25">25</option>
-                    <option [value]="50">50</option>
-                  </select>
-                  <span>registros</span>
-                </div>
-
+            <!-- Datatable Pagination Row -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4"
+              *ngIf="platformService.registrations().length > 0">
+              <div class="text-xs text-slate-400 font-medium">
+                Mostrando registros del {{ filteredAndPaginatedCertificates().items.length === 0 ? 0 :
+                (certCurrentPage() - 1) * certPageSize() + 1 }} al
+                {{ getMinRecord(certCurrentPage(), certPageSize(), filteredAndPaginatedCertificates().totalItems) }} de un total de
+                {{ filteredAndPaginatedCertificates().totalItems }} registros
               </div>
 
-              <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                  <thead>
-                    <tr class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-white/5 pb-2">
-                      <th (click)="changeCertSort('code')"
-                        class="pb-3 cursor-pointer hover:text-white transition-colors select-none">
-                        Código
-                        <span class="text-[9px] font-bold text-slate-400 ml-1">
-                          {{ certSortColumn() === 'code' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
-                        </span>
-                      </th>
-                      <th (click)="changeCertSort('fullName')"
-                        class="pb-3 cursor-pointer hover:text-white transition-colors select-none">
-                        Alumno / DNI
-                        <span class="text-[9px] font-bold text-slate-400 ml-1">
-                          {{ certSortColumn() === 'fullName' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
-                        </span>
-                      </th>
-                      <th (click)="changeCertSort('eventTitle')"
-                        class="pb-3 cursor-pointer hover:text-white transition-colors select-none">
-                        Evento
-                        <span class="text-[9px] font-bold text-slate-400 ml-1">
-                          {{ certSortColumn() === 'eventTitle' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
-                        </span>
-                      </th>
-                      <th (click)="changeCertSort('status')"
-                        class="pb-3 text-center cursor-pointer hover:text-white transition-colors select-none">
-                        Estado
-                        <span class="text-[9px] font-bold text-slate-400 ml-1">
-                          {{ certSortColumn() === 'status' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}
-                        </span>
-                      </th>
-                      <th class="pb-3 text-right">Controles</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-white/5">
-                    <!-- Fallback: no results found -->
-                    <tr *ngIf="filteredAndPaginatedCertificates().items.length === 0">
-                      <td colspan="5" class="text-center py-8 text-slate-500 text-xs">
-                        No se encontraron certificados emitidos coincidentes.
-                      </td>
-                    </tr>
-                    <tr *ngFor="let c of filteredAndPaginatedCertificates().items" class="hover:bg-white/[0.01]">
-                      <td class="py-3.5 font-mono font-bold text-amber-300">{{ c.code }}</td>
-                      <td class="py-3.5">
-                        <div class="font-bold text-slate-200">{{ c.fullName }}</div>
-                        <div class="text-[10px] text-slate-400 font-mono">DNI: {{ c.dni }}</div>
-                      </td>
-                      <td class="py-3.5 text-slate-300 font-medium">{{ c.eventTitle }}</td>
-                      <td class="py-3.5 text-center">
-                        <button (click)="toggleCertStatus(c.code)"
-                          [class]="c.status === 'Válido'
-                        ? 'px-3 py-1 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-pointer'
-                        : 'px-3 py-1 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 cursor-pointer'"
-                          title="Haga clic para revocar o activar">
-                          ● {{ c.status }}
-                        </button>
-                      </td>
-                      <td class="py-3.5 text-right">
-                        <div class="flex items-center justify-end gap-1.5">
-                          <button (click)="viewCertificate(c)"
-                            class="px-2.5 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white text-xs cursor-pointer">
-                            👁️ Ver
-                          </button>
-                          <button (click)="viewAndDownload(c)"
-                            class="px-2.5 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs cursor-pointer">
-                            📥 PDF
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedCertificates().totalPages > 1">
+                <button [disabled]="certCurrentPage() === 1" (click)="certCurrentPage.set(certCurrentPage() - 1)"
+                  class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                  Anterior
+                </button>
 
-              <!-- Datatable Pagination Row -->
-              <div
-                class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4">
-                <div class="text-xs text-slate-400 font-medium">
-                  Mostrando registros del {{ filteredAndPaginatedCertificates().items.length === 0 ? 0 :
-                  (certCurrentPage() - 1) * certPageSize() + 1 }} al
-                  {{ getMinRecord(certCurrentPage(), certPageSize(), filteredAndPaginatedCertificates().totalItems) }}
-                  de un total de
-                  {{ filteredAndPaginatedCertificates().totalItems }} registros
-                </div>
+                <button *ngFor="let page of getPagesArray(filteredAndPaginatedCertificates().totalPages)"
+                  (click)="certCurrentPage.set(page)"
+                  [class]="certCurrentPage() === page
+                ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
+                : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">
+                  {{ page }}
+                </button>
 
-                <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedCertificates().totalPages > 1">
-                  <button [disabled]="certCurrentPage() === 1" (click)="certCurrentPage.set(certCurrentPage() - 1)"
-                    class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-                    Anterior
-                  </button>
-
-                  <button *ngFor="let page of getPagesArray(filteredAndPaginatedCertificates().totalPages)"
-                    (click)="certCurrentPage.set(page)"
-                    [class]="certCurrentPage() === page
-                  ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
-                  : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">
-                    {{ page }}
-                  </button>
-
-                  <button [disabled]="certCurrentPage() === filteredAndPaginatedCertificates().totalPages"
-                    (click)="certCurrentPage.set(certCurrentPage() + 1)"
-                    class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-                    Siguiente
-                  </button>
-                </div>
+                <button [disabled]="certCurrentPage() === filteredAndPaginatedCertificates().totalPages"
+                  (click)="certCurrentPage.set(certCurrentPage() + 1)"
+                  class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                  Siguiente
+                </button>
               </div>
             </div>
 
@@ -1877,7 +1928,7 @@
         </div>
 
         <!-- COLUMNA DERECHA ESTRECHA (30%): WIDGET DE EARNINGS DE ALTA FIDELIDAD CON SVG -->
-        <div class="xl:col-span-1 space-y-6" *ngIf="activeTab() !== 'internal-data'">
+        <div class="xl:col-span-1 space-y-6" *ngIf="activeTab() !== 'internal-data' && activeTab() !== 'users' && activeTab() !== 'events' && activeTab() !== 'registrations' && activeTab() !== 'certificates'">
 
           <!-- TARJETA BLUE EARNINGS PREMIUM WIDGET -->
           <div class="earnings-premium-widget relative overflow-hidden p-6 rounded-3xl text-left">
@@ -2035,18 +2086,226 @@
       </div>
     </div>
 
+    <!-- Error Alert inside modal -->
+    <div *ngIf="saveUserError()"
+      class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">
+      ⚠️ {{ saveUserError() }}
+    </div>
+
     <div class="flex items-center gap-3 pt-2">
-      <button (click)="saveUser()"
-        class="flex-1 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs transition-all cursor-pointer">
-        Guardar Cambios
+      <button (click)="saveUser()" [disabled]="savingUser()"
+        class="flex-1 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ savingUser() ? 'Procesando...' : 'Guardar Cambios' }}
       </button>
-      <button (click)="showUserModal.set(false)"
-        class="flex-1 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer">
+      <button (click)="showUserModal.set(false)" [disabled]="savingUser()"
+        class="flex-1 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
         Cancelar
       </button>
     </div>
   </div>
 </div>
+
+
+<!-- ==========================================
+       MODAL: AGREGAR NUEVO INSCRITO (Ficha de Registro de Participante)
+       ========================================== -->
+<div *ngIf="showRegistrationModal()"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl p-6 shadow-2xl space-y-6 my-8">
+
+    <!-- Encabezado -->
+    <div class="flex items-center justify-between border-b border-white/5 pb-3">
+      <div>
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <span>📝</span> Ficha de Registro de Participante
+        </h3>
+        <p class="text-xs text-slate-400 font-mono mt-0.5">
+          Inscripción manual por parte del personal administrativo
+        </p>
+      </div>
+      <button (click)="showRegistrationModal.set(false)"
+        class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">
+        ✕
+      </button>
+    </div>
+
+    <!-- Formulario 2 Columnas -->
+    <form (submit)="saveRegistration(); $event.preventDefault()" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium">
+
+        <!-- COLUMNA IZQUIERDA: DATOS PERSONALES -->
+        <div class="space-y-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 border-b border-white/5 pb-1">
+            👤 Datos Personales
+          </h4>
+
+          <!-- DNI + Procedencia -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Número de DNI <span class="text-rose-400">*</span></label>
+              <input type="text"
+                [ngModel]="registrationForm().userDni"
+                (ngModelChange)="registrationForm.update(f => ({...f, userDni: $event}))"
+                [name]="'regDni'"
+                placeholder="73072250"
+                maxlength="8"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"
+                required />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Procedencia</label>
+              <select
+                [ngModel]="registrationForm().userProcedencia"
+                (ngModelChange)="registrationForm.update(f => ({...f, userProcedencia: $event}))"
+                [name]="'regProcedencia'"
+                class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold">
+                <option value="Interno">Interno</option>
+                <option value="Externo">Externo</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tipo de Asistente -->
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Tipo de Asistente</label>
+            <select
+              [ngModel]="registrationForm().userTipoAsistente"
+              (ngModelChange)="registrationForm.update(f => ({...f, userTipoAsistente: +$event}))"
+              [name]="'regTipoAsistente'"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold">
+              <option *ngFor="let t of platformService.tipoAsistentes()" [value]="t.id">
+                {{ t.AsigTipo }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Nombres + Apellido Paterno -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Nombres <span class="text-rose-400">*</span></label>
+              <input type="text"
+                [ngModel]="registrationForm().userName"
+                (ngModelChange)="registrationForm.update(f => ({...f, userName: $event}))"
+                [name]="'regNombres'"
+                placeholder="Juan Alfredo"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                required />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Apellido Paterno <span class="text-rose-400">*</span></label>
+              <input type="text"
+                [ngModel]="registrationForm().userPaternalLastName"
+                (ngModelChange)="registrationForm.update(f => ({...f, userPaternalLastName: $event}))"
+                [name]="'regApPaterno'"
+                placeholder="Choque"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                required />
+            </div>
+          </div>
+
+          <!-- Apellido Materno + Grado -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Apellido Materno <span class="text-rose-400">*</span></label>
+              <input type="text"
+                [ngModel]="registrationForm().userMaternalLastName"
+                (ngModelChange)="registrationForm.update(f => ({...f, userMaternalLastName: $event}))"
+                [name]="'regApMaterno'"
+                placeholder="Vizcarra"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+                required />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Grado Académico <span class="text-slate-500">(Opcional)</span></label>
+              <input type="text"
+                [ngModel]="registrationForm().userGrado"
+                (ngModelChange)="registrationForm.update(f => ({...f, userGrado: $event}))"
+                [name]="'regGrado'"
+                placeholder="Ej: Ingeniero"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs" />
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: DATOS DE CONTACTO Y EVENTO -->
+        <div class="space-y-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 border-b border-white/5 pb-1">
+            📞 Datos de Contacto
+          </h4>
+
+          <!-- Correo -->
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Correo Electrónico <span class="text-rose-400">*</span></label>
+            <input type="email"
+              [ngModel]="registrationForm().userEmail"
+              (ngModelChange)="registrationForm.update(f => ({...f, userEmail: $event}))"
+              [name]="'regCorreo'"
+              placeholder="ejemplo@correo.com"
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+              required />
+          </div>
+
+          <!-- Celular -->
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Número de Celular <span class="text-rose-400">*</span></label>
+            <input type="text"
+              [ngModel]="registrationForm().userPhone"
+              (ngModelChange)="registrationForm.update(f => ({...f, userPhone: $event}))"
+              [name]="'regCelular'"
+              placeholder="987654321"
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono"
+              required />
+          </div>
+
+          <!-- Curso / Evento -->
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1 font-bold">Curso / Evento <span class="text-rose-400">*</span></label>
+            <select
+              [ngModel]="registrationForm().eventId"
+              (ngModelChange)="registrationForm.update(f => ({...f, eventId: $event}))"
+              [name]="'regEvento'"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold">
+              <option [ngValue]="null" disabled>Seleccione un curso...</option>
+              <option *ngFor="let e of platformService.events().filter(ev => ev.type !== 'Repositorio')" [ngValue]="e.id">
+                [{{ e.type }}] {{ e.title }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Nota informativa -->
+          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/5 border border-amber-500/15 mt-2">
+            <span class="text-amber-400 shrink-0 mt-0.5">📧</span>
+            <p class="text-[10px] text-amber-300/70 leading-relaxed">
+              Se enviará automáticamente la <strong>Ficha de Registro</strong> al correo electrónico del participante al guardar.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Error Alert -->
+      <div *ngIf="saveRegistrationError()"
+        class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
+        ⚠️ {{ saveRegistrationError() }}
+      </div>
+
+      <!-- Botones -->
+      <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
+        <button type="button" (click)="showRegistrationModal.set(false)" [disabled]="savingRegistration()"
+          class="px-5 py-3 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">
+          ✕ Cerrar
+        </button>
+        <button type="submit" [disabled]="savingRegistration()"
+          class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="savingRegistration()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+          {{ savingRegistration() ? 'Registrando...' : '✓ Registrar' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
 
 
 <!-- ==========================================
@@ -2670,6 +2929,168 @@
   </div>
 </div>
 
+<!-- NUEVO MODAL DE CERTIFICADO CON FONDO (LANDSCAPE E IMPRESIÓN) -->
+<div 
+  class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-auto print:p-0 print:bg-white"
+  *ngIf="showCertWithBackground() && certParticipantData() as p" (click)="showCertWithBackground.set(false)">
+  
+  <div class="relative w-full max-w-[1000px] bg-slate-900 border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 print:p-0 print:border-0 print:bg-white print:shadow-none print:w-full print:max-w-none" (click)="$event.stopPropagation()">
+    
+    <!-- Header buttons (hidden in print) -->
+    <div class="flex items-center justify-between border-b border-white/10 pb-3 print:hidden">
+      <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+        <span>🎓</span> Certificado Oficial
+      </h3>
+      <div class="flex items-center gap-3">
+        <button (click)="downloadCertificate()"
+          class="px-5 py-2 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
+          🖨️ Imprimir Certificado
+        </button>
+        <button (click)="showCertWithBackground.set(false)"
+          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Certificate Canvas -->
+    <div class="flex-1 flex justify-center items-center overflow-auto p-4 bg-slate-950/40 rounded-2xl print:p-0 print:bg-white">
+      
+      <!-- Landscape A4 Sheet container -->
+      <div id="landscape-certificate-print-area" 
+           class="landscape-certificate-sheet relative w-[960px] h-[678px] bg-white text-slate-900 overflow-hidden shadow-2xl print:shadow-none print:w-[297mm] print:h-[210mm] print:border-0"
+           [style.background-image]="certFondoBase64() ? 'url(' + certFondoBase64() + ')' : 'none'"
+           style="background-size: cover; background-position: center; background-repeat: no-repeat;">
+           
+        <!-- If no background is loaded, a premium fallback placeholder border/gradient -->
+        <div *ngIf="!certFondoBase64()" class="absolute inset-0 border-[16px] border-double border-amber-600/30 p-12 flex flex-col justify-between"
+             style="background: linear-gradient(135deg, #fdfbf7 0%, #f5f0e6 100%);">
+          <!-- Fallback decorative corner borders -->
+          <div class="absolute inset-4 border border-amber-600/20"></div>
+        </div>
+        
+        <!-- Superimposed Content over the background image -->
+        <div class="absolute inset-0 flex flex-col justify-between p-12 print:p-14 z-10">
+          
+          <!-- Top Row: Resolution & Header info -->
+          <div class="flex justify-between items-start">
+            <div class="text-[10px] font-mono text-slate-600 font-bold bg-white/60 px-2.5 py-1 rounded backdrop-blur-sm print:bg-transparent print:p-0">
+              <span class="text-amber-800 font-bold">RESOLUCIÓN:</span> {{ certDocData()?.Resolucion || 'RD-025-2026-CHOJATA' }}
+            </div>
+            <div class="text-[10px] font-mono text-slate-600 font-bold bg-white/60 px-2.5 py-1 rounded backdrop-blur-sm print:bg-transparent print:p-0 text-right">
+              <span class="text-amber-800 font-bold">TIPO:</span> {{ certDocData()?.Tipo || 'APROBACIÓN' }}
+            </div>
+          </div>
+          
+          <!-- Middle Content: Recipient Name & Textos -->
+          <div class="flex-1 flex flex-col justify-center items-center text-center my-4 space-y-4">
+            
+            <!-- Otorga a / Certificado text -->
+            <div class="text-amber-800 font-serif font-bold text-lg tracking-widest uppercase">
+              {{ certDocData()?.Tipo === 'ASISTENCIA' ? 'CERTIFICADO DE ASISTENCIA' : 'CERTIFICADO DE APROBACIÓN' }}
+            </div>
+            
+            <div class="text-xs text-slate-500 italic">Otorgado a:</div>
+            
+            <!-- Recipient Name (Calligraphic font) -->
+            <div class="recipient-name font-serif text-3xl font-extrabold text-slate-900 tracking-wide underline decoration-amber-500/30 underline-offset-8">
+              {{ p.fullName }}
+            </div>
+            
+            <div class="text-xs text-slate-500">Con DNI/N° de Documento: <span class="font-mono font-bold text-slate-800">{{ p.dni }}</span></div>
+            
+            <!-- Texto01: Main body text -->
+            <div class="max-w-2xl text-xs sm:text-sm text-slate-700 leading-relaxed font-sans px-6" 
+                 [innerHTML]="certDocData()?.Texto01 || 'Por haber participado y aprobado satisfactoriamente el evento académico organizado por la institución.'">
+            </div>
+
+            <!-- Texto02: Academic details, hours, etc. -->
+            <div class="max-w-xl text-[11px] text-slate-500 font-sans px-6" 
+                 [innerHTML]="certDocData()?.Texto02 || ''">
+            </div>
+            
+          </div>
+          
+          <div class="flex justify-between items-end border-t border-slate-200/50 pt-6">
+            <!-- Left: Firmas (Configured in docsConfig) -->
+            <div class="w-1/3 flex justify-start gap-6 text-center">
+              
+              <div class="flex flex-col items-center justify-end" *ngIf="certDocData()?.Firma01">
+                <div class="h-10 flex items-center justify-center relative">
+                  <!-- Vector Sign mock overlay -->
+                  <svg viewBox="0 0 100 40" class="w-20 h-8 text-indigo-500/70" stroke="currentColor" fill="none" stroke-width="1.5">
+                    <path d="M10,25 Q30,5 45,20 T70,10 T85,30 M10,18 L90,18" />
+                  </svg>
+                </div>
+                <div class="h-[1px] w-28 bg-slate-400 mt-1 mb-1"></div>
+                <div class="text-[8px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma01 }}</div>
+                <div class="text-[6px] text-slate-500 font-mono tracking-wide mt-0.5">Autoridad Firmante 1</div>
+              </div>
+
+              <div class="flex flex-col items-center justify-end" *ngIf="certDocData()?.Firma02">
+                <div class="h-10 flex items-center justify-center relative">
+                  <svg viewBox="0 0 100 40" class="w-20 h-8 text-teal-600/70" stroke="currentColor" fill="none" stroke-width="1.5">
+                    <path d="M15,15 Q35,35 55,15 T75,25 M5,20 Q45,2 95,20" />
+                  </svg>
+                </div>
+                <div class="h-[1px] w-28 bg-slate-400 mt-1 mb-1"></div>
+                <div class="text-[8px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma02 }}</div>
+                <div class="text-[6px] text-slate-500 font-mono tracking-wide mt-0.5">Autoridad Firmante 2</div>
+              </div>
+
+              <div class="flex flex-col items-center justify-end" *ngIf="certDocData()?.Firma03">
+                <div class="h-10 flex items-center justify-center relative">
+                  <svg viewBox="0 0 100 40" class="w-20 h-8 text-rose-500/70" stroke="currentColor" fill="none" stroke-width="1.5">
+                    <path d="M10,10 C30,30 60,10 90,30 M20,20 Q50,38 80,10" />
+                  </svg>
+                </div>
+                <div class="h-[1px] w-28 bg-slate-400 mt-1 mb-1"></div>
+                <div class="text-[8px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma03 }}</div>
+                <div class="text-[6px] text-slate-500 font-mono tracking-wide mt-0.5">Autoridad Firmante 3</div>
+              </div>
+              
+              <!-- Default authority if no signatures are configured -->
+              <div class="flex flex-col items-center justify-end" *ngIf="!certDocData()?.Firma01 && !certDocData()?.Firma02 && !certDocData()?.Firma03">
+                <div class="h-10 flex items-center justify-center relative">
+                  <svg viewBox="0 0 100 40" class="w-24 h-8 text-indigo-600/70" stroke="currentColor" fill="none" stroke-width="1.5">
+                    <path d="M10,30 Q25,5 35,25 T55,10 T75,30 T90,20 M15,22 L85,22 M30,12 C40,0 45,35 60,25" />
+                  </svg>
+                </div>
+                <div class="h-[1px] w-32 bg-slate-400 mt-1 mb-1"></div>
+                <div class="text-[8px] font-bold text-slate-700 leading-none uppercase font-mono">Director General del IESTP Chojata</div>
+                <div class="text-[6px] text-slate-500 font-mono tracking-wide mt-0.5">Autoridad del Instituto</div>
+              </div>
+
+            </div>
+            
+            <!-- Center: Fecha de Emisión (from config) -->
+            <div class="w-1/3 text-center text-xs font-serif text-slate-600 italic">
+              Chojata, {{ certDocData()?.FechEmision ? formatDateForCertificate(certDocData()?.FechEmision) : formatDateForCertificate(p.issueDate) }}
+            </div>
+
+            <!-- Right: QR Validation and Certificate ID -->
+            <div class="flex items-center justify-end gap-3 w-1/3 text-right">
+              <div class="text-[9px] font-mono text-slate-500 leading-normal">
+                <div class="font-bold text-slate-600">VALIDACIÓN REGISTRADA</div>
+                <div>Código: <span class="text-amber-800 font-bold">{{ p.code }}</span></div>
+                <div>Fecha Emisión: <span class="text-slate-700 font-bold">{{ p.issueDate }}</span></div>
+              </div>
+              <div class="w-16 h-16 bg-white p-1 rounded border border-slate-200 flex items-center justify-center print:border-slate-300"
+                   [innerHTML]="getQrCodeSvg(p.code)">
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+      
+    </div>
+
+  </div>
+</div>
+
 <!-- ==========================================
      MODAL: AGREGAR / EDITAR REGISTRO DATA INTERNA
      ========================================== -->
@@ -2829,5 +3250,233 @@
         Cerrar Ventana
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     MODAL: CONFIGURAR DIPLOMA Y RESOLUCIÓN (e_documentos)
+     ========================================== -->
+<div
+  class="modal-backdrop fixed inset-0 z-[70] flex items-start justify-center bg-black/85 backdrop-blur-sm p-4 pt-8 overflow-y-auto animate-fade-in"
+  *ngIf="showDocsConfigModal()" (click)="showDocsConfigModal.set(false)">
+  <div
+    class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]"
+    (click)="$event.stopPropagation()">
+    <!-- Top header (fixed, never scrolls) -->
+    <div class="flex items-center justify-between border-b border-white/10 px-6 py-4 shrink-0">
+      <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+        <span>📄</span> Configurar Diploma y Resolución
+      </h3>
+      <button (click)="showDocsConfigModal.set(false)"
+        class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">
+        ✕
+      </button>
+    </div>
+
+    <!-- Scrollable body -->
+    <div class="flex-1 overflow-y-auto px-6 py-4 space-y-6 no-scrollbar">
+
+    <!-- Subtitle with Course name -->
+    <div class="bg-white/[0.03] border border-white/5 p-3 rounded-2xl">
+      <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Curso / Evento Seleccionado</span>
+      <span class="text-xs font-bold text-amber-400 font-mono">{{ selectedCourseForDocs()?.title }}</span>
+    </div>
+
+    <!-- Existing Templates Table -->
+    <div *ngIf="docsConfigList().length > 0" class="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+      <div class="px-4 py-3 bg-white/[0.04] border-b border-white/5 flex items-center justify-between">
+        <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wide">Plantillas Configuradas</h4>
+        <span class="px-2 py-0.5 rounded-full text-[9px] bg-slate-900 border border-white/10 text-slate-400 font-semibold font-mono">
+          {{ docsConfigList().length }} registradas
+        </span>
+      </div>
+      <div class="overflow-x-auto max-h-40">
+        <table class="w-full text-left border-collapse text-xs table-fixed">
+          <thead>
+            <tr class="bg-white/[0.02] text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-white/5">
+              <th class="px-4 py-2.5 w-[25%]">Rol / Tipo Asistente</th>
+              <th class="px-4 py-2.5 w-[28%]">Resolución</th>
+              <th class="px-4 py-2.5 w-[22%]">Certificación</th>
+              <th class="px-4 py-2.5 w-[25%] text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr *ngFor="let c of docsConfigList()" class="hover:bg-white/[0.02] transition-colors">
+              <td class="px-4 py-2.5 w-[25%] font-bold text-slate-300 align-middle">
+                <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-black uppercase text-[9px] inline-block">
+                  {{ c.tipo_asistente_rel?.AsigTipo || 'ASISTENTE' }}
+                </span>
+              </td>
+              <td class="px-4 py-2.5 w-[28%] font-mono text-slate-400 truncate align-middle" [title]="c.Resolucion">
+                {{ c.Resolucion || '-' }}
+              </td>
+              <td class="px-4 py-2.5 w-[22%] text-slate-400 truncate align-middle" [title]="c.Tipo">
+                {{ c.Tipo || '-' }}
+              </td>
+              <td class="px-4 py-2.5 w-[25%] text-right align-middle">
+                <div class="flex items-center justify-end gap-1.5">
+                  <button type="button" (click)="selectAsistenteTypeForDocs(c.TipoAsistente)"
+                    class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-200 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-0.5"
+                    title="Editar plantilla en el formulario">
+                    ✏️ Editar
+                  </button>
+                  <button type="button" (click)="deleteDocsConfig(c)"
+                    class="px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-0.5"
+                    title="Eliminar plantilla">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Form Header & Nuevo button -->
+    <div class="flex items-center justify-between border-t border-white/10 pt-2">
+      <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+        <span>{{ docsForm().id ? '📝' : '➕' }}</span>
+        <span>{{ docsForm().id ? 'Editando Plantilla' : 'Nueva Plantilla' }}</span>
+      </h4>
+      <button type="button" (click)="resetDocsForm(1)"
+        class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+        title="Limpiar formulario para crear nueva plantilla">
+        ✨ Nuevo
+      </button>
+    </div>
+
+    <!-- Form content -->
+    <form (submit)="saveDocsConfig(); $event.preventDefault()" class="space-y-4 text-left">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tipo de Asistente (Rol)</label>
+          <select [ngModel]="docsForm().TipoAsistente" (ngModelChange)="selectAsistenteTypeForDocs(+$event)"
+            [name]="'tipoAsistente'"
+            class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-sm font-semibold transition-all cursor-pointer">
+            <option *ngFor="let ta of platformService.tipoAsistentes()" [value]="ta.id">{{ ta.AsigTipo }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Número de Resolución</label>
+          <input type="text" [ngModel]="docsForm().Resolucion" (ngModelChange)="docsForm.update(f => ({ ...f, Resolucion: $event }))"
+            [name]="'resolucion'" placeholder="Ej: RD-025-2026-IESTP-CHOJATA"
+            class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subir PDF de Resolución</label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="resolucionPdfInput" accept=".pdf" (change)="onPdfFileChange($event)"
+              class="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
+            <a *ngIf="docsForm().pdfResolucion" [href]="'http://localhost:8000/storage/' + docsForm().pdfResolucion" target="_blank"
+              class="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1 transition-all"
+              title="Descargar PDF actual">
+              📥 Ver
+            </a>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tipo</label>
+          <input type="text" [ngModel]="docsForm().Tipo" (ngModelChange)="docsForm.update(f => ({ ...f, Tipo: $event }))"
+            [name]="'tipo'" placeholder="Ej: Certificado de Aprobación"
+            class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fecha de Emisión del Documento</label>
+          <input type="date" [ngModel]="docsForm().FechEmision" (ngModelChange)="docsForm.update(f => ({ ...f, FechEmision: $event }))"
+            [name]="'fechEmision'"
+            class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fondo de Documento</label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="docsFondoInput" accept="image/*" (change)="onFondoFileChange($event)"
+              class="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
+            <a *ngIf="docsForm().Fondo" [href]="'http://localhost:8000/storage/' + docsForm().Fondo" target="_blank"
+              class="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1 transition-all"
+              title="Ver imagen de fondo actual">
+              👁️ Ver
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Texto Principal (Línea 1)</label>
+        <div *ngIf="isBrowser" class="NgxEditor__Wrapper border border-white/10 rounded-xl bg-[#0b111e]">
+          <ngx-editor-menu [editor]="editorTexto01" [toolbar]="toolbar" class="block"></ngx-editor-menu>
+          <ngx-editor [editor]="editorTexto01" [ngModel]="docsForm().Texto01"
+            (ngModelChange)="docsForm.update(f => ({ ...f, Texto01: $event }))"
+            [ngModelOptions]="{standalone: true}"
+            placeholder="Por haber aprobado/asistido satisfactoriamente..." class="block"></ngx-editor>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Texto Secundario (Línea 2)</label>
+        <div *ngIf="isBrowser" class="NgxEditor__Wrapper border border-white/10 rounded-xl bg-[#0b111e]">
+          <ngx-editor-menu [editor]="editorTexto02" [toolbar]="toolbar" class="block"></ngx-editor-menu>
+          <ngx-editor [editor]="editorTexto02" [ngModel]="docsForm().Texto02"
+            (ngModelChange)="docsForm.update(f => ({ ...f, Texto02: $event }))"
+            [ngModelOptions]="{standalone: true}"
+            placeholder="En fe de lo cual se firma y expide la presente credencial..." class="block"></ngx-editor>
+        </div>
+      </div>
+
+      <div class="border-t border-white/10 pt-4">
+        <span class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Pie de Firmas (Cargos / Títulos)</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <input type="checkbox" [ngModel]="enableFirma01()" (ngModelChange)="toggleFirma01($event)"
+                [ngModelOptions]="{standalone: true}"
+                class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+              <label class="block text-[10px] font-bold text-slate-500">Firma 01</label>
+            </div>
+            <input type="text" [ngModel]="docsForm().Firma01" (ngModelChange)="docsForm.update(f => ({ ...f, Firma01: $event }))"
+              [name]="'firma01'" placeholder="Director General" [disabled]="!enableFirma01()"
+              class="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed" />
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <input type="checkbox" [ngModel]="enableFirma02()" (ngModelChange)="toggleFirma02($event)"
+                [ngModelOptions]="{standalone: true}"
+                class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+              <label class="block text-[10px] font-bold text-slate-500">Firma 02</label>
+            </div>
+            <input type="text" [ngModel]="docsForm().Firma02" (ngModelChange)="docsForm.update(f => ({ ...f, Firma02: $event }))"
+              [name]="'firma02'" placeholder="Jefe de Unidad Académica" [disabled]="!enableFirma02()"
+              class="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed" />
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <input type="checkbox" [ngModel]="enableFirma03()" (ngModelChange)="toggleFirma03($event)"
+                [ngModelOptions]="{standalone: true}"
+                class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+              <label class="block text-[10px] font-bold text-slate-500">Firma 03</label>
+            </div>
+            <input type="text" [ngModel]="docsForm().Firma03" (ngModelChange)="docsForm.update(f => ({ ...f, Firma03: $event }))"
+              [name]="'firma03'" placeholder="Coordinador General del Evento" [disabled]="!enableFirma03()"
+              class="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-white/10">
+        <button type="button" (click)="showDocsConfigModal.set(false)"
+          class="px-5 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 transition-all cursor-pointer">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="savingDocsConfig()"
+          class="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          <span *ngIf="savingDocsConfig()" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          {{ savingDocsConfig() ? 'Guardando...' : (docsForm().id ? '✓ Actualizar Configuración' : '✓ Guardar Configuración') }}
+        </button>
+      </div>
+    </form>
+    </div><!-- end scrollable body -->
   </div>
 </div>
