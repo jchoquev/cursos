@@ -23,6 +23,8 @@ return new class extends Migration
             $table->date('Fin')->nullable()->default(null);
             $table->string('Estado');
             $table->boolean('Ganador')->default(false);
+            $table->string('ImgCaratula')->nullable()->default(null);
+            $table->string('PdfDocumento')->nullable()->default(null);
             $table->timestamps();
 
             $table->foreign('Id_Linea')->references('Id')->on('inv_lineas')->onDelete('cascade');

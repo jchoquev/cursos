@@ -5,6 +5,7 @@ import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
 import { ApiService } from '../../../../services/api.service';
 import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { AlertService } from '../../../../services/alert.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 export interface InvLinea {
   Id: string;
@@ -24,6 +25,8 @@ export interface Proyecto {
   Fin?: string;
   Estado: string;
   Ganador: boolean;
+  ImgCaratula?: string | null;
+  PdfDocumento?: string | null;
   linea?: InvLinea;
 }
 
@@ -37,6 +40,17 @@ export class ProjectsComponent implements OnInit {
   private readonly apiService = inject(ApiService);
   private readonly dnaLoader = inject(DnaLoaderService);
   private readonly alert = inject(AlertService);
+  private readonly sanitizer = inject(DomSanitizer);
+
+  // --- PDF Modals & States (Frontend simulated for design demonstration) ---
+  showUploadPdfModal = signal<boolean>(false);
+  showPreviewPdfModal = signal<boolean>(false);
+  selectedProjectForPdf = signal<Proyecto | null>(null);
+  previewProject = signal<Proyecto | null>(null);
+  selectedPdfFile = signal<File | null>(null);
+  isUploadingPdf = signal<boolean>(false);
+  pdfUploadError = signal<string>('');
+  previewPdfUrl = signal<SafeResourceUrl | null>(null);
 
   // --- Lista y estado ---
   proyectos = signal<Proyecto[]>([]);
@@ -107,8 +121,17 @@ export class ProjectsComponent implements OnInit {
   }
 
   loadLineas(): void {
-    this.apiService.get<InvLinea[]>('/inv-lineas').subscribe({
-      next: (data) => this.lineas.set(Array.isArray(data) ? data : []),
+    // Solicitar un per_page alto (999) para traer todas las líneas en el combobox de selección
+    this.apiService.get<any>('/inv-lineas', { per_page: 999 }).subscribe({
+      next: (res) => {
+        if (res && Array.isArray(res.data)) {
+          this.lineas.set(res.data);
+        } else if (Array.isArray(res)) {
+          this.lineas.set(res);
+        } else {
+          this.lineas.set([]);
+        }
+      },
       error: () => {}
     });
   }
@@ -205,5 +228,59 @@ export class ProjectsComponent implements OnInit {
 
   getLinea(id: string): string {
     return this.lineas().find(l => l.Id === id)?.Linea || '—';
+  }
+
+  // --- PDF Actions (Simuladas en Frontend para feedback de diseño) ---
+  openUploadPdf(p: Proyecto): void {
+    this.selectedProjectForPdf.set(p);
+    this.selectedPdfFile.set(null);
+    this.pdfUploadError.set('');
+    this.isUploadingPdf.set(false);
+    this.showUploadPdfModal.set(true);
+  }
+
+  onPdfFileSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        this.pdfUploadError.set('El archivo seleccionado debe ser un PDF válido.');
+        this.selectedPdfFile.set(null);
+        return;
+      }
+      this.pdfUploadError.set('');
+      this.selectedPdfFile.set(file);
+    }
+  }
+
+  uploadPdf(): void {
+    const project = this.selectedProjectForPdf();
+    const file = this.selectedPdfFile();
+    if (!project || !file) return;
+
+    this.isUploadingPdf.set(true);
+    this.pdfUploadError.set('');
+
+    setTimeout(() => {
+      this.isUploadingPdf.set(false);
+      this.showUploadPdfModal.set(false);
+
+      // Actualizar localmente para ver el diseño funcionando de inmediato
+      this.proyectos.update(list =>
+        list.map(p => p.Id === project.Id ? { ...p, PdfDocumento: 'uploads/proyectos/mock_project_doc.pdf' } : p)
+      );
+
+      this.alert.success(
+        'Documento PDF subido',
+        `El archivo "${file.name}" fue cargado correctamente al proyecto "${project.Titulo}".`
+      );
+    }, 1500);
+  }
+
+  previewProjectPdf(p: Proyecto): void {
+    this.previewProject.set(p);
+    // Usamos un PDF dummy para la previsualización interactiva en el iframe
+    const mockPdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    this.previewPdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(mockPdfUrl));
+    this.showPreviewPdfModal.set(true);
   }
 }

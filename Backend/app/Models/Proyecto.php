@@ -25,7 +25,9 @@ class Proyecto extends Model
         'Inicio',
         'Fin',
         'Estado',
-        'Ganador'
+        'Ganador',
+        'ImgCaratula',
+        'PdfDocumento'
     ];
 
     protected $casts = [

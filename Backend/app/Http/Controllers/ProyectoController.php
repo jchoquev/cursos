@@ -60,6 +60,8 @@ class ProyectoController extends Controller
             'Fin' => 'nullable|date',
             'Estado' => 'required|string',
             'Ganador' => 'sometimes|boolean',
+            'ImgCaratula' => 'nullable|string',
+            'PdfDocumento' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -117,6 +119,8 @@ class ProyectoController extends Controller
             'Fin' => 'nullable|date',
             'Estado' => 'sometimes|required|string',
             'Ganador' => 'sometimes|boolean',
+            'ImgCaratula' => 'nullable|string',
+            'PdfDocumento' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
