@@ -1,0 +1,290 @@
+<div class="space-y-6 animate-fade-in">
+
+  <!-- Actions -->
+  <div class="flex items-center justify-end gap-2 flex-wrap">
+    <button (click)="openAddInternal()"
+      class="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
+      ➕ Agregar Individual
+    </button>
+    <button (click)="openImportModal()"
+      class="lp-ghost-btn px-5 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all cursor-pointer">
+      📥 Importación Masiva (CSV)
+    </button>
+  </div>
+
+  <!-- Controls Row -->
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      <span>Mostrar</span>
+      <select [ngModel]="internalPageSize()"
+        (ngModelChange)="internalPageSize.set(+$event); internalCurrentPage.set(1)"
+        class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+      </select>
+      <span>registros</span>
+    </div>
+
+    <div class="relative w-full sm:w-72">
+      <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+      <input type="text" [ngModel]="internalSearchQuery()"
+        (ngModelChange)="onInternalSearchQueryChange($event)"
+        (keydown.enter)="internalCurrentPage.set(1); loadInternalData()"
+        placeholder="Buscar y presionar Enter..."
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-10 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+      <span class="absolute right-3 inset-y-0 flex items-center text-[9px] text-slate-500 font-bold pointer-events-none">⏎</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
+            <th (click)="changeInternalSort('DNI')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              DNI / Identificador
+              <span class="text-[9px] font-bold text-slate-400 ml-1">{{ internalSortColumn() === 'DNI' ? (internalSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeInternalSort('Nombres')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Apellidos y Nombres
+              <span class="text-[9px] font-bold text-slate-400 ml-1">{{ internalSortColumn() === 'Nombres' ? (internalSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeInternalSort('TipoAsistente')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Tipo de Asistente
+              <span class="text-[9px] font-bold text-slate-400 ml-1">{{ internalSortColumn() === 'TipoAsistente' ? (internalSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th class="px-6 py-4">Información de Contacto</th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm">
+          <ng-container *ngIf="loadingInternalData()">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-20"></div></td>
+              <td class="px-6 py-4 space-y-2">
+                <div class="h-4 bg-white/10 rounded w-44"></div>
+                <div class="h-3 bg-white/10 rounded w-20"></div>
+              </td>
+              <td class="px-6 py-4"><div class="h-3.5 bg-white/10 rounded w-20"></div></td>
+              <td class="px-6 py-4 space-y-2">
+                <div class="h-3.5 bg-white/10 rounded w-36"></div>
+                <div class="h-3 bg-white/10 rounded w-24"></div>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex justify-end gap-2">
+                  <div class="w-8 h-8 bg-white/10 rounded-lg"></div>
+                  <div class="w-8 h-8 bg-white/10 rounded-lg"></div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <ng-container *ngIf="!loadingInternalData()">
+            <tr *ngIf="filteredAndPaginatedInternalData().items.length === 0">
+              <td colspan="5" class="text-center py-8 text-slate-500 text-xs">
+                No se encontraron registros en la base de datos interna.
+              </td>
+            </tr>
+            <tr *ngFor="let item of filteredAndPaginatedInternalData().items" class="hover:bg-white/[0.02]">
+              <td class="px-6 py-4 font-mono font-bold text-slate-200">{{ item.DNI }}</td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-100">{{ item.ApPaterno }} {{ item.ApMaterno }}, {{ item.Nombres }}</div>
+                <div *ngIf="item.Grado" class="text-xs text-amber-400/80 font-semibold">{{ item.Grado }}</div>
+              </td>
+              <td class="px-6 py-4">
+                <span [class]="'inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ' +
+                  (item.TipoAsistente === 'Estudiante' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                   item.TipoAsistente === 'Egresado' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' :
+                   item.TipoAsistente === 'Docente' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                   item.TipoAsistente === 'Administrativo' ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' :
+                   'bg-slate-500/10 text-slate-400 border-slate-500/20')">
+                  {{ item.TipoAsistente }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div *ngIf="item.Correo" class="text-xs text-slate-300 font-mono">{{ item.Correo }}</div>
+                <div *ngIf="item.NumCelular" class="text-xs text-slate-400">📱 {{ item.NumCelular }}</div>
+                <div *ngIf="!item.Correo && !item.NumCelular" class="text-xs text-slate-600 italic">Sin contacto</div>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="openEditInternal(item)"
+                    class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer text-xs" title="Editar">✏️</button>
+                  <button (click)="deleteInternal(item.DNI)"
+                    class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 transition-all cursor-pointer text-xs" title="Eliminar">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+    <div class="text-xs text-slate-400 font-medium">
+      Mostrando del {{ filteredAndPaginatedInternalData().items.length === 0 ? 0 : (internalCurrentPage() - 1) * internalPageSize() + 1 }} al
+      {{ getMinRecord(internalCurrentPage(), internalPageSize(), filteredAndPaginatedInternalData().totalItems) }} de
+      {{ filteredAndPaginatedInternalData().totalItems }} registros
+    </div>
+    <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedInternalData().totalPages > 1">
+      <button [disabled]="internalCurrentPage() === 1"
+        (click)="internalCurrentPage.set(internalCurrentPage() - 1)"
+        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+        Anterior
+      </button>
+      <button *ngFor="let page of getPagesArray(filteredAndPaginatedInternalData().totalPages)"
+        (click)="internalCurrentPage.set(page)"
+        [class]="internalCurrentPage() === page
+          ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
+          : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all cursor-pointer'">
+        {{ page }}
+      </button>
+      <button [disabled]="internalCurrentPage() === filteredAndPaginatedInternalData().totalPages"
+        (click)="internalCurrentPage.set(internalCurrentPage() + 1)"
+        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+        Siguiente
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Agregar / Editar Registro Interno -->
+<div *ngIf="showInternalModal()"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+    <h3 class="text-lg font-bold text-slate-100 pb-2 border-b border-white/5">
+      {{ isEditing() ? '📝 Editar Registro Interno' : '📥 Agregar Nuevo Registro Interno' }}
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-medium text-left">
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">DNI (Identificador Único)</label>
+        <input type="text" [ngModel]="internalForm().DNI" (ngModelChange)="internalForm.update(f => ({...f, DNI: $event}))"
+          (blur)="internalForm.update(f => ({...f, DNI: f.DNI.toUpperCase()}))" [disabled]="isEditing()"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 disabled:opacity-50 font-mono font-bold uppercase"
+          placeholder="8 dígitos" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Nombres</label>
+        <input type="text" [ngModel]="internalForm().Nombres" (ngModelChange)="internalForm.update(f => ({...f, Nombres: $event}))"
+          (blur)="internalForm.update(f => ({...f, Nombres: f.Nombres.toUpperCase()}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 uppercase"
+          placeholder="Nombres completos" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Apellido Paterno</label>
+        <input type="text" [ngModel]="internalForm().ApPaterno" (ngModelChange)="internalForm.update(f => ({...f, ApPaterno: $event}))"
+          (blur)="internalForm.update(f => ({...f, ApPaterno: f.ApPaterno.toUpperCase()}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 uppercase"
+          placeholder="Apellido paterno" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Apellido Materno</label>
+        <input type="text" [ngModel]="internalForm().ApMaterno" (ngModelChange)="internalForm.update(f => ({...f, ApMaterno: $event}))"
+          (blur)="internalForm.update(f => ({...f, ApMaterno: f.ApMaterno.toUpperCase()}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 uppercase"
+          placeholder="Apellido materno" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Tipo de Asistente</label>
+        <select [ngModel]="internalForm().TipoAsistente" (ngModelChange)="internalForm.update(f => ({...f, TipoAsistente: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50">
+          <option value="Estudiante">Estudiante</option>
+          <option value="Egresado">Egresado</option>
+          <option value="Docente">Docente</option>
+          <option value="Administrativo">Administrativo</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Grado Académico</label>
+        <input type="text" [ngModel]="internalForm().Grado" (ngModelChange)="internalForm.update(f => ({...f, Grado: $event}))"
+          (blur)="internalForm.update(f => ({...f, Grado: f.Grado.toUpperCase()}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 uppercase"
+          placeholder="Ej: Bachiller, Titulado, etc." />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Número de Celular</label>
+        <input type="text" [ngModel]="internalForm().NumCelular" (ngModelChange)="internalForm.update(f => ({...f, NumCelular: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 font-mono"
+          placeholder="9 dígitos" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Correo Electrónico</label>
+        <input type="email" [ngModel]="internalForm().Correo" (ngModelChange)="internalForm.update(f => ({...f, Correo: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
+          placeholder="ejemplo@correo.com" />
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-4 border-t border-white/5">
+      <button (click)="saveInternal()"
+        class="flex-1 py-3 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs transition-all cursor-pointer">
+        ✓ Registrar Información
+      </button>
+      <button (click)="showInternalModal.set(false)"
+        class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Importación Masiva CSV -->
+<div *ngIf="showImportModal()"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5">
+    <div class="flex items-center justify-between border-b border-white/5 pb-3">
+      <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+        <span>📥</span> Importación de Datos en Bloque (CSV / Excel)
+      </h3>
+      <button (click)="showImportModal.set(false)"
+        class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">✕</button>
+    </div>
+
+    <div class="space-y-4 text-xs leading-relaxed text-left text-slate-300">
+      <p>Guarde su archivo Excel en formato CSV delimitado por comas. El sistema procesará cada fila automáticamente.</p>
+
+      <div class="bg-white/[0.02] border border-white/5 p-3 rounded-xl space-y-1.5 font-mono text-[10px]">
+        <span class="block text-slate-500 font-bold uppercase tracking-wider">Cabeceras Esperadas:</span>
+        <div class="text-amber-400 font-bold">DNI, Nombres, ApPaterno, ApMaterno, TipoAsistente, Correo, NumCelular, Grado</div>
+        <p class="text-slate-500 leading-snug">* DNI, Nombres y ApPaterno son obligatorios. Si el DNI ya existe, se actualizarán los datos.</p>
+      </div>
+
+      <div class="relative border-2 border-dashed border-white/15 hover:border-amber-500/40 bg-white/[0.01] hover:bg-white/[0.03] transition-all p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-2">
+        <input type="file" accept=".csv,text/csv,text/plain" (change)="onCsvFileSelected($event)"
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+        <div class="z-0 space-y-1" *ngIf="!importingCsv()">
+          <span class="text-3xl block">📊</span>
+          <p class="text-xs font-bold text-slate-200">Seleccione su archivo CSV</p>
+          <p class="text-[10px] text-slate-500">Haz clic para buscar en tu computadora</p>
+        </div>
+        <div class="z-0 flex flex-col items-center gap-2" *ngIf="importingCsv()">
+          <div class="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
+          <p class="text-xs font-bold text-amber-400">Procesando archivo...</p>
+        </div>
+      </div>
+
+      <div *ngIf="importResult()"
+        class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+        🎉 {{ importResult() }}
+      </div>
+      <div *ngIf="importError()"
+        class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono max-h-36 overflow-y-auto whitespace-pre-wrap">
+        {{ importError() }}
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-3 border-t border-white/5">
+      <button (click)="showImportModal.set(false)"
+        class="px-5 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer">
+        Cerrar Ventana
+      </button>
+    </div>
+  </div>
+</div>

@@ -544,6 +544,15 @@ class MatriculaController extends Controller
             'Id_Matricula' => $matricula->id,
         ]);
 
+        // Decrementar cupo disponible del evento (mínimo 0) e incrementar número de matriculados
+        $evento = Evento::find($matricula->evento_id);
+        if ($evento) {
+            if ($evento->CapMaxima > 0) {
+                $evento->decrement('CapMaxima');
+            }
+            $evento->increment('NumMatriculados');
+        }
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Pago validado correctamente.',
@@ -563,6 +572,61 @@ class MatriculaController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Certificado emitido correctamente.',
+            'documento' => $documento
+        ]);
+    }
+
+    public function uploadPdfEscaneado(Request $request, int $id): JsonResponse
+    {
+        $matricula = Matricula::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'pdf' => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El archivo debe ser un PDF válido.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        if ($request->hasFile('pdf')) {
+            $file = $request->file('pdf');
+            $filename = 'scanned_' . $matricula->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('certificados_escaneados', $filename, 'public');
+
+            // Set the Estado of the associated EmitirDocumento to true
+            $documento = EmitirDocumento::where('Id_Matricula', $matricula->id)->first();
+            if ($documento) {
+                $documento->update(['Estado' => true]);
+            } else {
+                // If it doesn't exist, create it and set Estado to true
+                $yearDigits = date('y');
+                $randomChars = '';
+                $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                for ($i = 0; $i < 3; $i++) {
+                    $randomChars .= $characters[random_int(0, strlen($characters) - 1)];
+                }
+                $dniDigits = str_pad(substr($matricula->DNI, -2), 2, '0', STR_PAD_LEFT);
+                $order = Matricula::where('evento_id', $matricula->evento_id)
+                    ->where('Pago', true)
+                    ->count();
+                $orderDigits = str_pad($order, 3, '0', STR_PAD_LEFT);
+                $idDocumento = $yearDigits . $randomChars . $dniDigits . $orderDigits;
+
+                $documento = EmitirDocumento::create([
+                    'Id_Documento' => $idDocumento,
+                    'Id_Matricula' => $matricula->id,
+                    'Estado' => true
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'PDF subido correctamente y certificado emitido (estado a true).',
             'documento' => $documento
         ]);
     }

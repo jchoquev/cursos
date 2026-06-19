@@ -1,0 +1,188 @@
+<div class="space-y-6 animate-fade-in">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-bold text-white">Líneas de Investigación</h2>
+    <button (click)="openAdd()"
+      class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
+      ➕ Nueva Línea
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-col sm:flex-row items-center gap-3 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+    <!-- Filtro periodo -->
+    <div class="w-full sm:w-56 shrink-0">
+      <select [ngModel]="filterPeriodoId()" (ngModelChange)="onPeriodoChange($event)"
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+        <option value="">Todos los periodos</option>
+        <option *ngFor="let p of periodos()" [value]="p.Id">
+          {{ p.Asig }}{{ p.Activo ? ' (Activo)' : '' }}
+        </option>
+      </select>
+    </div>
+    <!-- Búsqueda -->
+    <div class="relative flex-1 w-full">
+      <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+      <input type="text" [ngModel]="tempSearch()" (ngModelChange)="tempSearch.set($event)"
+        (keyup.enter)="applySearch()" placeholder="Buscar línea de investigación..."
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-2.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+    </div>
+    <button (click)="applySearch()"
+      class="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10 whitespace-nowrap border-none">
+      Buscar
+    </button>
+    <button *ngIf="searchQuery()" (click)="clearSearch()"
+      class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-400 transition-all cursor-pointer border border-white/10 whitespace-nowrap">
+      ✕ Limpiar
+    </button>
+    <div class="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap">
+      <span>Mostrar</span>
+      <select [ngModel]="perPage()" (ngModelChange)="changePerPage(+$event)"
+        class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden shadow-xl">
+    <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">🧭 Registro de Líneas</h3>
+      <span class="text-[10px] text-slate-500 font-mono">{{ total() }} líneas encontradas</span>
+    </div>
+
+    <div *ngIf="loadError()" class="px-6 py-4 text-xs text-rose-400 bg-rose-500/10 border-b border-rose-500/20 flex items-center gap-2">
+      ⚠️ {{ loadError() }}
+      <button (click)="loadLineas()" class="ml-2 underline text-rose-300 cursor-pointer bg-transparent border-none text-xs">Reintentar</button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-left">
+        <thead class="bg-white/[0.03] border-b border-white/5">
+          <tr>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Línea de Investigación</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Periodo Académico</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/[0.04] text-sm">
+          <!-- Skeleton -->
+          <ng-container *ngIf="isLoading()">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-72"></div></td>
+              <td class="px-6 py-4"><div class="h-5 bg-white/10 rounded-full w-20"></div></td>
+              <td class="px-6 py-4 text-right"><div class="flex justify-end gap-2"><div class="w-8 h-7 bg-white/10 rounded-lg"></div><div class="w-8 h-7 bg-white/10 rounded-lg"></div></div></td>
+            </tr>
+          </ng-container>
+
+          <ng-container *ngIf="!isLoading()">
+            <tr *ngIf="lineas().length === 0">
+              <td colspan="3" class="text-center py-10 text-slate-500 text-xs">No se encontraron líneas de investigación.</td>
+            </tr>
+            <tr *ngFor="let l of lineas()" class="hover:bg-white/[0.02] transition-colors">
+              <td class="px-6 py-4 text-slate-200 font-medium">{{ l.Linea }}</td>
+              <td class="px-6 py-4">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
+                  [class]="l.periodo_aca?.Activo
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : 'bg-slate-500/10 text-slate-400 border-slate-500/20'">
+                  {{ l.periodo_aca?.Asig || getPeriodoNombre(l.Id_PeriodoAca) }}
+                  <span *ngIf="l.periodo_aca?.Activo" class="ml-1 w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="openEdit(l)"
+                    class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[11px] font-bold cursor-pointer transition-all border border-amber-500/20">✏️</button>
+                  <button (click)="delete(l)"
+                    class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[11px] font-bold cursor-pointer transition-all border border-rose-500/20">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/5">
+      <div class="text-xs text-slate-400 font-medium">
+        Mostrando {{ lineas().length === 0 ? 0 : (currentPage() - 1) * perPage() + 1 }}
+        al {{ (currentPage() - 1) * perPage() + lineas().length }}
+        de {{ total() }} líneas
+      </div>
+      <div class="flex items-center gap-1.5" *ngIf="lastPage() > 1">
+        <button [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"
+          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
+        <ng-container *ngFor="let page of pagesArray()">
+          <button *ngIf="page === 1 || page === lastPage() || (page >= currentPage() - 1 && page <= currentPage() + 1)"
+            (click)="goToPage(page)"
+            [class]="currentPage() === page
+              ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold'
+              : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
+          <span *ngIf="(page === currentPage() - 2 && page > 1) || (page === currentPage() + 2 && page < lastPage())"
+            class="text-slate-600 text-xs px-1">…</span>
+        </ng-container>
+        <button [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)"
+          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="showModal()" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto animate-fade-in p-4">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl my-6">
+
+    <div class="flex items-center justify-between px-6 py-3 border-b border-white/5">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          🧭 {{ isEditing() ? 'Editar Línea de Investigación' : 'Nueva Línea de Investigación' }}
+        </h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Vinculada a un periodo académico</p>
+      </div>
+      <button (click)="showModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold border-none">✕</button>
+    </div>
+
+    <form (submit)="save(); $event.preventDefault()" class="px-6 pt-4 pb-5 space-y-4">
+
+      <!-- Periodo Académico -->
+      <div>
+        <label class="block text-[11px] text-slate-400 mb-1">Periodo Académico <span class="text-rose-400">*</span></label>
+        <select [ngModel]="form().Id_PeriodoAca" (ngModelChange)="form.update(f => ({...f, Id_PeriodoAca: $event}))" name="Id_PeriodoAca"
+          class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold cursor-pointer">
+          <option value="">— Seleccione un periodo —</option>
+          <option *ngFor="let p of periodos()" [value]="p.Id">
+            {{ p.Asig }}{{ p.Activo ? ' (Activo)' : '' }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Nombre de la Línea -->
+      <div>
+        <label class="block text-[11px] text-slate-400 mb-1">Nombre de la Línea <span class="text-rose-400">*</span></label>
+        <input type="text" [ngModel]="form().Linea" (ngModelChange)="form.update(f => ({...f, Linea: $event}))" name="Linea"
+          placeholder="Ej: Inteligencia Artificial y Aprendizaje Automático"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+          required />
+      </div>
+
+      <div *ngIf="saveError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
+        ⚠️ {{ saveError() }}
+      </div>
+
+      <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
+        <button type="button" (click)="showModal.set(false)" [disabled]="saving()"
+          class="px-5 py-2.5 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">
+          ✕ Cerrar
+        </button>
+        <button type="submit" [disabled]="saving()"
+          class="px-6 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+          {{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Crear Línea') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

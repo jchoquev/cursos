@@ -27,6 +27,7 @@
     "qrcode": "^1.5.4",
     "qrcode-generator": "^2.0.4",
     "rxjs": "~7.8.0",
+    "sweetalert2": "^11.26.25",
     "tslib": "^2.3.0"
   },
   "devDependencies": {

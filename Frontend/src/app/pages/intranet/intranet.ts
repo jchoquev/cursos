@@ -6,11 +6,15 @@ import { ApiService } from '../../services/api.service';
 import { SearchCertificates } from '../search-certificates/search-certificates';
 import { NgxEditorModule, Editor, Toolbar } from 'ngx-editor';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ThemeService } from '../../services/theme.service';
+import { DnaLoaderService } from '../../services/dna-loader.service';
+import { AlertService } from '../../services/alert.service';
+import { DnaLoaderComponent } from '../../components/dna-loader/dna-loader';
 
 @Component({
   selector: 'app-intranet',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxEditorModule],
+  imports: [CommonModule, FormsModule, NgxEditorModule, DnaLoaderComponent],
   templateUrl: './intranet.html',
   styleUrl: './intranet.css',
 })
@@ -19,6 +23,51 @@ export class IntranetComponent implements OnInit, OnDestroy {
   private readonly apiService = inject(ApiService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly sanitizer = inject(DomSanitizer);
+  readonly themeService = inject(ThemeService);
+  readonly themeMode = this.themeService.mode;
+  toggleTheme(): void { this.themeService.toggle(); }
+  readonly dnaLoader = inject(DnaLoaderService);
+  private readonly alert = inject(AlertService);
+
+  // DNI lookup state para el modal de registro
+  searchingDniReg = signal<boolean>(false);
+  dniFoundInDB    = signal<boolean | null>(null); // null=sin buscar, true=encontrado, false=no encontrado
+
+  onRegDniChange(dni: string): void {
+    this.registrationForm.update(f => ({ ...f, userDni: dni }));
+    this.dniFoundInDB.set(null);
+
+    if (dni.trim().length !== 8) return;
+
+    this.searchingDniReg.set(true);
+    this.dnaLoader.show('Consultando Base de Datos', 'Buscando información del participante...');
+
+    this.apiService.get<any>(`/consulta-dni/${dni.trim()}`).subscribe({
+      next: (data) => {
+        this.searchingDniReg.set(false);
+        this.dnaLoader.hide();
+        if (data && data.DNI) {
+          this.dniFoundInDB.set(true);
+          this.registrationForm.update(f => ({
+            ...f,
+            userName:            data.Nombres       || '',
+            userPaternalLastName: data.ApPaterno     || '',
+            userMaternalLastName: data.ApMaterno     || '',
+            userEmail:           data.Correo         || '',
+            userPhone:           data.NumCelular     || '',
+            userGrado:           data.GradAcademico  || '',
+          }));
+        } else {
+          this.dniFoundInDB.set(false);
+        }
+      },
+      error: () => {
+        this.searchingDniReg.set(false);
+        this.dnaLoader.hide();
+        this.dniFoundInDB.set(false);
+      }
+    });
+  }
 
   // Auth Inputs — señales para reactividad completa
   emailInput = signal<string>('');
@@ -701,7 +750,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
     const isFree = this.paymentIsFree();
 
     if (!isFree && (!this.paymentReceiptNumber() || !this.paymentDate() || !this.paymentAmount())) {
-      alert('Por favor complete todos los datos del recibo o marque como Inscripción Gratuita.');
+      this.alert.warning('Datos incompletos', 'Por favor complete todos los datos del recibo o marque como Inscripción Gratuita.');
       return;
     }
 
@@ -717,12 +766,12 @@ export class IntranetComponent implements OnInit, OnDestroy {
     this.apiService.patch<any>(`/matriculas/${this.selectedRegistrationId()}/validar-pago`, payload).subscribe({
       next: (resp) => {
         this.showPaymentModal.set(false);
-        alert('✅ Pago validado correctamente e inscripción aprobada.');
+        this.alert.success('Pago validado', 'Inscripción aprobada correctamente.');
         this.platformService.loadRegistrations(); // reload registrations from database
       },
       error: (err) => {
         console.error('Error al validar el pago:', err);
-        alert('❌ Error al validar el pago: ' + (err?.error?.message || 'Error del servidor.'));
+        this.alert.error('Error al validar', err?.error?.message || 'Error del servidor.');
       }
     });
   }
@@ -879,7 +928,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
         next: () => {
           this.savingUser.set(false);
           this.showUserModal.set(false);
-          alert('✅ Datos de usuario actualizados correctamente.');
+          this.alert.success('Usuario actualizado');
         },
         error: (err) => {
           this.savingUser.set(false);
@@ -899,7 +948,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
         next: () => {
           this.savingUser.set(false);
           this.showUserModal.set(false);
-          alert(`✅ Usuario registrado. Se ha enviado un correo a ${newUser.email} con las credenciales de acceso.`);
+          this.alert.success('Usuario registrado', `Se ha enviado un correo a ${newUser.email} con las credenciales de acceso.`);
         },
         error: (err) => {
           this.savingUser.set(false);
@@ -916,9 +965,9 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   deleteUser(email: string): void {
-    if (confirm('¿Está seguro de eliminar a este usuario? Se cancelarán también todas sus inscripciones vinculadas.')) {
+    this.alert.confirmDanger('Eliminar usuario', '¿Está seguro de eliminar a este usuario? Se cancelarán también todas sus inscripciones vinculadas.').then(ok => { if (!ok) return;
       this.platformService.deleteUser(email);
-    }
+    });
   }
 
   // --- EVENT CRUD ---
@@ -1134,7 +1183,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
           const updatedEvent = this.platformService.mapBackendEventoToEventItem(resp.data);
           this.platformService.editEvent(updatedEvent);
           this.showEventModal.set(false);
-          alert('✅ Evento académico actualizado correctamente.');
+          this.alert.success('Evento actualizado');
         },
         error: (err) => {
           this.savingEvent.set(false);
@@ -1179,7 +1228,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
           const createdEvent = this.platformService.mapBackendEventoToEventItem(resp.data);
           this.platformService.addEvent(createdEvent);
           this.showEventModal.set(false);
-          alert('✅ Evento académico creado correctamente y guardado en la base de datos.');
+          this.alert.success('Evento creado', 'Evento académico creado correctamente y guardado en la base de datos.');
         },
         error: (err) => {
           this.savingEvent.set(false);
@@ -1196,18 +1245,18 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   deleteEvent(id: any): void {
-    if (confirm('¿Está seguro de eliminar este evento? Se eliminarán de forma permanente todos sus registros e inscripciones.')) {
+    this.alert.confirmDanger('Eliminar evento', '¿Está seguro de eliminar este evento? Se eliminarán de forma permanente todos sus registros e inscripciones.').then(ok => { if (!ok) return;
       this.apiService.delete<any>(`/eventos/${id}`).subscribe({
         next: (resp) => {
           this.platformService.deleteEvent(id);
-          alert('✅ Evento eliminado correctamente.');
+          this.alert.success('Evento eliminado', 'Evento eliminado correctamente.');
         },
         error: (err) => {
           console.error('Error deleting event:', err);
-          alert('❌ Error al eliminar el evento de la base de datos.');
+          this.alert.error('Error al eliminar', 'Error al eliminar el evento de la base de datos.');
         }
       });
-    }
+    });
   }
 
   // --- REGISTRATIONS HANDLERS ---
@@ -1216,23 +1265,252 @@ export class IntranetComponent implements OnInit, OnDestroy {
   }
 
   rejectReg(regId: number): void {
-    if (confirm('¿Está seguro de rechazar y eliminar permanentemente esta inscripción?')) {
+    this.alert.confirmDanger('Eliminar inscripción', '¿Está seguro de rechazar y eliminar permanentemente esta inscripción?').then(ok => { if (!ok) return;
       this.apiService.delete<any>(`/matriculas/${regId}`).subscribe({
         next: (resp) => {
-          alert('✅ Inscripción eliminada correctamente.');
+          this.alert.success('Inscripción eliminada', 'Inscripción eliminada correctamente.');
           this.platformService.loadRegistrations(); // reload registrations from database
         },
         error: (err) => {
           console.error('Error al eliminar inscripción:', err);
-          alert('❌ Error al eliminar la inscripción de la base de datos.');
+          this.alert.error('Error al eliminar', 'Error al eliminar la inscripción de la base de datos.');
         }
       });
+    });
+  }
+
+  printRegistrations(): void {
+    const query = this.appliedRegSearchQuery().toLowerCase().trim();
+    const appliedEvent = this.appliedFilterEventId();
+    const appliedYear = this.appliedFilterYear();
+    const sortCol = this.regSortColumn();
+    const sortDir = this.regSortDirection();
+
+    let list = [...this.platformService.registrations()].filter(r => !r.isPaymentValidated);
+
+    // 1. Filter by event or year
+    if (appliedEvent) {
+      list = list.filter(r => String(r.eventId) === String(appliedEvent));
+    } else if (appliedYear) {
+      const eventsInYear = this.platformService.events().filter(e => {
+        let year = '';
+        if (e.courseStartDate && e.courseStartDate.includes('/')) {
+          year = e.courseStartDate.split('/')[2];
+        } else if (e.date && e.date.includes('/')) {
+          year = e.date.split('/')[2];
+        } else if (e.created_at) {
+          year = e.created_at.substring(0, 4);
+        }
+        return year === appliedYear;
+      }).map(e => String(e.id));
+      list = list.filter(r => eventsInYear.includes(String(r.eventId)));
     }
+
+    // 2. Filter by search query
+    if (query) {
+      list = list.filter(r =>
+        r.userName.toLowerCase().includes(query) ||
+        r.userDni.includes(query) ||
+        r.eventTitle.toLowerCase().includes(query) ||
+        r.userEmail.toLowerCase().includes(query)
+      );
+    }
+
+    list.sort((a: any, b: any) => {
+      const valA = a[sortCol] || '';
+      const valB = b[sortCol] || '';
+      return sortDir === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.alert.warning('Popups bloqueados', 'Por favor, permita las ventanas emergentes (popups) para imprimir.');
+      return;
+    }
+
+    const title = 'Registro de Inscritos';
+    const dateStr = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    let eventFilterText = 'Todos los eventos / cursos';
+    if (appliedEvent) {
+      const ev = this.platformService.events().find(e => String(e.id) === String(appliedEvent));
+      if (ev) eventFilterText = ev.title;
+    } else if (appliedYear) {
+      eventFilterText = `Eventos del año ${appliedYear}`;
+    }
+
+    let rowsHtml = '';
+    list.forEach((r, idx) => {
+      rowsHtml += `
+        <tr>
+          <td style="text-align: center;">${idx + 1}</td>
+          <td>
+            <strong>${r.userName}</strong>
+            <span style="font-size: 8px; font-weight: bold; padding: 2px 4px; background: #f1f5f9; border-radius: 4px; margin-left: 6px; text-transform: uppercase;">
+              ${r.tipoAsistente}
+            </span>
+            <div style="font-size: 10px; color: #64748b; font-family: monospace; margin-top: 2px;">
+              DNI: ${r.userDni} | ${r.userEmail}
+            </div>
+          </td>
+          <td>${r.eventTitle}</td>
+          <td style="font-family: monospace; color: #64748b;">${r.date}</td>
+          <td style="text-align: center;">
+            <span style="font-weight: bold; font-size: 10px; color: ${r.isPaymentValidated ? '#10b981' : '#d97706'};">
+              ${r.isPaymentValidated ? '✓ Validado' : '⏳ Pendiente'}
+            </span>
+          </td>
+        </tr>
+      `;
+    });
+
+    if (list.length === 0) {
+      rowsHtml = `
+        <tr>
+          <td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">
+            No se encontraron registros de inscripción.
+          </td>
+        </tr>
+      `;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${title}</title>
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 15mm 15mm 15mm 15mm;
+          }
+          body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            line-height: 1.5;
+          }
+          .header {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+          }
+          .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .meta-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #475569;
+          }
+          .filter-badge {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th {
+            background-color: #0f172a;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            padding: 10px 8px;
+            text-align: left;
+            border: 1px solid #0f172a;
+          }
+          td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+          }
+          tr:nth-child(even) td {
+            background-color: #f8fafc;
+          }
+          .footer {
+            margin-top: 30px;
+            font-size: 10px;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="title">${title}</h1>
+            <span style="font-size: 11px; color: #64748b;">IESTP Chojata</span>
+          </div>
+          <div class="meta-info">
+            <div>Filtro: <span class="filter-badge">${eventFilterText}</span></div>
+            <div>Fecha de Impresión: <strong>${dateStr}</strong></div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 5%; text-align: center;">N°</th>
+              <th style="width: 40%;">Alumno</th>
+              <th style="width: 35%;">Evento Solicitado</th>
+              <th style="width: 12%;">Fecha Solicitud</th>
+              <th style="width: 8%; text-align: center;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          Documento generado automáticamente desde la plataforma de Cursos e Investigación - IESTP Chojata.
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() {
+              window.close();
+            }, 500);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 
   openAddRegistration(): void {
     this.saveRegistrationError.set('');
     this.savingRegistration.set(false);
+    this.searchingDniReg.set(false);
+    this.dniFoundInDB.set(null);
     this.registrationForm.set({
       userDni: '',
       userName: '',
@@ -1276,7 +1554,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
         this.savingRegistration.set(false);
         if (resp.status === 'success') {
           this.showRegistrationModal.set(false);
-          alert('✅ Inscripción registrada correctamente. Se ha enviado el correo de confirmación al participante.');
+          this.alert.success('Inscripción registrada', 'Se ha enviado el correo de confirmación al participante.');
         } else {
           this.saveRegistrationError.set(resp.message || 'Error al registrar la inscripción.');
         }
@@ -1365,7 +1643,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
   issueCert(regId: number): void {
     this.apiService.patch<any>(`/matriculas/${regId}/emitir-certificado`, {}).subscribe({
       next: (resp) => {
-        alert('🎓 Certificado emitido correctamente.');
+        this.alert.success('Certificado emitido', 'Certificado emitido correctamente.');
         this.platformService.loadRegistrations(); // refresh list
         
         // Find the registration from current list to get details
@@ -1384,7 +1662,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al emitir certificado:', err);
-        alert('❌ Error al emitir el certificado.');
+        this.alert.error('Error al emitir', 'Error al emitir el certificado.');
       }
     });
   }
@@ -1417,7 +1695,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
     const user = this.platformService.currentUser();
     if (!user) return;
     const res = this.platformService.registerToEvent(user.dni, user.name, user.email, eventId);
-    alert(res.message);
+    this.alert.info('Información', res.message);
   }
 
   // Visualizer integration
@@ -1438,27 +1716,43 @@ export class IntranetComponent implements OnInit, OnDestroy {
         if (resp && resp.status === 'success' && resp.fondo_base64) {
           this.certFondoBase64.set(resp.fondo_base64);
           this.certDocData.set(resp.e_documento);
-          this.certParticipantData.set({
-            code: cert.code,
-            fullName: cert.fullName,
-            dni: cert.dni,
-            eventId: cert.eventId,
-            eventTitle: cert.eventTitle,
-            issueDate: cert.issueDate
-          });
-          this.showCertWithBackground.set(true);
         } else {
-          this.activeCertificate.set(cert);
+          this.certFondoBase64.set(null);
+          this.certDocData.set(null);
         }
+        this.certParticipantData.set({
+          code: cert.code,
+          fullName: cert.fullName,
+          dni: cert.dni,
+          eventId: cert.eventId,
+          eventTitle: cert.eventTitle,
+          issueDate: cert.issueDate,
+          tipoAsistente: reg?.tipoAsistente || 'ASISTENTE',
+          hours: cert.hours || 150
+        });
+        this.showCertWithBackground.set(true);
       },
       error: (err) => {
-        this.activeCertificate.set(cert);
+        this.certFondoBase64.set(null);
+        this.certDocData.set(null);
+        this.certParticipantData.set({
+          code: cert.code,
+          fullName: cert.fullName,
+          dni: cert.dni,
+          eventId: cert.eventId,
+          eventTitle: cert.eventTitle,
+          issueDate: cert.issueDate,
+          tipoAsistente: reg?.tipoAsistente || 'ASISTENTE',
+          hours: cert.hours || 150
+        });
+        this.showCertWithBackground.set(true);
       }
     });
   }
 
   closeCertificateModal(): void {
     this.activeCertificate.set(null);
+    this.showCertWithBackground.set(false);
   }
 
   downloadCertificate(): void {
@@ -1479,29 +1773,39 @@ export class IntranetComponent implements OnInit, OnDestroy {
         if (resp && resp.status === 'success' && resp.fondo_base64) {
           this.certFondoBase64.set(resp.fondo_base64);
           this.certDocData.set(resp.e_documento);
-          this.certParticipantData.set({
-            code: cert.code,
-            fullName: cert.fullName,
-            dni: cert.dni,
-            eventId: cert.eventId,
-            eventTitle: cert.eventTitle,
-            issueDate: cert.issueDate
-          });
-          this.showCertWithBackground.set(true);
-          setTimeout(() => {
-            this.downloadCertificate();
-          }, 1000);
         } else {
-          this.activeCertificate.set(cert);
-          this.showPrintCertModal.set(true);
-          setTimeout(() => {
-            this.downloadCertificate();
-          }, 1000);
+          this.certFondoBase64.set(null);
+          this.certDocData.set(null);
         }
+        this.certParticipantData.set({
+          code: cert.code,
+          fullName: cert.fullName,
+          dni: cert.dni,
+          eventId: cert.eventId,
+          eventTitle: cert.eventTitle,
+          issueDate: cert.issueDate,
+          tipoAsistente: reg?.tipoAsistente || 'ASISTENTE',
+          hours: cert.hours || 150
+        });
+        this.showCertWithBackground.set(true);
+        setTimeout(() => {
+          this.downloadCertificate();
+        }, 1000);
       },
       error: (err) => {
-        this.activeCertificate.set(cert);
-        this.showPrintCertModal.set(true);
+        this.certFondoBase64.set(null);
+        this.certDocData.set(null);
+        this.certParticipantData.set({
+          code: cert.code,
+          fullName: cert.fullName,
+          dni: cert.dni,
+          eventId: cert.eventId,
+          eventTitle: cert.eventTitle,
+          issueDate: cert.issueDate,
+          tipoAsistente: reg?.tipoAsistente || 'ASISTENTE',
+          hours: cert.hours || 150
+        });
+        this.showCertWithBackground.set(true);
         setTimeout(() => {
           this.downloadCertificate();
         }, 1000);
@@ -1530,6 +1834,16 @@ export class IntranetComponent implements OnInit, OnDestroy {
     } catch (e) {
       return dateStr;
     }
+  }
+
+  toTitleCase(str: string | null | undefined): string {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .filter(word => word.length > 0)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 
   // Resolution modal controls
@@ -1649,48 +1963,48 @@ export class IntranetComponent implements OnInit, OnDestroy {
     };
 
     if (!form.DNI || !form.Nombres || !form.ApPaterno || !form.ApMaterno) {
-      alert('DNI, Nombres y Apellidos son obligatorios.');
+      this.alert.warning('Campos obligatorios', 'DNI, Nombres y Apellidos son obligatorios.');
       return;
     }
 
     if (this.isEditing()) {
       this.apiService.put<any>(`/data-interna/${form.DNI}`, form).subscribe({
         next: (resp) => {
-          alert('✅ Registro interno actualizado con éxito.');
+          this.alert.success('Registro actualizado', 'Registro interno actualizado con éxito.');
           this.showInternalModal.set(false);
           this.loadInternalData();
         },
         error: (err) => {
-          alert('❌ Error al actualizar el registro: ' + (err?.error?.message || 'Error del servidor'));
+          this.alert.error('Error al actualizar', err?.error?.message || 'Error del servidor');
         }
       });
     } else {
       this.apiService.post<any>('/data-interna', form).subscribe({
         next: (resp) => {
-          alert('✅ Registro interno creado con éxito.');
+          this.alert.success('Registro creado', 'Registro interno creado con éxito.');
           this.showInternalModal.set(false);
           this.loadInternalData();
         },
         error: (err) => {
-          alert('❌ Error al crear el registro: ' + (err?.error?.message || 'El DNI ya existe o error de servidor'));
+          this.alert.error('Error al crear', err?.error?.message || 'El DNI ya existe o error de servidor');
         }
       });
     }
   }
 
   deleteInternal(dni: string): void {
-    if (confirm('¿Está seguro de eliminar este registro interno?')) {
+    this.alert.confirmDanger('Eliminar registro', '¿Está seguro de eliminar este registro interno?').then(ok => { if (!ok) return;
       this.apiService.delete<any>(`/data-interna/${dni}`).subscribe({
         next: () => {
-          alert('✅ Registro eliminado correctamente.');
+          this.alert.success('Registro eliminado', 'Registro eliminado correctamente.');
           this.loadInternalData();
         },
         error: (err) => {
           console.error('Error al eliminar registro:', err);
-          alert('❌ Error al eliminar el registro de la base de datos.');
+          this.alert.error('Error al eliminar', 'Error al eliminar el registro de la base de datos.');
         }
       });
-    }
+    });
   }
 
   openImportModal(): void {
@@ -1793,7 +2107,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
     const file = event.target?.files?.[0];
     if (file) {
       if (file.type !== 'application/pdf') {
-        alert('❌ Por favor, seleccione un archivo PDF válido.');
+        this.alert.warning('Archivo inválido', 'Por favor, seleccione un archivo PDF válido.');
         event.target.value = '';
         return;
       }
@@ -1805,7 +2119,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
     const file = event.target?.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('❌ Por favor, seleccione una imagen válida para el fondo.');
+        this.alert.warning('Archivo inválido', 'Por favor, seleccione una imagen válida para el fondo.');
         event.target.value = '';
         return;
       }
@@ -1957,7 +2271,7 @@ export class IntranetComponent implements OnInit, OnDestroy {
     this.apiService.postFormData<any>('/e-documentos', formData).subscribe({
       next: (resp) => {
         this.savingDocsConfig.set(false);
-        alert('✅ Configuración del documento guardada con éxito.');
+        this.alert.success('Configuración guardada', 'Configuración del documento guardada con éxito.');
         // Reset form to empty state
         this.resetDocsForm(form.TipoAsistente);
         // Refresh local list without reloading the form
@@ -1966,31 +2280,30 @@ export class IntranetComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.savingDocsConfig.set(false);
         console.error('Error al guardar configuración:', err);
-        alert('❌ Error al guardar la configuración: ' + (err?.error?.message || 'Error de servidor'));
+        this.alert.error('Error al guardar', err?.error?.message || 'Error de servidor');
       }
     });
   }
 
   deleteDocsConfig(config: any): void {
-    if (!confirm(`¿Está seguro de eliminar la configuración para el rol "${config.tipo_asistente_rel?.AsigTipo || 'ASISTENTE'}"?`)) {
-      return;
-    }
+    this.alert.confirmDanger('Eliminar configuración', `¿Está seguro de eliminar la configuración para el rol "${config.tipo_asistente_rel?.AsigTipo || 'ASISTENTE'}"?`).then(ok => { if (!ok) return;
 
-    const course = this.selectedCourseForDocs();
-    if (!course) return;
+      const course = this.selectedCourseForDocs();
+      if (!course) return;
 
-    this.apiService.delete<any>(`/e-documentos/${config.id}`).subscribe({
-      next: (resp) => {
-        alert('✅ Configuración eliminada con éxito.');
-        // Reset form to empty state in case it was loading the deleted config
-        this.resetDocsForm(this.docsForm().TipoAsistente);
-        // Refresh local list without reloading the form
-        this.loadCourseDocsConfig(course.id, false);
-      },
-      error: (err) => {
-        console.error('Error al eliminar configuración:', err);
-        alert('❌ Error al eliminar la configuración: ' + (err?.error?.message || 'Error de servidor'));
-      }
+      this.apiService.delete<any>(`/e-documentos/${config.id}`).subscribe({
+        next: (resp) => {
+          this.alert.success('Configuración eliminada', 'Configuración eliminada con éxito.');
+          // Reset form to empty state in case it was loading the deleted config
+          this.resetDocsForm(this.docsForm().TipoAsistente);
+          // Refresh local list without reloading the form
+          this.loadCourseDocsConfig(course.id, false);
+        },
+        error: (err) => {
+          console.error('Error al eliminar configuración:', err);
+          this.alert.error('Error al eliminar', err?.error?.message || 'Error de servidor');
+        }
+      });
     });
   }
 }

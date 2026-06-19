@@ -1,0 +1,459 @@
+<!-- PANEL DE DASHBOARD INTERNO -->
+<div *ngIf="platformService.currentUser() as user"
+  class="dashboard-shell-layout relative flex min-h-screen w-full gap-0 text-slate-100 bg-[#0c0305]/95 backdrop-blur-xl animate-fade-in print:hidden">
+
+  <!-- SIDEBAR -->
+  <aside
+    class="dashboard-sidebar flex flex-col border-r border-white/5 bg-[#120508] transition-all duration-300 shrink-0 sticky top-0 self-start min-h-screen"
+    [class.collapsed]="sidebarCollapsed()">
+    <div class="sidebar-brand-header flex items-center justify-between p-5 border-b border-white/5 min-h-[72px]">
+      <div class="flex items-center gap-2.5 overflow-hidden">
+        <img src="/logo-chojata.png" alt="IESTP Chojata"
+          class="w-8 h-8 object-contain shrink-0 drop-shadow-[0_0_5px_rgba(244,63,94,0.35)]" />
+        <div class="flex flex-col leading-none text-left sidebar-brand-text transition-opacity duration-300">
+          <span class="text-xs font-black uppercase tracking-wider text-white">Cursos e Investigación</span>
+          <span class="text-[8px] font-bold text-slate-500 font-mono tracking-widest mt-0.5">PLATAFORMA</span>
+        </div>
+      </div>
+      <button (click)="toggleSidebar()"
+        class="hidden lg:flex w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 items-center justify-center text-slate-400 hover:text-white cursor-pointer transition-all">
+        <span class="text-[10px] font-bold">❮</span>
+      </button>
+    </div>
+
+    <div
+      class="sidebar-profile-card p-4 mx-3 my-5 bg-white/[0.02] border border-white/5 rounded-2xl text-center relative overflow-hidden transition-all duration-300">
+      <div class="absolute -right-8 -top-8 w-16 h-16 bg-wine-800/20 rounded-full blur-xl"></div>
+      <div
+        class="w-11 h-11 rounded-full mx-auto bg-gradient-to-tr from-wine-700 to-amber-500 p-[2px] flex items-center justify-center text-xl text-white shadow-md">
+        <span>{{ user.role === 'Administrador' ? '👑' : '💵' }}</span>
+      </div>
+      <div class="mt-2 text-xs font-bold text-slate-200 truncate sidebar-profile-name">{{ user.name }}</div>
+      <span
+        class="inline-block mt-1 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-white/10 text-amber-300 border border-white/5 sidebar-profile-role">
+        {{ user.role }}
+      </span>
+    </div>
+
+    <nav class="sidebar-nav flex-1 px-3 pb-6 overflow-y-auto space-y-4 text-left">
+      <!-- Grupo: Navegación -->
+      <div *ngIf="user.role === 'Administrador'" class="space-y-1">
+        <span
+          class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Navegación</span>
+        <a routerLink="/intranet/overview" routerLinkActive="sidebar-btn-active"
+          [routerLinkActiveOptions]="{exact: true}"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">📊</span>
+          <span class="sidebar-btn-text">Resumen General</span>
+        </a>
+      </div>
+
+      <!-- Grupo: Administración -->
+      <div *ngIf="user.role === 'Administrador'" class="space-y-1 pt-2 border-t border-white/5">
+        <span
+          class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Administración</span>
+        <a routerLink="/intranet/users" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">👥</span>
+          <span class="sidebar-btn-text">Gestión Usuarios</span>
+        </a>
+        <a routerLink="/intranet/periodo-aca" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">🗓️</span>
+          <span class="sidebar-btn-text">Periodo Académico</span>
+        </a>
+      </div>
+
+      <!-- Grupo: Formación Continua -->
+      <div *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua' || user.role === 'Caja'"
+        class="space-y-1 pt-2 border-t border-white/5">
+        <span
+          class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Formación Continua</span>
+
+        <a routerLink="/intranet/registrations" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">📥</span>
+          <span class="sidebar-btn-text">{{ user.role === 'Administrador' || user.role === 'Formación Continua' ?
+            'Inscripciones' : 'Validar Pagos' }}</span>
+          <span *ngIf="stats().pendingRegistrations > 0"
+            class="sidebar-btn-badge ml-auto px-1.5 py-0.5 rounded-full text-[8px] bg-[#f43f5e] text-white font-bold font-mono">
+            {{ stats().pendingRegistrations }}
+          </span>
+        </a>
+
+        <a *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'"
+          routerLink="/intranet/courses" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">📅</span>
+          <span class="sidebar-btn-text">Gestión de Eventos</span>
+        </a>
+
+        <a *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'"
+          routerLink="/intranet/certificates" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">🎓</span>
+          <span class="sidebar-btn-text">Emisión de Certificados</span>
+        </a>
+
+        <a *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'"
+          routerLink="/intranet/internal-data" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">📥</span>
+          <span class="sidebar-btn-text">Información Interna</span>
+        </a>
+      </div>
+
+      <!-- Grupo: Investigación -->
+      <div *ngIf="user.role === 'Administrador' || user.role === 'Investigación'"
+        class="space-y-1 pt-2 border-t border-white/5">
+        <span
+          class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Investigación</span>
+        <a routerLink="/intranet/inv-lineas" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">🧭</span>
+          <span class="sidebar-btn-text">Líneas de Investigación</span>
+        </a>
+        <a routerLink="/intranet/projects" routerLinkActive="sidebar-btn-active"
+          class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
+          <span class="sidebar-btn-icon">🔬</span>
+          <span class="sidebar-btn-text">Gestión de Proyectos</span>
+        </a>
+      </div>
+
+      <!-- Grupo: Utilitarios -->
+      <div class="space-y-1 pt-2 border-t border-white/5">
+        <span
+          class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Salida</span>
+        <button (click)="handleLogout()"
+          class="sidebar-btn-inactive text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 w-full">
+          <span class="sidebar-btn-icon">🚪</span>
+          <span class="sidebar-btn-text">Cerrar Sesión</span>
+        </button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="dashboard-main flex-1 flex flex-col min-w-0 transition-all duration-300 bg-[#0e0407]">
+
+    <!-- TOP BAR -->
+    <header
+      class="dashboard-topbar flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#120508]/40 backdrop-blur-md min-h-[72px]">
+      <div class="flex items-center gap-4">
+        <button (click)="toggleSidebar()"
+          class="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 cursor-pointer border border-white/5 flex items-center justify-center transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <div class="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
+          <span>Cursos e Investigación</span>
+          <span class="text-slate-700">/</span>
+          <span class="text-[#f43f5e] font-bold font-mono uppercase tracking-wider">{{ breadcrumbLabel() }}</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <button
+          class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition-all">
+          <span class="text-xs">🔍</span>
+        </button>
+        <button (click)="toggleTheme()"
+          [title]="themeMode() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+          class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition-all">
+          <span class="text-xs">{{ themeMode() === 'dark' ? '☀️' : '🌙' }}</span>
+        </button>
+        <button
+          class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition-all">
+          <span class="text-xs">文</span>
+        </button>
+        <button
+          class="relative w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition-all">
+          <span class="text-xs">🔔</span>
+          <span
+            class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-slate-950 text-[9px] font-black rounded-full flex items-center justify-center shadow-sm">
+            3
+          </span>
+        </button>
+        <div class="h-6 w-px bg-white/10 mx-1"></div>
+        <div class="flex items-center gap-2 bg-white/[0.03] border border-white/5 px-2.5 py-1 rounded-xl">
+          <div
+            class="w-6 h-6 rounded-lg bg-gradient-to-tr from-wine-700 to-rose-500 flex items-center justify-center text-[10px] font-black text-white uppercase shadow-sm">
+            {{ user.name.charAt(0) }}
+          </div>
+          <span class="text-xs font-bold text-slate-300 hidden md:inline max-w-[120px] truncate">
+            {{ user.name }}
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- DASHBOARD BODY -->
+    <div class="dashboard-body flex-1 p-6 space-y-6 text-left">
+
+      <!-- Page title -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2">
+        <div>
+          <h1 class="text-2xl font-black text-white tracking-tight uppercase flex items-center gap-2.5">
+            {{ pageTitle() }}
+          </h1>
+          <p class="text-slate-400 text-xs mt-1">Sistema de Cursos e Investigación — IESTP Chojata.</p>
+        </div>
+        <div
+          class="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/[0.03] border border-white/5 px-3 py-1.5 rounded-xl self-start font-mono">
+          Periodo Actual: {{ periodoActivo() || "..." }}
+        </div>
+      </div>
+
+      <!-- Router Outlet: child pages render here -->
+      <router-outlet></router-outlet>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================================
+     MODAL: VALIDACIÓN DE PAGO
+     ========================================== -->
+<div
+  class="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
+  *ngIf="showPaymentModal()" (click)="showPaymentModal.set(false)">
+  <div
+    class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-6"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+      <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+        <span>💵</span> Registrar y Validar Pago de Inscripción
+      </h3>
+      <button (click)="showPaymentModal.set(false)"
+        class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">
+        ✕
+      </button>
+    </div>
+
+    <form (submit)="submitPaymentValidation(); $event.preventDefault()" class="space-y-4 text-left">
+      <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+        <input type="checkbox" id="paymentIsFree" [ngModel]="paymentIsFree()"
+          (ngModelChange)="paymentIsFree.set($event)" [name]="'paymentIsFree'"
+          class="w-4 h-4 rounded border-white/10 text-amber-500 bg-slate-900 focus:ring-amber-500 focus:ring-2 cursor-pointer" />
+        <label for="paymentIsFree"
+          class="text-xs font-bold text-slate-300 cursor-pointer uppercase select-none flex items-center gap-1.5">
+          🎁 ¿El evento es gratuito?
+        </label>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Número de Recibo / Operación</label>
+        <input type="text" [ngModel]="paymentReceiptNumber()"
+          (ngModelChange)="paymentReceiptNumber.set($event)" [name]="'paymentReceiptNumber'"
+          placeholder="REC-2026-XXXX"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+          [disabled]="paymentIsFree()" [required]="!paymentIsFree()" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fecha de Pago</label>
+          <input type="date" [ngModel]="paymentDate()" (ngModelChange)="paymentDate.set($event)"
+            [name]="'paymentDate'"
+            class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            [disabled]="paymentIsFree()" [required]="!paymentIsFree()" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Monto Pagado (S/.)</label>
+          <input type="number" step="0.01" [ngModel]="paymentAmount()"
+            (ngModelChange)="paymentAmount.set($event ? +$event : null)" [name]="'paymentAmount'"
+            placeholder="0.00"
+            class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            [disabled]="paymentIsFree()" [required]="!paymentIsFree()" />
+        </div>
+      </div>
+
+      <div *ngIf="!paymentIsFree()">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subir Foto o Escaneo de Recibo</label>
+        <div
+          class="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-2xl p-4 bg-white/[0.01] hover:bg-white/[0.03] transition-all relative">
+          <input type="file" accept="image/*" (change)="onReceiptFileChange($event)"
+            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+          <div class="text-center space-y-1 z-0">
+            <span class="text-2xl">📸</span>
+            <p class="text-xs text-slate-300 font-semibold">Haga clic o arrastre su archivo aquí</p>
+            <p class="text-[10px] text-slate-500">Formatos permitidos: JPG, PNG (máx. 4MB)</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!paymentIsFree() && paymentImage()"
+        class="mt-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Vista Previa del Recibo:</p>
+        <img [src]="paymentImage()" alt="Preview Recibo"
+          class="max-h-36 rounded-xl mx-auto border border-white/10 object-contain shadow-md" />
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-white/10">
+        <button type="button" (click)="showPaymentModal.set(false)"
+          class="px-5 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 transition-all cursor-pointer">
+          Cancelar
+        </button>
+        <button type="submit"
+          class="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white shadow-lg transition-all cursor-pointer">
+          ✓ Validar y Registrar Pago
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ==========================================
+     MODAL DE CERTIFICADO CON FONDO
+     ========================================== -->
+<div
+  class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-auto print:p-0 print:bg-white"
+  *ngIf="showCertWithBackground() && certParticipantData() as p" (click)="showCertWithBackground.set(false)">
+
+  <div
+    class="relative w-full max-w-[1000px] bg-slate-900 border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 m-auto print:p-0 print:border-0 print:bg-white print:shadow-none print:w-full print:max-w-none"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex items-center justify-between border-b border-white/10 pb-3 print:hidden">
+      <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+        <span>🎓</span> Certificado Oficial
+      </h3>
+      <div class="flex items-center gap-3">
+        <button (click)="downloadCertificate()"
+          class="px-5 py-2 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
+          🖨️ Imprimir Certificado
+        </button>
+        <button (click)="showCertWithBackground.set(false)"
+          class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="flex-1 flex justify-center items-center overflow-auto p-4 bg-slate-950/40 rounded-2xl print:p-0 print:bg-white">
+      <div id="landscape-certificate-print-area"
+        class="landscape-certificate-sheet relative w-[960px] h-[678px] bg-white text-slate-900 overflow-hidden shadow-2xl print:shadow-none print:border-0"
+        [style.background-image]="certFondoBase64() ? 'url(' + certFondoBase64() + ')' : 'none'"
+        style="background-size: cover; background-position: center; background-repeat: no-repeat;">
+
+        <ng-container *ngIf="!certFondoBase64()">
+          <div class="absolute inset-5 border-[3px] border-[#c5a059] rounded-sm pointer-events-none z-20"></div>
+          <svg class="absolute right-0 top-0 h-full w-28 pointer-events-none select-none z-0" viewBox="0 0 110 700"
+            preserveAspectRatio="none">
+            <polygon points="110,0 30,0 110,180" fill="#00599a" />
+            <polygon points="110,150 15,280 110,410" fill="#00adef" />
+            <polygon points="110,380 45,480 110,580" fill="#008ecb" />
+            <polygon points="110,550 30,700 110,700" fill="#00599a" />
+            <polygon points="110,220 60,330 110,440" fill="#00bbf9" opacity="0.6" />
+          </svg>
+        </ng-container>
+
+        <div class="absolute inset-0 flex flex-col justify-between p-12 print:p-14 z-10">
+          <div
+            class="flex-1 flex flex-col top-[70px] print:top-[60px] items-center text-center my-2 space-y-3 relative z-10 w-full px-12">
+            <div class="flex items-center gap-6 justify-center w-full">
+              <div class="flex flex-col items-center">
+                <h6 class="text-[12px] print:text-[12px] font-sans font-bold text-slate-700 uppercase">
+                  AUTORIZADO CON {{ certDocData()?.Resolucion || '' }}
+                </h6>
+                <h1
+                  class="text-[#0d47a1] print:text-[#0d47a1] font-sans font-black tracking-[0.15em] text-[45px] print:text-[45px] sm:text-[45px] uppercase leading-none">
+                  CERTIFICADO
+                </h1>
+                <div
+                  class="text-[#0d47a1] font-sans font-bold text-[20px] print:text-[20px] tracking-widest uppercase mt-1">
+                  EN CALIDAD DE {{ (p.tipoAsistente || certDocData()?.Tipo || '') | uppercase }}
+                </div>
+              </div>
+            </div>
+
+            <div class="text-[15px] print:text-[15px] text-slate-500 italic leading-none">Otorgado a:</div>
+
+            <div class="recipient-name-cursive text-2xl sm:text-3.5xl text-[#0d47a1] leading-none my-1"
+              style="font-family: 'Great Vibes', cursive;">
+              <p class="text-[35px] print:text-[35px]">{{ toTitleCase(p.fullName) }}</p>
+            </div>
+
+            <div
+              class="max-w-2xl text-[12px] print:text-[12px] sm:text-[12px] text-slate-700 leading-relaxed font-sans px-8 text-center"
+              *ngIf="certFondoBase64() && certDocData()?.Texto01" [innerHTML]="certDocData()?.Texto01">
+            </div>
+            <div
+              class="text-[18px] print:text-[18px] sm:text-[18px] font-sans font-black text-[#0d47a1] tracking-wide max-w-2xl px-6 leading-tight uppercase">
+              {{ p.eventTitle }}
+            </div>
+            <div
+              class="max-w-2xl text-[12px] print:text-[12px] sm:text-[12px] text-slate-500 font-sans px-8 text-center"
+              *ngIf="certFondoBase64() && certDocData()?.Texto02" [innerHTML]="certDocData()?.Texto02">
+            </div>
+            <div
+              class="w-full text-right max-w-2xl px-8 text-[12px] print:text-[12px] font-sans text-slate-700 font-medium mt-2">
+              Chojata, {{ certDocData()?.FechEmision ? formatDateForCertificate(certDocData()?.FechEmision) :
+              formatDateForCertificate(p.issueDate) }}
+            </div>
+            <table class="w-2/3 text-center mt-10">
+              <tr>
+                <td>
+                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
+                  <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma01 }}</div>
+                </td>
+                <td>
+                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
+                  <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma02 }}</div>
+                </td>
+                <td>
+                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
+                  <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma03 }}</div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="flex justify-between items-end pt-4 w-full relative z-10">
+            <div class="w-full flex justify-start gap-4 text-center">
+              <div class="flex flex-col items-center justify-end"
+                *ngIf="!certFondoBase64() && !certDocData()?.Firma01 && !certDocData()?.Firma02">
+                <div class="h-8 flex items-center justify-center relative">
+                  <svg viewBox="0 0 100 40" class="w-20 h-6 text-wine-600/70" stroke="currentColor" fill="none"
+                    stroke-width="1.5">
+                    <path d="M10,30 Q25,5 35,25 T55,10 T75,30 T90,20 M15,22 L85,22 M30,12 C40,0 45,35 60,25" />
+                  </svg>
+                </div>
+                <div class="h-[1px] w-28 bg-slate-400 mt-1 mb-0.5"></div>
+                <div class="text-[7px] font-bold text-slate-700 leading-none uppercase font-mono">Director General</div>
+                <div class="text-[5px] text-slate-500 font-mono tracking-wide mt-0.5">Autoridad del Instituto</div>
+              </div>
+            </div>
+            <div class="w-1/2 flex justify-end items-center gap-4 pb-1" *ngIf="!certFondoBase64()">
+              <div
+                class="relative w-12 h-12 rounded-full border-2 border-amber-500 bg-white flex items-center justify-center shadow-md overflow-hidden shrink-0">
+                <img src="/logo-chojata.png" alt="Seal" class="w-9 h-9 object-contain" />
+              </div>
+              <div class="flex items-center gap-0.5 font-serif text-slate-700 select-none">
+                <span class="text-lg font-bold font-serif text-amber-600 leading-none">15</span>
+                <div class="text-[6px] font-sans uppercase font-black tracking-wider leading-none">Aniversario</div>
+              </div>
+            </div>
+            <div class="w-1/2" *ngIf="certFondoBase64()"></div>
+          </div>
+        </div>
+
+        <div
+          class="absolute bottom-[20px] right-[20px] flex items-center justify-end gap-2.5 text-right z-20 bg-white/95 px-3 py-2 rounded-2xl border border-slate-100 shadow-sm print:shadow-none print:border-slate-200">
+          <div class="text-[9px] font-mono text-slate-600 leading-normal">
+            <div class="font-bold text-slate-700">VALIDACIÓN REGISTRADA</div>
+            <div>Código: <span class="text-slate-900 font-extrabold font-mono">{{ p.code }}</span></div>
+          </div>
+          <div
+            class="w-20 h-20 bg-white p-1 rounded border border-slate-200 flex items-center justify-center print:border-slate-300 shrink-0"
+            [innerHTML]="getQrCodeSvg(p.code)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

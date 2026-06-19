@@ -1,0 +1,404 @@
+<div class="space-y-6 animate-fade-in">
+  <div class="flex items-center justify-end">
+    <button (click)="openAddEvent()"
+      class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
+      ➕ Agregar Nuevo Evento
+    </button>
+  </div>
+
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      <span>Mostrar</span>
+      <select [ngModel]="eventPageSize()" (ngModelChange)="eventPageSize.set(+$event); eventCurrentPage.set(1)"
+        class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+        <option [value]="5">5</option><option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option>
+      </select>
+      <span>registros</span>
+    </div>
+    <div class="relative w-full sm:w-72">
+      <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+      <input type="text" [ngModel]="eventSearchQuery()" (ngModelChange)="eventSearchQuery.set($event); eventCurrentPage.set(1)" placeholder="Buscar eventos..."
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+    </div>
+  </div>
+
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
+            <th (click)="changeEventSort('title')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Evento <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'title' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeEventSort('instructor')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Docente / Tutor <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'instructor' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeEventSort('capacity')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Capacidad / Cupos <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'capacity' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeEventSort('date')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Fecha <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'date' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeEventSort('status')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none text-center">
+              Estado <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'status' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm">
+          <ng-container *ngIf="platformService.isLoading()">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+              <td class="px-6 py-4"><div class="flex items-center gap-2"><div class="w-6 h-6 bg-white/10 rounded-lg"></div><div class="space-y-2"><div class="h-4 bg-white/10 rounded w-48"></div><div class="h-3 bg-white/10 rounded w-20"></div></div></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-28"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-12"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-16"></div></td>
+              <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-14 mx-auto"></div></td>
+              <td class="px-6 py-4 text-right"><div class="flex justify-end gap-2"><div class="w-8 h-8 bg-white/10 rounded-lg"></div><div class="w-8 h-8 bg-white/10 rounded-lg"></div></div></td>
+            </tr>
+          </ng-container>
+          <ng-container *ngIf="!platformService.isLoading()">
+            <tr *ngIf="filteredAndPaginatedEvents().items.length === 0">
+              <td colspan="6" class="text-center py-8 text-slate-500 text-xs">No se encontraron eventos coincidentes.</td>
+            </tr>
+            <tr *ngFor="let e of filteredAndPaginatedEvents().items" class="hover:bg-white/[0.02]">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">{{ e.icon }}</span>
+                  <div>
+                    <div class="font-bold text-slate-100">{{ e.title }}</div>
+                    <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wide">{{ e.type }} | {{ e.hours }} horas</span>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-slate-300 font-medium">{{ e.instructor }}</td>
+              <td class="px-6 py-4 font-mono text-slate-300">{{ e.registeredCount }} / <span class="text-slate-500">{{ e.capacity }}</span></td>
+              <td class="px-6 py-4 font-mono text-slate-400">{{ e.date }}</td>
+              <td class="px-6 py-4 text-center">
+                <span [class]="e.status === 'activo' ? 'inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-slate-500/15 text-slate-400 border border-slate-500/20'">
+                  {{ e.status === 'activo' ? 'Activo' : 'Concluido' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="openEditEvent(e)" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer text-xs" title="Editar">✏️</button>
+                  <button (click)="selectCourseForDocs(e)" class="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/10 transition-all cursor-pointer text-xs" title="Configurar Diploma y Resolución">📄</button>
+                  <button (click)="deleteEvent(e.id)" class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 transition-all cursor-pointer text-xs" title="Eliminar">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4">
+    <div class="text-xs text-slate-400 font-medium">
+      Mostrando registros del {{ filteredAndPaginatedEvents().items.length === 0 ? 0 : (eventCurrentPage() - 1) * eventPageSize() + 1 }} al
+      {{ getMinRecord(eventCurrentPage(), eventPageSize(), filteredAndPaginatedEvents().totalItems) }} de un total de {{ filteredAndPaginatedEvents().totalItems }} registros
+    </div>
+    <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedEvents().totalPages > 1">
+      <button [disabled]="eventCurrentPage() === 1" (click)="eventCurrentPage.set(eventCurrentPage() - 1)"
+        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
+      <button *ngFor="let page of getPagesArray(filteredAndPaginatedEvents().totalPages)" (click)="eventCurrentPage.set(page)"
+        [class]="eventCurrentPage() === page ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all' : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
+      <button [disabled]="eventCurrentPage() === filteredAndPaginatedEvents().totalPages" (click)="eventCurrentPage.set(eventCurrentPage() + 1)"
+        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar/Editar Evento -->
+<div *ngIf="showEventModal()" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto no-scrollbar animate-fade-in">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl p-6 shadow-2xl space-y-4 my-8">
+    <h3 class="text-lg font-bold text-slate-100 pb-2 border-b border-white/5">
+      {{ isEditing() ? '📝 Editar Configuración del Evento' : '📅 Crear Nuevo Evento Académico' }}
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-medium">
+      <div class="md:col-span-2">
+        <label class="block text-xs text-slate-400 mb-1">Título del Evento</label>
+        <textarea [ngModel]="eventForm().title" (ngModelChange)="eventForm.update(f => ({...f, title: $event}))" rows="2"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50" placeholder="Nombre completo de la actividad académica"></textarea>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-xs text-slate-400 mb-1">Banner (768x432) px</label>
+        <div class="flex items-center gap-3">
+          <label class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 text-xs font-semibold cursor-pointer transition-all">
+            Seleccionar archivo
+            <input type="file" accept="image/*" (change)="onBannerSelected($event)" class="hidden" />
+          </label>
+          <span class="text-xs text-slate-500 truncate max-w-xs">{{ eventForm().coverUrl ? 'Imagen cargada' : 'Sin archivos seleccionados' }}</span>
+        </div>
+        <div *ngIf="eventForm().coverUrl" class="mt-2.5 h-20 w-36 rounded-xl border border-white/10 overflow-hidden bg-slate-950">
+          <img [src]="eventForm().coverUrl" class="w-full h-full object-cover" />
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-xs text-slate-400 mb-1">Descripción</label>
+        <div *ngIf="isBrowser" class="NgxEditor__Wrapper border border-white/10 rounded-xl bg-[#0b111e]">
+          <ngx-editor-menu [editor]="editor" [toolbar]="toolbar" class="block"></ngx-editor-menu>
+          <ngx-editor [editor]="editor" [ngModel]="eventForm().description"
+            (ngModelChange)="eventForm.update(f => ({...f, description: $event, fullDescription: $event}))"
+            placeholder="Resumen corto de los temas del curso..." class="block"></ngx-editor>
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-xs text-slate-400 mb-1">Horas Académicas</label>
+        <input type="number" [ngModel]="eventForm().hours" (ngModelChange)="eventForm.update(f => ({...f, hours: +$event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50" placeholder="Ej: 40" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Inicia inscripción</label>
+        <input type="datetime-local" [ngModel]="eventForm().registrationStartDate" (ngModelChange)="eventForm.update(f => ({...f, registrationStartDate: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50" style="color-scheme: dark;" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Finaliza inscripción</label>
+        <input type="datetime-local" [ngModel]="eventForm().registrationEndDate" (ngModelChange)="eventForm.update(f => ({...f, registrationEndDate: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50" style="color-scheme: dark;" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Inicia Curso</label>
+        <input type="datetime-local" [ngModel]="eventForm().courseStartDate" (ngModelChange)="eventForm.update(f => ({...f, courseStartDate: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50" style="color-scheme: dark;" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Finaliza Curso</label>
+        <input type="datetime-local" [ngModel]="eventForm().courseEndDate" (ngModelChange)="eventForm.update(f => ({...f, courseEndDate: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50" style="color-scheme: dark;" />
+      </div>
+      <div class="md:col-span-2 border-t border-white/5 pt-3 mt-1">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs text-slate-400 mb-1">Tipo de Actividad</label>
+            <select [ngModel]="eventForm().type" (ngModelChange)="eventForm.update(f => ({...f, type: $event}))"
+              class="block w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50">
+              <option *ngFor="let type of platformService.activityTypes()" [value]="type.tipActividad">{{ type.tipActividad }}</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs text-slate-400 mb-1 font-bold">Periodo Académico</label>
+            <select [ngModel]="eventForm().Id_PeriodoAca" (ngModelChange)="eventForm.update(f => ({...f, Id_PeriodoAca: $event}))" [name]="'periodoAca'"
+              class="block w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold">
+              <option *ngFor="let p of academicPeriods()" [value]="p.Id">{{ p.Asig }} {{ p.Activo ? '(Activo)' : '' }}</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs text-slate-400 mb-1">Docentes Expositores</label>
+            <div class="flex flex-wrap gap-2 mb-2" *ngIf="getInstructorsList().length > 0">
+              <span *ngFor="let name of getInstructorsList()" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
+                <span>👨‍🏫 {{ name }}</span>
+                <button type="button" (click)="removeInstructor(name)" class="hover:text-rose-400 transition-colors bg-transparent border-0 p-0 cursor-pointer font-bold text-[10px] ml-1">✕</button>
+              </span>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" #newInstructorInput placeholder="Ej: Dr. Alejandro Benítez"
+                class="flex-1 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-sm font-medium"
+                (keyup.enter)="addInstructor(newInstructorInput.value); newInstructorInput.value = ''" />
+              <button type="button" (click)="addInstructor(newInstructorInput.value); newInstructorInput.value = ''"
+                class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-bold transition-all cursor-pointer">＋ Agregar</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Capacidad Máxima</label>
+            <input type="number" [ngModel]="eventForm().capacity" (ngModelChange)="eventForm.update(f => ({...f, capacity: +$event}))"
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50" placeholder="Ej: 30" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Estado</label>
+            <select [ngModel]="eventForm().status" (ngModelChange)="eventForm.update(f => ({...f, status: $event}))"
+              class="block w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50">
+              <option value="activo">Activo / Vigente</option>
+              <option value="concluido">Concluido / Finalizado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="saveEventError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">⚠️ {{ saveEventError() }}</div>
+    <div class="flex items-center gap-3 pt-2">
+      <button (click)="saveEvent()" [disabled]="savingEvent()"
+        class="flex-1 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ savingEvent() ? 'Guardando...' : (isEditing() ? '✓ Actualizar Evento' : '✓ Crear Evento') }}
+      </button>
+      <button (click)="showEventModal.set(false)" [disabled]="savingEvent()"
+        class="flex-1 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Configurar Diploma y Resolución -->
+<div class="modal-backdrop fixed inset-0 z-[70] flex items-start justify-center bg-black/85 backdrop-blur-sm p-4 pt-8 overflow-y-auto animate-fade-in"
+  *ngIf="showDocsConfigModal()" (click)="showDocsConfigModal.set(false)">
+  <div class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]" (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between border-b border-white/10 px-6 py-4 shrink-0">
+      <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2"><span>📄</span> Configurar Diploma y Resolución</h3>
+      <button (click)="showDocsConfigModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">✕</button>
+    </div>
+    <div class="flex-1 overflow-y-auto px-6 py-4 space-y-6 no-scrollbar">
+      <div class="bg-white/[0.03] border border-white/5 p-3 rounded-2xl">
+        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Curso / Evento Seleccionado</span>
+        <span class="text-xs font-bold text-amber-400 font-mono">{{ selectedCourseForDocs()?.title }}</span>
+      </div>
+      <div *ngIf="docsConfigList().length > 0" class="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+        <div class="px-4 py-3 bg-white/[0.04] border-b border-white/5 flex items-center justify-between">
+          <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wide">Plantillas Configuradas</h4>
+          <span class="px-2 py-0.5 rounded-full text-[9px] bg-slate-900 border border-white/10 text-slate-400 font-semibold font-mono">{{ docsConfigList().length }} registradas</span>
+        </div>
+        <div class="overflow-x-auto max-h-40">
+          <table class="w-full text-left border-collapse text-xs table-fixed">
+            <thead>
+              <tr class="bg-white/[0.02] text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-white/5">
+                <th class="px-4 py-2.5 w-[25%]">Rol / Tipo Asistente</th>
+                <th class="px-4 py-2.5 w-[28%]">Resolución</th>
+                <th class="px-4 py-2.5 w-[22%]">Certificación</th>
+                <th class="px-4 py-2.5 w-[25%] text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              <ng-container *ngIf="loadingDocsConfig()">
+                <tr *ngFor="let i of [1,2,3,4]" class="animate-pulse">
+                  <td class="px-4 py-2.5 w-[25%]"><div class="h-5 bg-white/10 rounded w-20"></div></td>
+                  <td class="px-4 py-2.5 w-[28%]"><div class="h-4 bg-white/10 rounded w-36"></div></td>
+                  <td class="px-4 py-2.5 w-[22%]"><div class="h-4 bg-white/10 rounded w-24"></div></td>
+                  <td class="px-4 py-2.5 w-[25%] text-right"><div class="flex justify-end gap-1.5"><div class="w-14 h-6 bg-white/10 rounded"></div><div class="w-14 h-6 bg-white/10 rounded"></div></div></td>
+                </tr>
+              </ng-container>
+              <ng-container *ngIf="!loadingDocsConfig()">
+                <tr *ngFor="let c of docsConfigList()" class="hover:bg-white/[0.02] transition-colors">
+                  <td class="px-4 py-2.5 w-[25%] font-bold text-slate-300 align-middle">
+                    <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-black uppercase text-[9px] inline-block">{{ c.tipo_asistente_rel?.AsigTipo || 'ASISTENTE' }}</span>
+                  </td>
+                  <td class="px-4 py-2.5 w-[28%] font-mono text-slate-400 truncate align-middle" [title]="c.Resolucion">{{ c.Resolucion || '-' }}</td>
+                  <td class="px-4 py-2.5 w-[22%] text-slate-400 truncate align-middle" [title]="c.Tipo">{{ c.Tipo || '-' }}</td>
+                  <td class="px-4 py-2.5 w-[25%] text-right align-middle">
+                    <div class="flex items-center justify-end gap-1.5">
+                      <button type="button" (click)="selectAsistenteTypeForDocs(c.TipoAsistente)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-200 text-[10px] font-bold transition-all cursor-pointer">✏️ Editar</button>
+                      <button type="button" (click)="deleteDocsConfig(c)" class="px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-bold transition-all cursor-pointer">🗑️ Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex items-center justify-between border-t border-white/10 pt-2">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <span>{{ docsForm().id ? '📝' : '➕' }}</span><span>{{ docsForm().id ? 'Editando Plantilla' : 'Nueva Plantilla' }}</span>
+        </h4>
+        <button type="button" (click)="resetDocsForm(1)" class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-bold transition-all cursor-pointer">✨ Nuevo</button>
+      </div>
+      <form (submit)="saveDocsConfig(); $event.preventDefault()" class="space-y-4 text-left">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tipo de Asistente (Rol)</label>
+            <select [ngModel]="docsForm().TipoAsistente" (ngModelChange)="selectAsistenteTypeForDocs(+$event)" [name]="'tipoAsistente'"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-sm font-semibold transition-all cursor-pointer">
+              <option *ngFor="let ta of platformService.tipoAsistentes()" [value]="ta.id">{{ ta.AsigTipo }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Número de Resolución</label>
+            <input type="text" [ngModel]="docsForm().Resolucion" (ngModelChange)="docsForm.update(f => ({ ...f, Resolucion: $event }))" [name]="'resolucion'"
+              placeholder="Ej: RD-025-2026-IESTP-CHOJATA"
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subir PDF de Resolución</label>
+            <div class="flex items-center gap-2">
+              <input type="file" id="resolucionPdfInput" accept=".pdf" (change)="onPdfFileChange($event)"
+                class="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
+              <a *ngIf="docsForm().pdfResolucion" [href]="'http://localhost:8000/storage/' + docsForm().pdfResolucion" target="_blank"
+                class="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1 transition-all">📥 Ver</a>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tipo</label>
+            <input type="text" [ngModel]="docsForm().Tipo" (ngModelChange)="docsForm.update(f => ({ ...f, Tipo: $event }))" [name]="'tipo'"
+              placeholder="Ej: Certificado de Aprobación"
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fecha de Emisión del Documento</label>
+            <input type="date" [ngModel]="docsForm().FechEmision" (ngModelChange)="docsForm.update(f => ({ ...f, FechEmision: $event }))" [name]="'fechEmision'"
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fondo de Documento</label>
+            <div class="flex items-center gap-2">
+              <input type="file" id="docsFondoInput" accept="image/*" (change)="onFondoFileChange($event)"
+                class="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
+              <a *ngIf="docsForm().Fondo" [href]="'http://localhost:8000/storage/' + docsForm().Fondo" target="_blank"
+                class="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1 transition-all">👁️ Ver</a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Texto Principal (Línea 1)</label>
+          <div *ngIf="isBrowser" class="NgxEditor__Wrapper border border-white/10 rounded-xl bg-[#0b111e]">
+            <ngx-editor-menu [editor]="editorTexto01" [toolbar]="toolbar" class="block"></ngx-editor-menu>
+            <ngx-editor [editor]="editorTexto01" [ngModel]="docsForm().Texto01" (ngModelChange)="docsForm.update(f => ({ ...f, Texto01: $event }))" [ngModelOptions]="{standalone: true}"
+              placeholder="Por haber aprobado/asistido satisfactoriamente..." class="block"></ngx-editor>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Texto Secundario (Línea 2)</label>
+          <div *ngIf="isBrowser" class="NgxEditor__Wrapper border border-white/10 rounded-xl bg-[#0b111e]">
+            <ngx-editor-menu [editor]="editorTexto02" [toolbar]="toolbar" class="block"></ngx-editor-menu>
+            <ngx-editor [editor]="editorTexto02" [ngModel]="docsForm().Texto02" (ngModelChange)="docsForm.update(f => ({ ...f, Texto02: $event }))" [ngModelOptions]="{standalone: true}"
+              placeholder="En fe de lo cual se firma y expide la presente credencial..." class="block"></ngx-editor>
+          </div>
+        </div>
+        <div class="border-t border-white/10 pt-4">
+          <span class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Pie de Firmas (Cargos / Títulos)</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1.5">
+                <input type="checkbox" [ngModel]="enableFirma01()" (ngModelChange)="toggleFirma01($event)" [ngModelOptions]="{standalone: true}"
+                  class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                <label class="block text-[10px] font-bold text-slate-500">Firma 01</label>
+              </div>
+              <input type="text" [ngModel]="docsForm().Firma01" (ngModelChange)="docsForm.update(f => ({ ...f, Firma01: $event }))" [name]="'firma01'"
+                placeholder="Director General" [disabled]="!enableFirma01()"
+                class="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed" />
+            </div>
+            <div>
+              <div class="flex items-center gap-2 mb-1.5">
+                <input type="checkbox" [ngModel]="enableFirma02()" (ngModelChange)="toggleFirma02($event)" [ngModelOptions]="{standalone: true}"
+                  class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                <label class="block text-[10px] font-bold text-slate-500">Firma 02</label>
+              </div>
+              <input type="text" [ngModel]="docsForm().Firma02" (ngModelChange)="docsForm.update(f => ({ ...f, Firma02: $event }))" [name]="'firma02'"
+                placeholder="Jefe de Unidad Académica" [disabled]="!enableFirma02()"
+                class="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed" />
+            </div>
+            <div>
+              <div class="flex items-center gap-2 mb-1.5">
+                <input type="checkbox" [ngModel]="enableFirma03()" (ngModelChange)="toggleFirma03($event)" [ngModelOptions]="{standalone: true}"
+                  class="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                <label class="block text-[10px] font-bold text-slate-500">Firma 03</label>
+              </div>
+              <input type="text" [ngModel]="docsForm().Firma03" (ngModelChange)="docsForm.update(f => ({ ...f, Firma03: $event }))" [name]="'firma03'"
+                placeholder="Coordinador General del Evento" [disabled]="!enableFirma03()"
+                class="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed" />
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-white/10">
+          <button type="button" (click)="showDocsConfigModal.set(false)"
+            class="px-5 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 transition-all cursor-pointer">Cancelar</button>
+          <button type="submit" [disabled]="savingDocsConfig()"
+            class="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            <span *ngIf="savingDocsConfig()" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            {{ savingDocsConfig() ? 'Guardando...' : (docsForm().id ? '✓ Actualizar Configuración' : '✓ Guardar Configuración') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

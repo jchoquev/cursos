@@ -1,9 +1,25 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PlatformService, Certificate } from '../../services/platform.service';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ApiService } from '../../services/api.service';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import { DnaLoaderService } from '../../services/dna-loader.service';
 import qrcode from 'qrcode-generator';
+
+export interface CertResult {
+  valido: boolean;
+  codigo: string;
+  nombres: string;
+  dni: string;
+  evento: string;
+  evento_id?: string;
+  tipo_asistente_id?: number;
+  horas: number;
+  fecha: string | null;
+  tipo: string;
+  resolucion?: string | null;
+  mensaje?: string;
+}
 
 @Component({
   selector: 'app-search-certificates',
@@ -13,104 +29,111 @@ import qrcode from 'qrcode-generator';
   styleUrl: './search-certificates.css',
 })
 export class SearchCertificates {
-  private readonly platformService = inject(PlatformService);
+  private readonly apiService = inject(ApiService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly dnaLoader = inject(DnaLoaderService);
 
-  // Search fields
-  searchType = signal<'dni' | 'code'>('dni');
   searchQuery = signal<string>('');
   isSearching = signal<boolean>(false);
   hasSearched = signal<boolean>(false);
 
-  // Results
-  results = signal<Certificate[]>([]);
+  result = signal<CertResult | null>(null);
+  isValid = signal<boolean>(false);
+  errorMsg = signal<string>('');
 
-  // Active Certificate for Modal View
-  activeCertificate = signal<Certificate | null>(null);
-
-  // Verification Screen Refinements Signals
+  showPrintModal = signal<boolean>(false);
   showResolutionModal = signal<boolean>(false);
-  showPrintCertModal = signal<boolean>(false);
+  resolucionPdfUrl = signal<SafeResourceUrl | null>(null);
+  resolucionError = signal<string>('');
 
-  // Perform search
   onSearch(): void {
     const query = this.searchQuery().trim();
     if (!query) return;
 
     this.isSearching.set(true);
     this.hasSearched.set(false);
+    this.result.set(null);
+    this.isValid.set(false);
+    this.errorMsg.set('');
 
-    // Simulate short institutional delay for premium feel
-    setTimeout(() => {
-      if (this.searchType() === 'dni') {
-        const found = this.platformService.findCertificatesByDni(query);
-        this.results.set(found);
-      } else {
-        const found = this.platformService.findCertificateByCode(query);
-        this.results.set(found ? [found] : []);
+    this.apiService.get<CertResult>(`/validar-certificado/${encodeURIComponent(query)}`).subscribe({
+      next: (res) => {
+        this.result.set(res);
+        this.isValid.set(res.valido);
+        this.isSearching.set(false);
+        this.hasSearched.set(true);
+      },
+      error: (err) => {
+        const msg = err?.error?.mensaje || 'No se encontró ningún certificado con ese código.';
+        this.errorMsg.set(msg);
+        this.isValid.set(false);
+        this.isSearching.set(false);
+        this.hasSearched.set(true);
       }
-      this.isSearching.set(false);
-      this.hasSearched.set(true);
-    }, 600);
+    });
   }
 
-  // Open modal
-  viewCertificate(cert: Certificate): void {
-    this.showPrintCertModal.set(false);
-    this.showResolutionModal.set(false);
-    this.activeCertificate.set(cert);
+  formatDate(date: string | null | undefined): string {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return date;
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const year = d.getUTCFullYear();
+    return `${day}/${month}/${year}`;
   }
 
-  // Close modal
-  closeCertificateModal(): void {
-    this.activeCertificate.set(null);
-  }
+  downloadCertificate(): void { window.print(); }
 
-  // Download / Print Certificate
-  downloadCertificate(): void {
-    window.print();
-  }
+  viewResolutionPdf(): void {
+    const cert = this.result();
+    if (!cert?.evento_id || !cert?.tipo_asistente_id) {
+      this.resolucionError.set('No se encontró la información del evento para esta resolución.');
+      this.showResolutionModal.set(true);
+      return;
+    }
 
-  // Open modal and trigger print after rendering
-  viewAndDownload(cert: Certificate): void {
-    this.viewCertificate(cert);
-    this.showPrintCertModal.set(true); // force diploma view for printing
-    setTimeout(() => {
-      this.downloadCertificate();
-    }, 200);
-  }
+    this.resolucionPdfUrl.set(null);
+    this.resolucionError.set('');
+    this.dnaLoader.show('Cargando resolución', 'Obteniendo el documento PDF...');
 
-  // Resolution modal controls
-  viewResolutionPdf(cert: Certificate): void {
-    this.showResolutionModal.set(true);
+    this.apiService.get<any>('/resolucion-pdf-base64', {
+      evento_id: cert.evento_id,
+      tipo_asistente: cert.tipo_asistente_id,
+    }).subscribe({
+      next: (resp) => {
+        this.dnaLoader.hide();
+        if (resp?.status === 'success' && resp.pdf_base64) {
+          this.resolucionPdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(resp.pdf_base64));
+        } else {
+          this.resolucionError.set('No se encontró una resolución en PDF para este certificado.');
+        }
+        this.showResolutionModal.set(true);
+      },
+      error: (err) => {
+        this.dnaLoader.hide();
+        this.resolucionError.set(err?.error?.message || 'No se encontró una resolución en PDF para este certificado.');
+        this.showResolutionModal.set(true);
+      }
+    });
   }
 
   closeResolutionPdf(): void {
     this.showResolutionModal.set(false);
+    this.resolucionPdfUrl.set(null);
+    this.resolucionError.set('');
   }
 
-  // Dynamic QR Code SVG generator helper
   getQrCodeSvgRaw(code: string): string {
-    // Generate a beautiful, authentic SVG QR code block
-    // Pointing to verification URL: https://iestpchojata.edu.pe/certificados/validador?code=code
     const url = `https://iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
-    
     try {
-      // 0 means auto-detect version, 'M' is error correction level (Medium)
       const qr = qrcode(0, 'M');
       qr.addData(url);
       qr.make();
-      // Generate SVG string (cell size = 4, margin = 0)
-      const svgString = qr.createSvgTag(4, 0);
-      // Make the generated SVG responsive and stylable
-      return svgString
+      return qr.createSvgTag(4, 0)
         .replace('<svg', '<svg class="w-full h-full text-slate-800"')
-        .replace(/fill="white"/g, 'fill="white"') // Keep white background
-        .replace(/fill="black"/g, 'fill="currentColor"'); // Use currentColor for QR bits
-    } catch (e) {
-      console.error('Error generating QR code:', e);
-      return '';
-    }
+        .replace(/fill="black"/g, 'fill="currentColor"');
+    } catch { return ''; }
   }
 
   getQrCodeSvg(code: string): SafeHtml {

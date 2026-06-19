@@ -31,17 +31,16 @@
   border-image: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.08), transparent) 1;
 }
 
-/* --- REFINEMENT: CAPTCHA CUSTOM DESIGN --- */
-
+/* --- CAPTCHA DESIGN --- */
 .captcha-box {
   background-color: #05030b;
-  box-shadow: 
+  box-shadow:
     inset 0 2px 8px rgba(0, 0, 0, 0.8),
     0 0 10px rgba(245, 158, 11, 0.15);
 }
 
 .captcha-letters {
-  text-shadow: 
+  text-shadow:
     1px 1px 2px rgba(0,0,0,0.8),
     -1px -1px 2px rgba(255,255,255,0.1),
     0 0 12px rgba(245, 158, 11, 0.3);
@@ -50,7 +49,7 @@
   display: inline-block;
 }
 
-/* Animación rebote del Check de Éxito en modal */
+/* Animación rebote del Check de Éxito */
 @keyframes successPulse {
   0% { transform: scale(0.9); }
   50% { transform: scale(1.05); }
@@ -59,4 +58,102 @@
 
 .animate-bounce {
   animation: successPulse 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+/* ============================================
+   FILTER BAR — DISEÑO EDUCATIVO INSTITUCIONAL
+   ============================================ */
+.lp-filter-border {
+  position: sticky;
+  top: 74px;
+  z-index: 20;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 18px;
+  background: rgba(18, 7, 10, 0.85);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255,255,255,0.04) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Light mode filter bar */
+:host-context(body.light-mode) .lp-filter-border {
+  background: rgba(255, 253, 251, 0.96);
+  border: 1px solid rgba(122, 16, 48, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(122, 16, 48, 0.06), 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* ============================================
+   CARDS — DISEÑO EDUCATIVO MODERNO
+   ============================================ */
+.lp-card img {
+  filter: saturate(0.88) contrast(1.02);
+}
+.lp-card:hover img {
+  filter: saturate(1) contrast(1.04);
+}
+
+/* Repo card */
+.lp-repo-card {
+  background:
+    linear-gradient(145deg, rgba(180, 35, 77, 0.07), rgba(255, 255, 255, 0.018)) !important;
+}
+
+/* Light mode repo card text (ya cubierto por lp-card-title / lp-repo-meta en styles.css) */
+
+/* Light mode card content text (clases semánticas, no afectan badges del banner) */
+:host-context(body.light-mode) .lp-card .lp-card-title { color: #1e293b !important; }
+:host-context(body.light-mode) .lp-card .lp-card-desc { color: #64748b !important; }
+:host-context(body.light-mode) .lp-card .lp-card-meta { color: #b45309 !important; }
+
+/* Light mode filter toggle hover fixes */
+:host-context(body.light-mode) .lp-filter-toggle-label { color: #5c0a1e !important; }
+:host-context(body.light-mode) .lp-filter-toggle-label:hover {
+  color: #be123c !important;
+  background: rgba(190, 18, 60, 0.08) !important;
+}
+:host-context(body.light-mode) .lp-filter-toggle button:not([class*="from-"]) { color: #5c0a1e !important; }
+:host-context(body.light-mode) .lp-filter-toggle button:not([class*="from-"]):hover {
+  color: #be123c !important;
+  background: rgba(190, 18, 60, 0.08) !important;
+}
+:host-context(body.light-mode) .lp-filter-btn { color: #5c0a1e !important; }
+:host-context(body.light-mode) .lp-filter-btn:hover {
+  color: #be123c !important;
+  background: rgba(190, 18, 60, 0.08) !important;
+}
+
+/* Light mode: sidebar blocks */
+:host-context(body.light-mode) .lp-sidebar-block .text-slate-200 { color: #1e293b !important; }
+:host-context(body.light-mode) .lp-sidebar-block .text-slate-300 { color: #334155 !important; }
+:host-context(body.light-mode) .lp-sidebar-block .text-slate-400 { color: #64748b !important; }
+:host-context(body.light-mode) .lp-sidebar-block .text-amber-400 { color: #b45309 !important; }
+
+/* Light mode: modal generic buttons */
+:host-context(body.light-mode) .lp-modal-content .text-white,
+:host-context(body.light-mode) .lp-modal-content .text-slate-100 { color: #0f172a !important; }
+:host-context(body.light-mode) .lp-modal-content .text-slate-200 { color: #1e293b !important; }
+:host-context(body.light-mode) .lp-modal-content .text-slate-300 { color: #334155 !important; }
+:host-context(body.light-mode) .lp-modal-content .text-slate-400 { color: #64748b !important; }
+:host-context(body.light-mode) .lp-modal-content .text-amber-300 { color: #be123c !important; }
+:host-context(body.light-mode) .lp-modal-content .text-amber-400 { color: #b45309 !important; }
+
+:host-context(body.light-mode) .lp-modal-content button:not([class*="amber"]):not([class*="emerald"]):not([class*="rose"]):not([class*="wine"]):not([class*="from-"]) {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #475569 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+:host-context(body.light-mode) .lp-modal-content button:not([class*="amber"]):not([class*="emerald"]):not([class*="rose"]):not([class*="wine"]):not([class*="from-"]):hover {
+  background-color: rgba(0, 0, 0, 0.09) !important;
+  color: #1e293b !important;
+}
+
+/* Empty state light */
+:host-context(body.light-mode) .lp-empty-state h3 { color: #334155 !important; }
+:host-context(body.light-mode) .lp-empty-state p { color: #64748b !important; }
+
+@media (max-width: 767px) {
+  .lp-filter-border {
+    position: static;
+  }
 }

@@ -1,0 +1,37 @@
+<div [hidden]="!loader.visible()"
+     class="dna-loader-overlay fixed inset-0 z-[200] flex flex-col items-center justify-center select-none"
+     style="backdrop-filter:blur(14px)">
+  <div class="flex flex-col items-center gap-10">
+
+    <svg viewBox="0 0 172 80" width="260" height="120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="dna-glow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Strand 1: wine rose -->
+      <circle class="dna-s1" cx="11"  cy="40" r="5" fill="#d4547a" filter="url(#dna-glow)"/>
+      <circle class="dna-s1" cx="36"  cy="40" r="5" fill="#d4547a" filter="url(#dna-glow)"/>
+      <circle class="dna-s1" cx="61"  cy="40" r="5" fill="#d4547a" filter="url(#dna-glow)"/>
+      <circle class="dna-s1" cx="86"  cy="40" r="5" fill="#d4547a" filter="url(#dna-glow)"/>
+      <circle class="dna-s1" cx="111" cy="40" r="5" fill="#d4547a" filter="url(#dna-glow)"/>
+      <circle class="dna-s1" cx="136" cy="40" r="5" fill="#d4547a" filter="url(#dna-glow)"/>
+      <circle class="dna-s1" cx="161" cy="40" r="5" fill="#d4547a" filter="url(#dna-glow)"/>
+      <!-- Strand 2: gold -->
+      <circle class="dna-s2" cx="11"  cy="40" r="5" fill="#c5a059" filter="url(#dna-glow)"/>
+      <circle class="dna-s2" cx="36"  cy="40" r="5" fill="#c5a059" filter="url(#dna-glow)"/>
+      <circle class="dna-s2" cx="61"  cy="40" r="5" fill="#c5a059" filter="url(#dna-glow)"/>
+      <circle class="dna-s2" cx="86"  cy="40" r="5" fill="#c5a059" filter="url(#dna-glow)"/>
+      <circle class="dna-s2" cx="111" cy="40" r="5" fill="#c5a059" filter="url(#dna-glow)"/>
+      <circle class="dna-s2" cx="136" cy="40" r="5" fill="#c5a059" filter="url(#dna-glow)"/>
+      <circle class="dna-s2" cx="161" cy="40" r="5" fill="#c5a059" filter="url(#dna-glow)"/>
+    </svg>
+
+    <div class="flex flex-col items-center gap-2">
+      <p class="text-white text-sm font-bold tracking-[0.25em] uppercase">{{ loader.title() }}</p>
+      <p class="text-slate-500 text-xs tracking-wide">{{ loader.message() }}</p>
+    </div>
+
+  </div>
+</div>

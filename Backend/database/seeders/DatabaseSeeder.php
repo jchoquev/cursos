@@ -3,18 +3,20 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
+        // Asegurarse de que el periodo académico 2026-I esté creado y activo
+        $periodo = \App\Models\PeriodoAca::firstOrCreate(
+            ['Asig' => '2026-I'],
+            ['Id' => \Illuminate\Support\Str::uuid()->toString(), 'Activo' => true]
+        );
         \App\Models\TipoAsistente::firstOrCreate(['id' => 1], ['AsigTipo' => 'ASISTENTE']);
         \App\Models\TipoAsistente::firstOrCreate(['id' => 2], ['AsigTipo' => 'PONENTE']);
         \App\Models\TipoAsistente::firstOrCreate(['id' => 3], ['AsigTipo' => 'ORGANIZADOR']);
@@ -52,6 +54,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         if (\App\Models\Evento::count() === 0) {
+            $periodoActive = \App\Models\PeriodoAca::where('Activo', true)->first();
+            $periodoId = $periodoActive ? $periodoActive->Id : null;
+
             \App\Models\Evento::create([
                 'id' => \Illuminate\Support\Str::uuid()->toString(),
                 'titulo' => 'Desarrollo Frontend con Angular Avanzado',
@@ -66,6 +71,7 @@ class DatabaseSeeder extends Seeder
                 'DonceteExp' => ['Dr. Alejandro Benítez'],
                 'CapMaxima' => 35,
                 'Estado' => true,
+                'Id_PeriodoAca' => $periodoId,
             ]);
 
             \App\Models\Evento::create([
@@ -82,6 +88,7 @@ class DatabaseSeeder extends Seeder
                 'DonceteExp' => ['MSc. Elena Rostova'],
                 'CapMaxima' => 25,
                 'Estado' => true,
+                'Id_PeriodoAca' => $periodoId,
             ]);
 
             \App\Models\Evento::create([
@@ -98,7 +105,14 @@ class DatabaseSeeder extends Seeder
                 'DonceteExp' => ['Ing. Carlos Mendoza'],
                 'CapMaxima' => 50,
                 'Estado' => true,
+                'Id_PeriodoAca' => $periodoId,
             ]);
         }
+
+        $this->call([
+            InvLineaSeeder::class,
+            ProyectoSeeder::class,
+            MatriculaSeeder::class,
+        ]);
     }
 }

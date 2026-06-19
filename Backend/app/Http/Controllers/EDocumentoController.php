@@ -198,4 +198,49 @@ class EDocumentoController extends Controller
             'e_documento'  => $config
         ]);
     }
+
+    /**
+     * Obtener el PDF de la resolución en base64 según evento y tipo de asistente.
+     * Público — usado en la validación de certificados del inicio.
+     */
+    public function getResolucionBase64(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $eventoId      = $request->query('evento_id');
+        $tipoAsistente = $request->query('tipo_asistente');
+
+        if (!$eventoId || !$tipoAsistente) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Faltan parámetros requeridos: evento_id y tipo_asistente.'
+            ], 400);
+        }
+
+        $config = EDocumento::where('Id_evento', $eventoId)
+            ->where('TipoAsistente', $tipoAsistente)
+            ->first();
+
+        if (!$config || !$config->pdfResolucion) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'No se encontró una resolución en PDF para este evento y tipo de asistente.'
+            ], 404);
+        }
+
+        if (!Storage::disk('public')->exists($config->pdfResolucion)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'El archivo de resolución no existe en el servidor.'
+            ], 404);
+        }
+
+        $fileContent = Storage::disk('public')->get($config->pdfResolucion);
+        $base64      = 'data:application/pdf;base64,' . base64_encode($fileContent);
+
+        return response()->json([
+            'status'           => 'success',
+            'pdf_base64'       => $base64,
+            'resolucion'       => $config->Resolucion,
+            'fecha_emision'    => $config->FechEmision,
+        ]);
+    }
 }

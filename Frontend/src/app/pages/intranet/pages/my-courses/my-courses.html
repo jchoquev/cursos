@@ -1,0 +1,37 @@
+<div class="space-y-6 animate-fade-in">
+  <h2 class="text-2xl font-bold text-white">Mis Cursos y Eventos Asignados</h2>
+
+  <div *ngIf="platformService.currentUser() as user" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <ng-container *ngFor="let e of platformService.events()">
+      <div *ngIf="e.instructor === user.name"
+        class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl flex flex-col justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-2xl">{{ e.icon }}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
+              {{ e.type }}
+            </span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-100 mb-2">{{ e.title }}</h3>
+          <p class="text-xs text-slate-400 font-mono mb-1">Fecha: {{ e.date }} | Horas Académicas: {{ e.hours }}</p>
+          <p class="text-xs text-slate-500 leading-normal" [innerHTML]="e.description"></p>
+        </div>
+        <div class="flex items-center gap-2 pt-2">
+          <button (click)="goToAttendance(e.id)"
+            class="flex-1 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/15 text-white transition-all cursor-pointer text-center">
+            ⏱️ Tomar Asistencia
+          </button>
+          <button (click)="goToCertificates()"
+            class="flex-1 py-2 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer text-center">
+            🎓 Evaluar Alumnos
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <div *ngIf="platformService.events().length === 0" class="col-span-2 text-center p-12 text-slate-500">
+      <span class="text-3xl">📚</span>
+      <h3 class="text-base font-bold text-slate-200 mt-2">No tienes cursos asignados</h3>
+    </div>
+  </div>
+</div>

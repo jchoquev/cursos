@@ -1,0 +1,150 @@
+<div class="space-y-6 animate-fade-in">
+  <div class="flex items-center justify-end">
+    <button (click)="openAddUser()"
+      class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
+      ➕ Registrar Nuevo Usuario
+    </button>
+  </div>
+
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      <span>Mostrar</span>
+      <select [ngModel]="userPageSize()" (ngModelChange)="userPageSize.set(+$event); userCurrentPage.set(1)"
+        class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+        <option [value]="5">5</option><option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option>
+      </select>
+      <span>registros</span>
+    </div>
+    <div class="relative w-full sm:w-72">
+      <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+      <input type="text" [ngModel]="userSearchQuery()"
+        (ngModelChange)="userSearchQuery.set($event); userCurrentPage.set(1)" placeholder="Buscar usuarios..."
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-1.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+    </div>
+  </div>
+
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
+            <th (click)="changeUserSort('name')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Usuario <span class="text-[9px] font-bold text-slate-400 ml-1">{{ userSortColumn() === 'name' ? (userSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeUserSort('dni')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              DNI / Documento <span class="text-[9px] font-bold text-slate-400 ml-1">{{ userSortColumn() === 'dni' ? (userSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeUserSort('role')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Rol <span class="text-[9px] font-bold text-slate-400 ml-1">{{ userSortColumn() === 'role' ? (userSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm">
+          <ng-container *ngIf="platformService.isLoading()">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+              <td class="px-6 py-4"><div class="space-y-2"><div class="h-4 bg-white/10 rounded w-48"></div><div class="h-3 bg-white/10 rounded w-32"></div></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-24"></div></td>
+              <td class="px-6 py-4"><div class="h-5 bg-white/10 rounded-full w-20"></div></td>
+              <td class="px-6 py-4 text-right"><div class="flex justify-end gap-2"><div class="w-8 h-8 bg-white/10 rounded-lg"></div><div class="w-8 h-8 bg-white/10 rounded-lg"></div></div></td>
+            </tr>
+          </ng-container>
+          <ng-container *ngIf="!platformService.isLoading()">
+            <tr *ngIf="filteredAndPaginatedUsers().items.length === 0">
+              <td colspan="4" class="text-center py-8 text-slate-500 text-xs">No se encontraron usuarios coincidentes.</td>
+            </tr>
+            <tr *ngFor="let u of filteredAndPaginatedUsers().items" class="hover:bg-white/[0.02]">
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-100">{{ u.name }}</div>
+                <div class="text-xs text-slate-400 font-mono">{{ u.email }}</div>
+              </td>
+              <td class="px-6 py-4 font-mono text-slate-300">{{ u.dni }}</td>
+              <td class="px-6 py-4">
+                <span [class]="'px-3 py-1 rounded-full text-[10px] font-bold border ' +
+                  (u.role === 'Administrador' ? 'bg-[#be123c]/10 text-[#f43f5e] border-[#be123c]/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20')">
+                  {{ u.role }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="openEditUser(u)" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 transition-all cursor-pointer text-xs" title="Editar">✏️</button>
+                  <button (click)="deleteUser(u.email)" [disabled]="u.email === 'admin@institucion.edu'"
+                    class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/10 transition-all cursor-pointer text-xs disabled:opacity-30 disabled:cursor-not-allowed" title="Eliminar">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4">
+    <div class="text-xs text-slate-400 font-medium">
+      Mostrando registros del {{ filteredAndPaginatedUsers().items.length === 0 ? 0 : (userCurrentPage() - 1) * userPageSize() + 1 }} al
+      {{ getMinRecord(userCurrentPage(), userPageSize(), filteredAndPaginatedUsers().totalItems) }} de un total de {{ filteredAndPaginatedUsers().totalItems }} registros
+    </div>
+    <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedUsers().totalPages > 1">
+      <button [disabled]="userCurrentPage() === 1" (click)="userCurrentPage.set(userCurrentPage() - 1)"
+        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
+      <button *ngFor="let page of getPagesArray(filteredAndPaginatedUsers().totalPages)" (click)="userCurrentPage.set(page)"
+        [class]="userCurrentPage() === page ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all' : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
+      <button [disabled]="userCurrentPage() === filteredAndPaginatedUsers().totalPages" (click)="userCurrentPage.set(userCurrentPage() + 1)"
+        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar/Editar Usuario -->
+<div *ngIf="showUserModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+    <h3 class="text-lg font-bold text-slate-100">{{ isEditing() ? '📝 Editar Datos de Usuario' : '👥 Registrar Nuevo Usuario' }}</h3>
+    <div class="space-y-4 text-sm font-medium">
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Nombre Completo</label>
+        <input type="text" [ngModel]="userForm().name" (ngModelChange)="userForm.update(f => ({...f, name: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50" placeholder="Ej: Ing. Pedro Ramirez" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">DNI</label>
+        <input type="text" [ngModel]="userForm().dni" (ngModelChange)="userForm.update(f => ({...f, dni: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50" placeholder="8 dígitos" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Correo Electrónico</label>
+        <input type="email" [ngModel]="userForm().email" (ngModelChange)="userForm.update(f => ({...f, email: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50" placeholder="ejemplo@institucion.edu" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1 font-bold">Rol Institucional</label>
+        <select [ngModel]="userForm().role" (ngModelChange)="userForm.update(f => ({...f, role: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50">
+          <option value="Administrador">Administrador</option>
+          <option value="Caja">Caja</option>
+          <option value="Formación Continua">Formación Continua</option>
+          <option value="Investigación">Investigación</option>
+        </select>
+      </div>
+      <div *ngIf="isEditing()">
+        <label class="block text-xs text-slate-400 mb-1">Nueva Contraseña</label>
+        <input type="password" [ngModel]="userForm().password" (ngModelChange)="userForm.update(f => ({...f, password: $event}))"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50" placeholder="Dejar vacío para mantener la actual" />
+      </div>
+      <div *ngIf="!isEditing()" class="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+        <span class="text-amber-400 text-base shrink-0 mt-0.5">📧</span>
+        <p class="text-[11px] text-amber-300/80 leading-relaxed">Se generará una contraseña segura automáticamente y se enviará al correo electrónico registrado.</p>
+      </div>
+    </div>
+    <div *ngIf="saveUserError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">⚠️ {{ saveUserError() }}</div>
+    <div class="flex items-center gap-3 pt-2">
+      <button (click)="saveUser()" [disabled]="savingUser()"
+        class="flex-1 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ savingUser() ? 'Procesando...' : 'Guardar Cambios' }}
+      </button>
+      <button (click)="showUserModal.set(false)" [disabled]="savingUser()"
+        class="flex-1 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>

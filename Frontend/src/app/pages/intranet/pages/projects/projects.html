@@ -1,0 +1,303 @@
+<div class="space-y-6 animate-fade-in">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-bold text-white">Proyectos de Investigación Institucional</h2>
+    <button (click)="openAdd()"
+      class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10">
+      ➕ Nuevo Proyecto
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center">
+      <div class="text-2xl font-black text-slate-200">{{ stats().total }}</div>
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Total Proyectos</div>
+    </div>
+    <div class="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-center">
+      <div class="text-2xl font-black text-emerald-300">{{ stats().enEjecucion }}</div>
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">En Ejecución</div>
+    </div>
+    <div class="rounded-2xl border border-slate-500/20 bg-slate-500/5 p-4 text-center">
+      <div class="text-2xl font-black text-slate-300">{{ stats().concluidos }}</div>
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Concluidos</div>
+    </div>
+    <div class="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-center">
+      <div class="text-2xl font-black text-amber-300">{{ stats().ganadores }}</div>
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">Ganadores</div>
+    </div>
+  </div>
+
+  <!-- Barra búsqueda + tamaño -->
+  <div class="flex flex-col sm:flex-row items-center gap-3 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
+    <div class="relative flex-1 w-full">
+      <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+      <input type="text" [ngModel]="tempSearch()" (ngModelChange)="tempSearch.set($event)"
+        (keyup.enter)="applySearch()" placeholder="Buscar por título, resumen o estado..."
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-2.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+    </div>
+    <button (click)="applySearch()"
+      class="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10 whitespace-nowrap border-none">
+      Buscar
+    </button>
+    <button *ngIf="searchQuery()" (click)="clearSearch()"
+      class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-400 transition-all cursor-pointer border border-white/10 whitespace-nowrap">
+      ✕ Limpiar
+    </button>
+    <div class="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap">
+      <span>Mostrar</span>
+      <select [ngModel]="perPage()" (ngModelChange)="changePerPage(+$event)"
+        class="bg-slate-900 border border-white/10 text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden shadow-xl">
+    <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">🔬 Registro de Proyectos</h3>
+      <span class="text-[10px] text-slate-500 font-mono">{{ total() }} proyectos encontrados</span>
+    </div>
+    <div *ngIf="loadError()" class="px-6 py-4 text-xs text-rose-400 bg-rose-500/10 border-b border-rose-500/20 flex items-center gap-2">
+      ⚠️ {{ loadError() }}
+      <button (click)="loadProyectos()" class="ml-2 underline text-rose-300 cursor-pointer bg-transparent border-none text-xs">Reintentar</button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-left">
+        <thead class="bg-white/[0.03] border-b border-white/5">
+          <tr>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Código</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Título</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Responsable(s)</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Asesor(es)</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Línea</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Inicio</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-center">Estado</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-center">Ganador</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/[0.04] text-sm">
+          <ng-container *ngIf="isLoading()">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-24"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-44"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-28"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-28"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-20"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-20"></div></td>
+              <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-20 mx-auto"></div></td>
+              <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-10 mx-auto"></div></td>
+              <td class="px-6 py-4 text-right"><div class="flex justify-end gap-2"><div class="w-14 h-7 bg-white/10 rounded-lg"></div><div class="w-14 h-7 bg-white/10 rounded-lg"></div></div></td>
+            </tr>
+          </ng-container>
+          <ng-container *ngIf="!isLoading()">
+            <tr *ngIf="proyectos().length === 0">
+              <td colspan="9" class="text-center py-10 text-slate-500 text-xs">No se encontraron proyectos registrados.</td>
+            </tr>
+            <tr *ngFor="let p of proyectos()" class="hover:bg-white/[0.02] transition-colors">
+              <td class="px-6 py-4 font-mono text-amber-300 font-bold text-[11px]">{{ p.Id }}</td>
+              <td class="px-6 py-4 text-slate-200 font-semibold max-w-[200px]">
+                <div class="truncate" [title]="p.Titulo">{{ p.Titulo }}</div>
+              </td>
+              <td class="px-6 py-4 text-slate-400 max-w-[140px]">
+                <span *ngFor="let r of p.Responsable; let last = last">{{ r }}<span *ngIf="!last">, </span></span>
+              </td>
+              <td class="px-6 py-4 text-slate-400 max-w-[140px]">
+                <span *ngFor="let a of p.Asesor; let last = last">{{ a }}<span *ngIf="!last">, </span></span>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-block px-2.5 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 text-[10px] font-semibold border border-amber-500/20">
+                  {{ p.linea?.Linea || getLinea(p.Id_Linea) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 font-mono text-slate-400 text-xs">{{ p.Inicio | dateFormat }}</td>
+              <td class="px-6 py-4 text-center">
+                <span [class]="
+                  p.Estado === 'Planteamiento'   ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20' :
+                  p.Estado === 'En Proceso'      ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20' :
+                  p.Estado === 'En Ejecución'    ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                  p.Estado === 'Concluido'       ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20' :
+                                                   'px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20'">
+                  {{ p.Estado }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span *ngIf="p.Ganador" class="text-amber-400">🏆</span>
+                <span *ngIf="!p.Ganador" class="text-slate-700 text-xs">—</span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="openEdit(p)"
+                    class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[11px] font-bold cursor-pointer transition-all border border-amber-500/20">✏️</button>
+                  <button (click)="delete(p)"
+                    class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[11px] font-bold cursor-pointer transition-all border border-rose-500/20">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+    <!-- Paginación -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/5">
+      <div class="text-xs text-slate-400 font-medium">
+        Mostrando {{ proyectos().length === 0 ? 0 : (currentPage() - 1) * perPage() + 1 }}
+        al {{ (currentPage() - 1) * perPage() + proyectos().length }}
+        de {{ total() }} proyectos
+      </div>
+      <div class="flex items-center gap-1.5" *ngIf="lastPage() > 1">
+        <button [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"
+          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+          Anterior
+        </button>
+        <ng-container *ngFor="let page of pagesArray()">
+          <button *ngIf="page === 1 || page === lastPage() || (page >= currentPage() - 1 && page <= currentPage() + 1)"
+            (click)="goToPage(page)"
+            [class]="currentPage() === page
+              ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold'
+              : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">
+            {{ page }}
+          </button>
+          <span *ngIf="(page === currentPage() - 2 && page > 1) || (page === currentPage() + 2 && page < lastPage())"
+            class="text-slate-600 text-xs px-1">…</span>
+        </ng-container>
+        <button [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)"
+          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nuevo / Editar Proyecto -->
+<div *ngIf="showModal()" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto animate-fade-in p-4">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl my-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-3 border-b border-white/5">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          🔬 {{ isEditing() ? 'Editar Proyecto de Investigación' : 'Nuevo Proyecto de Investigación' }}
+        </h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Registro institucional de proyecto de investigación</p>
+      </div>
+      <button (click)="showModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold border-none">✕</button>
+    </div>
+
+    <form (submit)="save(); $event.preventDefault()" class="px-6 pt-3 pb-4 space-y-3">
+
+      <!-- Título -->
+      <div>
+        <label class="block text-[11px] text-slate-400 mb-1">Título del Proyecto <span class="text-rose-400">*</span></label>
+        <input type="text" [ngModel]="form().Titulo" (ngModelChange)="form.update(f => ({...f, Titulo: $event}))" name="Titulo"
+          placeholder="Título completo del proyecto de investigación"
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
+          required />
+      </div>
+
+      <!-- Resumen -->
+      <div>
+        <label class="block text-[11px] text-slate-400 mb-1">Resumen <span class="text-rose-400">*</span></label>
+        <textarea [ngModel]="form().Resumen" (ngModelChange)="form.update(f => ({...f, Resumen: $event}))" name="Resumen"
+          rows="2" placeholder="Descripción breve del proyecto..."
+          class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs resize-none"></textarea>
+      </div>
+
+      <!-- Grid: Participantes + Clasificación -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Columna Izquierda -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Responsable(s) <span class="text-rose-400">*</span></label>
+            <input type="text" [ngModel]="responsableText()" (ngModelChange)="responsableText.set($event)" name="Responsable"
+              placeholder="Nombre 1, Nombre 2, ..."
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs" />
+            <p class="text-[10px] text-slate-600 mt-1">Separar múltiples nombres con comas</p>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Asesor(es) <span class="text-rose-400">*</span></label>
+            <input type="text" [ngModel]="asesorText()" (ngModelChange)="asesorText.set($event)" name="Asesor"
+              placeholder="Nombre 1, Nombre 2, ..."
+              class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs" />
+            <p class="text-[10px] text-slate-600 mt-1">Separar múltiples nombres con comas</p>
+          </div>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Línea de Investigación <span class="text-rose-400">*</span></label>
+            <select [ngModel]="form().Id_Linea" (ngModelChange)="form.update(f => ({...f, Id_Linea: $event}))" name="Id_Linea"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold cursor-pointer">
+              <option value="">— Seleccione una línea —</option>
+              <option *ngFor="let l of lineas()" [value]="l.Id">{{ l.Linea }}</option>
+            </select>
+            <p *ngIf="lineas().length === 0" class="text-[10px] text-amber-500/80 mt-1">⚠️ No hay líneas de investigación registradas.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Inicio <span class="text-rose-400">*</span></label>
+              <input type="date" [ngModel]="form().Inicio" (ngModelChange)="form.update(f => ({...f, Inicio: $event}))" name="Inicio"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Fin <span class="text-slate-600">(Opcional)</span></label>
+              <input type="date" [ngModel]="form().Fin" (ngModelChange)="form.update(f => ({...f, Fin: $event}))" name="Fin"
+                class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Estado</label>
+            <select [ngModel]="form().Estado" (ngModelChange)="form.update(f => ({...f, Estado: $event}))" name="Estado"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold cursor-pointer">
+              <option value="Planteamiento">Planteamiento</option>
+              <option value="En Proceso">En Proceso</option>
+              <option value="En Ejecución">En Ejecución</option>
+              <option value="Concluido">Concluido</option>
+              <option value="Suspendido">Suspendido</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ganador — ancho completo -->
+        <div class="md:col-span-2 flex items-center gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/15">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" [ngModel]="form().Ganador" (ngModelChange)="form.update(f => ({...f, Ganador: $event}))" name="Ganador" class="sr-only peer" />
+            <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+          </label>
+          <div>
+            <div class="text-xs font-bold text-amber-300">🏆 Proyecto Ganador / Destacado</div>
+            <div class="text-[10px] text-slate-500">Marcar si este proyecto fue reconocido, premiado o seleccionado institucionalmente.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="saveError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
+        ⚠️ {{ saveError() }}
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
+        <button type="button" (click)="showModal.set(false)" [disabled]="saving()"
+          class="px-5 py-3 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">
+          ✕ Cerrar
+        </button>
+        <button type="submit" [disabled]="saving()"
+          class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+          {{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Registrar Proyecto') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

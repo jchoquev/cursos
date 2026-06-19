@@ -1,13 +1,16 @@
-import { Component, inject, signal, computed, HostListener, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, inject, signal, computed, effect, HostListener, OnInit, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { PlatformService, EventItem, Certificate } from './services/platform.service';
 import { FormsModule } from '@angular/forms';
+import { ThemeService } from './services/theme.service';
+import { DnaLoaderService } from './services/dna-loader.service';
+import { DnaLoaderComponent } from './components/dna-loader/dna-loader';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, FormsModule],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, FormsModule, DnaLoaderComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -15,63 +18,40 @@ export class App implements OnInit {
   readonly platformService = inject(PlatformService);
   readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  readonly themeService = inject(ThemeService);
+  private readonly dnaLoader = inject(DnaLoaderService);
 
   // Señal para identificar si la ruta actual es pública
   readonly isPublicRoute = signal<boolean>(true);
 
   // Theme toggle (light / dark) — persisted to localStorage
-  themeMode = signal<'light' | 'dark'>('dark');
+  readonly themeMode = this.themeService.mode;
 
   // Identifica si estamos en el cliente para evitar Hydration Mismatch
-  isBrowser = signal<boolean>(false);
+  isBrowser = signal<boolean>(isPlatformBrowser(this.platformId));
 
   constructor() {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
-        // Ocultar navbar/footer en rutas que inicien con /intranet
         const isIntranet = event.urlAfterRedirects.startsWith('/intranet');
         this.isPublicRoute.set(!isIntranet);
- 
-        if (isPlatformBrowser(this.platformId)) {
-          // En intranet siempre quitar light-mode del body
-          if (isIntranet) {
-            document.body.classList.remove('light-mode');
-          } else {
-            this.applyTheme();
-          }
-        }
+      }
+    });
+
+    // Wire platform loading state → DNA loader automatically
+    effect(() => {
+      if (this.platformService.isLoading()) {
+        this.dnaLoader.show('Cargando', 'Sincronizando datos de la plataforma...');
+      } else {
+        this.dnaLoader.hide();
       }
     });
   }
- 
-  ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.isBrowser.set(true);
-      // Leer tema guardado del localStorage
-      const saved = localStorage.getItem('app-theme') as 'light' | 'dark' | null;
-      if (saved) {
-        this.themeMode.set(saved);
-      }
-      this.applyTheme();
-    }
-  }
+
+  ngOnInit(): void {}
 
   toggleTheme(): void {
-    const next = this.themeMode() === 'dark' ? 'light' : 'dark';
-    this.themeMode.set(next);
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('app-theme', next);
-      this.applyTheme();
-    }
-  }
-
-  private applyTheme(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    if (this.themeMode() === 'light') {
-      document.body.classList.add('light-mode');
-    } else {
-      document.body.classList.remove('light-mode');
-    }
+    this.themeService.toggle();
   }
 
   // Sleek interactive modals

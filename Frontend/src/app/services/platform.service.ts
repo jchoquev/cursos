@@ -26,6 +26,13 @@ export interface EventItem {
   courseStartDate?: string;
   courseEndDate?: string;
   created_at?: string;
+  Id_PeriodoAca?: string | null;
+}
+
+export interface PeriodoAca {
+  Id: string;
+  Asig: string;
+  Activo: boolean;
 }
 
 export interface UserItem {
@@ -198,21 +205,41 @@ export class PlatformService {
       courseStartDate: this.formatDate(item.InCurso),
       courseEndDate: this.formatDate(item.FnCurso),
       created_at: item.created_at,
+      Id_PeriodoAca: item.Id_PeriodoAca,
     };
   }
 
-  loadEvents(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
+  readonly periodosAca = signal<PeriodoAca[]>([]);
+  private periodosLoaded = false;
+
+  loadEvents(force = false): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (!force && this.eventsLoaded && this.periodosLoaded) return;
     this.isLoading.set(true);
     // Clear previous database events to prevent duplicate/lingering elements during loading
     this.events.update(list => list.filter(e => e.type === 'Repositorio'));
 
-    this.apiService.get<any[]>('/eventos').subscribe({
-      next: (data) => {
-        if (Array.isArray(data)) {
-          const mapped = data.map(item => this.mapBackendEventoToEventItem(item));
+    const events$ = this.apiService.get<any[]>('/eventos');
+    const periodos$ = this.apiService.get<PeriodoAca[]>('/periodo-aca').pipe(
+      catchError(err => {
+        console.error('Error loading periods in PlatformService:', err);
+        return of([] as PeriodoAca[]);
+      })
+    );
+
+    forkJoin([events$, periodos$]).subscribe({
+      next: ([eventsData, periodosData]) => {
+        // 1. Process Periodos
+        if (Array.isArray(periodosData) && periodosData.length > 0) {
+          // Sort periodos descending by Asig (e.g. 2026-I, 2025-II, 2025-I)
+          periodosData.sort((a, b) => b.Asig.localeCompare(a.Asig, undefined, { numeric: true, sensitivity: 'base' }));
+          this.periodosAca.set(periodosData);
+          this.periodosLoaded = true;
+        }
+
+        // 2. Process Events
+        if (Array.isArray(eventsData)) {
+          const mapped = eventsData.map(item => this.mapBackendEventoToEventItem(item));
           
           const bannerRequests = mapped.map(event => {
             if (event.id && event.coverUrl) {
@@ -234,18 +261,21 @@ export class PlatformService {
               next: (updatedEvents) => {
                 const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
                 this.events.set([...updatedEvents, ...staticRepositorios]);
+                this.eventsLoaded = true;
                 this.isLoading.set(false);
               },
               error: (err) => {
                 console.error('Error loading banners:', err);
                 const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
                 this.events.set([...mapped, ...staticRepositorios]);
+                this.eventsLoaded = true;
                 this.isLoading.set(false);
               }
             });
           } else {
             const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
             this.events.set([...mapped, ...staticRepositorios]);
+            this.eventsLoaded = true;
             this.isLoading.set(false);
           }
         } else {
@@ -253,7 +283,7 @@ export class PlatformService {
         }
       },
       error: (err) => {
-        console.error('Error fetching events from backend:', err);
+        console.error('Error fetching initial data from backend:', err);
         this.isLoading.set(false);
       }
     });
@@ -292,8 +322,13 @@ export class PlatformService {
   }
 
   // --- ESTADO GLOBAL DE CARGA Y ERROR ---
-  readonly isLoading = signal<boolean>(true);
+  readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string>('');
+
+  // Cache flags — prevent redundant API calls when navigating between pages
+  private eventsLoaded = false;
+  private registrationsLoaded = false;
+  private usersLoaded = false;
 
   // --- MOCK STORES USING SIGNALS ---
 
@@ -602,6 +637,9 @@ export class PlatformService {
   logout(): void {
     this.currentUser.set(null);
     this.errorMessage.set('');
+    this.eventsLoaded = false;
+    this.registrationsLoaded = false;
+    this.usersLoaded = false;
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
@@ -712,16 +750,14 @@ export class PlatformService {
     this.registrations.update((list) => list.filter((r) => r.eventId !== id));
   }
 
-  loadUsers(): void {
-    if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn() || this.userRole() !== 'Administrador') {
-      return;
-    }
+  loadUsers(force = false): void {
+    if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn() || this.userRole() !== 'Administrador') return;
+    if (!force && this.usersLoaded) return;
     this.isLoading.set(true);
     this.apiService.get<UserItem[]>('/users').subscribe({
       next: (data) => {
-        if (Array.isArray(data)) {
-          this.users.set(data);
-        }
+        if (Array.isArray(data)) this.users.set(data);
+        this.usersLoaded = true;
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -731,10 +767,9 @@ export class PlatformService {
     });
   }
 
-  loadRegistrations(): void {
-    if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn()) {
-      return;
-    }
+  loadRegistrations(force = false): void {
+    if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn()) return;
+    if (!force && this.registrationsLoaded) return;
     this.isLoading.set(true);
     this.apiService.get<any[]>('/matriculas', { all: 'true' }).subscribe({
       next: (data) => {
@@ -764,6 +799,7 @@ export class PlatformService {
           });
           this.registrations.set(mapped);
         }
+        this.registrationsLoaded = true;
         this.isLoading.set(false);
       },
       error: (err) => {

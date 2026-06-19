@@ -1,0 +1,74 @@
+<div class="intranet-login-page min-h-screen w-full flex items-center justify-center bg-[#0c0305]/95 backdrop-blur-xl px-4 py-8 relative overflow-hidden">
+  <!-- Elementos decorativos de fondo -->
+  <div class="absolute -right-32 -top-32 w-96 h-96 bg-wine-800/10 rounded-full blur-3xl"></div>
+  <div class="absolute -left-32 -bottom-32 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl"></div>
+
+  <div class="max-w-md w-full relative z-10">
+    <div class="intranet-login-card rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-32 h-32 bg-wine-800/20 rounded-full blur-3xl"></div>
+      <div class="absolute -left-16 -bottom-16 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
+
+      <div class="text-center mb-8">
+        <span class="text-4xl">🔐</span>
+        <h2 class="text-2xl font-extrabold text-white mt-3 text-center">Cursos e Investigación</h2>
+        <p class="text-slate-400 text-sm mt-1 text-center font-normal">Plataforma de gestión académica y de investigación institucional</p>
+      </div>
+
+      <form (submit)="handleLogin(); $event.preventDefault()" class="space-y-5">
+        <div *ngIf="loginError()"
+          class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
+          {{ loginError() }}
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Correo Electrónico</label>
+          <input type="email" [ngModel]="emailInput()" (ngModelChange)="emailInput.set($event)" [name]="'email'"
+            placeholder="usuario@institucion.edu"
+            class="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
+            required />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Contraseña</label>
+          <input type="password" [ngModel]="passwordInput()" (ngModelChange)="passwordInput.set($event)"
+            [name]="'password'" placeholder="••••••••"
+            class="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium"
+            required />
+        </div>
+
+        <button type="submit"
+          class="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white shadow-lg shadow-wine-800/30 transition-all cursor-pointer text-sm border-0">
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <div class="mt-8 pt-6 border-t border-white/10">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 text-center mb-4">
+          ⚡ ACCESO RÁPIDO DE EVALUACIÓN
+        </h4>
+        <div class="grid grid-cols-2 gap-2">
+          <button (click)="quickLogin('admin')"
+            class="intranet-login-quick-btn py-2.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-amber-500/30 text-left text-xs font-semibold text-slate-200 transition-all cursor-pointer flex flex-col justify-between min-h-[60px]">
+            <span class="text-amber-400">👤 Administrador</span>
+            <span class="text-[9px] text-slate-500 font-mono mt-0.5">Control Total</span>
+          </button>
+          <button (click)="quickLogin('caja')"
+            class="intranet-login-quick-btn py-2.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-amber-500/30 text-left text-xs font-semibold text-slate-200 transition-all cursor-pointer flex flex-col justify-between min-h-[60px]">
+            <span class="text-amber-400">💵 Caja / Tesorería</span>
+            <span class="text-[9px] text-slate-500 font-mono mt-0.5">Gestión de Pagos</span>
+          </button>
+          <button (click)="quickLogin('formacion')"
+            class="intranet-login-quick-btn py-2.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-amber-500/30 text-left text-xs font-semibold text-slate-200 transition-all cursor-pointer flex flex-col justify-between min-h-[60px]">
+            <span class="text-amber-400">🎓 Form. Continua</span>
+            <span class="text-[9px] text-slate-500 font-mono mt-0.5">Cursos y Certificados</span>
+          </button>
+          <button (click)="quickLogin('investigacion')"
+            class="intranet-login-quick-btn py-2.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-amber-500/30 text-left text-xs font-semibold text-slate-200 transition-all cursor-pointer flex flex-col justify-between min-h-[60px]">
+            <span class="text-amber-400">🔬 Investigación</span>
+            <span class="text-[9px] text-slate-500 font-mono mt-0.5">Gestión Proyectos</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,18 +1,26 @@
-import { Component, signal, computed, inject, OnInit, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, computed, inject, OnInit, DestroyRef, PLATFORM_ID, effect } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HeroImage } from '../../components/hero-image/hero-image';
-import { PlatformService, EventItem, Certificate } from '../../services/platform.service';
+import { PlatformService, EventItem } from '../../services/platform.service';
 import { ApiService } from '../../services/api.service';
-import { SearchCertificates } from '../search-certificates/search-certificates';
-import { ActivatedRoute } from '@angular/router';
+import { CertResult } from '../search-certificates/search-certificates';
+import qrcode from 'qrcode-generator';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import { DnaLoaderService } from '../../services/dna-loader.service';
+
+export interface PeriodoAca {
+  Id: string;
+  Asig: string;
+  Activo: boolean;
+}
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeroImage],
+  imports: [CommonModule, FormsModule, HeroImage, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -22,7 +30,21 @@ export class Home implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly searchCertificatesHelper = new SearchCertificates();
+  private readonly dnaLoader = inject(DnaLoaderService);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  // Resolución PDF (base64) cargada bajo demanda
+  resolucionPdfUrl = signal<SafeResourceUrl | null>(null);
+  resolucionError = signal<string>('');
+
+  constructor() {
+    effect(() => {
+      const periods = this.platformService.periodosAca();
+      if (periods.length > 0 && this.selectedPeriodo() === 'Todos') {
+        this.selectedPeriodo.set(periods[0].Id);
+      }
+    });
+  }
 
   ngOnInit(): void {
     // takeUntilDestroyed evita memory leaks al destruir el componente
@@ -35,7 +57,10 @@ export class Home implements OnInit {
   // Filters state
   selectedCategory = signal<string>('Todos');
   selectedStatus = signal<'activo' | 'pasado'>('activo');
-  selectedYear = signal<string>('Todos');
+  selectedPeriodo = signal<string>('Todos');
+
+  // Periodos Académicos cargados desde el backend
+  periodosAca = this.platformService.periodosAca;
 
   readonly categories = computed(() => {
     const types = this.platformService.activityTypes().map(t => t.tipActividad);
@@ -47,7 +72,8 @@ export class Home implements OnInit {
 
   // Quick Validation sidebar input — ahora como signal
   quickCertCode = signal<string>('');
-  quickValidationResult = signal<{ success: boolean; message: string; cert?: Certificate } | null>(null);
+  quickValidationResult = signal<{ success: boolean; message: string; cert?: CertResult } | null>(null);
+  isValidating = signal<boolean>(false);
 
   // Verification Screen Refinements Signals
   showResolutionModal = signal<boolean>(false);
@@ -76,6 +102,7 @@ export class Home implements OnInit {
   captchaText = signal<string>('');
   captchaUserInput = signal<string>('');
   captchaError = signal<string>('');
+  isRegistering = signal<boolean>(false);
 
   // Paso 3 Success State
   registrationCode = signal<string>('');
@@ -86,14 +113,39 @@ export class Home implements OnInit {
     const list = this.platformService.events();
     const cat = this.selectedCategory();
     const stat = this.selectedStatus();
-    const yr = this.selectedYear();
+    const periodo = this.selectedPeriodo();
+    const periodos = this.periodosAca();
 
-    return list.filter((e) => {
+    return list.map((e) => {
+      // Map static/mock repositorios that don't have Id_PeriodoAca
+      if (e.type === 'Repositorio' && !e.Id_PeriodoAca && periodos.length > 0) {
+        let year = '';
+        let month = 0;
+        if (e.date) {
+          if (e.date.includes('/')) {
+            const parts = e.date.split('/');
+            year = parts[2];
+            month = parseInt(parts[1], 10);
+          } else if (e.date.includes('-')) {
+            const parts = e.date.split('-');
+            year = parts[0];
+            month = parseInt(parts[1], 10);
+          }
+        }
+        if (year) {
+          const semester = month <= 6 ? 'I' : 'II';
+          const targetAsig = `${year}-${semester}`;
+          const match = periodos.find(p => p.Asig === targetAsig);
+          return {
+            ...e,
+            Id_PeriodoAca: match ? match.Id : periodos[0].Id
+          };
+        }
+      }
+      return e;
+    }).filter((e) => {
       if (cat === 'Repositorio') {
-        const dateParts = e.date.includes('/') ? e.date.split('/') : [];
-        const itemYear = dateParts.length === 3 ? dateParts[2] : e.date.split('-')[0];
-        const matchYear = yr === 'Todos' || itemYear === yr;
-        return e.type === 'Repositorio' && matchYear;
+        return e.type === 'Repositorio' && e.Id_PeriodoAca === periodo;
       } else {
         const matchStatus = e.status === stat;
         const matchCategory = cat === 'Todos' ? e.type !== 'Repositorio' : e.type === cat;
@@ -112,9 +164,11 @@ export class Home implements OnInit {
     this.selectedStatus.set(stat);
   }
 
-  selectYear(yr: string): void {
-    this.selectedYear.set(yr);
+  selectPeriodo(periodoId: string): void {
+    this.selectedPeriodo.set(periodoId);
   }
+
+  // Carga de periodos académicos delegada a PlatformService para mostrar el DNA Loader global en el inicio
 
   openEventDetails(event: EventItem): void {
     this.selectedEventForModal.set(event);
@@ -232,8 +286,10 @@ export class Home implements OnInit {
     const event = this.currentRegisterEvent();
     if (!event) return;
 
+    this.isRegistering.set(true);
+
     const fullName = `${this.firstName().trim()} ${this.paternalLastName().trim()} ${this.maternalLastName().trim()}`;
-    
+
     const payload = {
       DNI: this.dniInput(),
       Procedencia: this.provenance(),
@@ -249,8 +305,8 @@ export class Home implements OnInit {
 
     this.apiService.post<any>('/matriculas', payload).subscribe({
       next: (resp) => {
+        this.isRegistering.set(false);
         if (resp.status === 'success' && resp.data) {
-          // Update the local mock store as well so it propagates to intranet stats immediately
           const newReg = {
             id: resp.data.id,
             userEmail: payload.Correo,
@@ -263,7 +319,6 @@ export class Home implements OnInit {
             tipoAsistente: this.platformService.tipoAsistentes().find(t => t.id === payload.TipoAsistente)?.AsigTipo || 'ASISTENTE'
           };
           this.platformService.registrations.update(curr => [...curr, newReg]);
-
           this.registrationCode.set(`INS-2026-${String(resp.data.id).padStart(3, '0')}`);
           this.successFullName.set(fullName);
           this.activeStep.set(3);
@@ -272,6 +327,7 @@ export class Home implements OnInit {
         }
       },
       error: (err) => {
+        this.isRegistering.set(false);
         console.error('Error al registrar matricula:', err);
         const errMsg = err?.error?.message || 'Error al conectar con el servidor para registrar la inscripción.';
         this.captchaError.set(errMsg);
@@ -336,22 +392,26 @@ export class Home implements OnInit {
     const code = this.quickCertCode().trim();
     if (!code) return;
 
-    const cert = this.platformService.findCertificateByCode(code);
-    if (cert) {
-      this.showPrintCertModal.set(false);
-      this.showResolutionModal.set(false);
-      this.quickValidationResult.set({
-        success: true,
-        message: 'Certificado Válido y Oficial.',
-        cert,
-      });
-    } else {
-      this.quickValidationResult.set({
-        success: false,
-        message: 'El código ingresado no coincide con ningún registro oficial.',
-      });
-    }
-    this.quickCertCode.set('');
+    this.isValidating.set(true);
+    this.quickValidationResult.set(null);
+
+    this.apiService.get<CertResult>(`/validar-certificado/${encodeURIComponent(code)}`).subscribe({
+      next: (res) => {
+        this.isValidating.set(false);
+        if (res.valido) {
+          this.quickValidationResult.set({ success: true, message: 'Certificado Válido y Oficial.', cert: res });
+        } else {
+          this.quickValidationResult.set({ success: false, message: res.mensaje || 'Certificado inválido o revocado.' });
+        }
+        this.quickCertCode.set('');
+      },
+      error: (err) => {
+        this.isValidating.set(false);
+        const msg = err?.error?.mensaje || 'El código ingresado no coincide con ningún registro oficial.';
+        this.quickValidationResult.set({ success: false, message: msg });
+        this.quickCertCode.set('');
+      }
+    });
   }
 
   closeQuickValidation(): void {
@@ -363,17 +423,55 @@ export class Home implements OnInit {
   }
 
   // Resolution modal controls
-  viewResolutionPdf(cert: Certificate): void {
-    this.showResolutionModal.set(true);
+  viewResolutionPdf(): void {
+    const cert = this.quickValidationResult()?.cert;
+    if (!cert?.evento_id || !cert?.tipo_asistente_id) {
+      this.resolucionError.set('No se encontró la información del evento para esta resolución.');
+      this.showResolutionModal.set(true);
+      return;
+    }
+
+    this.resolucionPdfUrl.set(null);
+    this.resolucionError.set('');
+    this.dnaLoader.show('Cargando resolución', 'Obteniendo el documento PDF...');
+
+    this.apiService.get<any>('/resolucion-pdf-base64', {
+      evento_id: cert.evento_id,
+      tipo_asistente: cert.tipo_asistente_id,
+    }).subscribe({
+      next: (resp) => {
+        this.dnaLoader.hide();
+        if (resp?.status === 'success' && resp.pdf_base64) {
+          this.resolucionPdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(resp.pdf_base64));
+        } else {
+          this.resolucionError.set('No se encontró una resolución en PDF para este certificado.');
+        }
+        this.showResolutionModal.set(true);
+      },
+      error: (err) => {
+        this.dnaLoader.hide();
+        this.resolucionError.set(err?.error?.message || 'No se encontró una resolución en PDF para este certificado.');
+        this.showResolutionModal.set(true);
+      }
+    });
   }
 
   closeResolutionPdf(): void {
     this.showResolutionModal.set(false);
+    this.resolucionPdfUrl.set(null);
+    this.resolucionError.set('');
   }
 
   getQrCodeSvg(code: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(
-      this.searchCertificatesHelper.getQrCodeSvgRaw(code)
-    );
+    const url = `https://iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
+    try {
+      const qr = qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      const svg = qr.createSvgTag(4, 0)
+        .replace('<svg', '<svg class="w-full h-full text-slate-800"')
+        .replace(/fill="black"/g, 'fill="currentColor"');
+      return this.sanitizer.bypassSecurityTrustHtml(svg);
+    } catch { return this.sanitizer.bypassSecurityTrustHtml(''); }
   }
 }

@@ -29,6 +29,8 @@ class Evento extends Model
         'DonceteExp',
         'CapMaxima',
         'Estado',
+        'Id_PeriodoAca',
+        'NumMatriculados',
     ];
 
     protected $casts = [
@@ -44,5 +46,10 @@ class Evento extends Model
     public function tipoActividad()
     {
         return $this->belongsTo(TipoActividad::class, 'TActividad');
+    }
+
+    public function periodoAcademico()
+    {
+        return $this->belongsTo(PeriodoAca::class, 'Id_PeriodoAca', 'Id');
     }
 }

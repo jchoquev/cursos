@@ -14,9 +14,15 @@ class EventoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $eventos = Evento::with('tipoActividad')->orderBy('created_at', 'desc')->get();
+        $query = Evento::with('tipoActividad');
+
+        if ($request->has('periodo_id') && !empty($request->input('periodo_id'))) {
+            $query->where('Id_PeriodoAca', $request->input('periodo_id'));
+        }
+
+        $eventos = $query->orderBy('created_at', 'desc')->get();
         return response()->json($eventos);
     }
 

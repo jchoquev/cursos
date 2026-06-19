@@ -1,0 +1,168 @@
+<app-dna-loader *ngIf="dnaLoader.visible()"></app-dna-loader>
+
+<div class="space-y-6 animate-fade-in">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end bg-white/[0.03] border border-white/10 p-5 rounded-3xl backdrop-blur-xl">
+    <div class="space-y-2 text-left">
+      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Periodo Académico</label>
+      <select [ngModel]="tempCertFilterPeriodId()" (ngModelChange)="onPeriodChange($event)"
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+        <option *ngFor="let p of academicPeriods()" [value]="p.Id">{{ p.Asig }}</option>
+      </select>
+    </div>
+    <div class="space-y-2 text-left">
+      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Seleccionar Evento / Curso</label>
+      <select [ngModel]="tempCertFilterEventId()" (ngModelChange)="tempCertFilterEventId.set($event); applyCertificateFilters()"
+        class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+        <option value="">Todos los eventos / cursos</option>
+        <option *ngFor="let e of availableEvents()" [value]="e.id">{{ e.title }}</option>
+      </select>
+    </div>
+    <div class="space-y-2 text-left">
+      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Buscar por Alumno / DNI</label>
+      <div class="relative">
+        <span class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 text-xs">🔍</span>
+        <input type="text" [ngModel]="tempCertSearchQuery()" (ngModelChange)="tempCertSearchQuery.set($event)"
+          (keyup.enter)="applyCertificateFilters()" placeholder="DNI, Nombres, Correo..."
+          class="w-full bg-slate-900 border border-white/10 text-white rounded-xl py-2.5 pl-8 pr-4 text-xs focus:outline-none focus:border-amber-500 font-semibold placeholder-slate-500 transition-all" />
+      </div>
+    </div>
+    <button type="button" (click)="applyCertificateFilters()"
+      class="w-full px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-lg shadow-amber-500/10 flex items-center justify-center gap-1.5 h-[38px] border-none font-sans">
+      <span>Buscar</span>
+    </button>
+  </div>
+
+
+
+
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden shadow-xl">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.01]">
+      <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">🎓 Certificados y Egresados Aptos</h3>
+      <div class="flex items-center gap-2 text-xs text-slate-400">
+        <span>Mostrar</span>
+        <select [ngModel]="certPageSize()" (ngModelChange)="certPageSize.set(+$event); certCurrentPage.set(1)"
+          class="bg-slate-900 border border-white/10 text-white rounded-xl px-2.5 py-1 focus:outline-none focus:border-amber-500 font-semibold cursor-pointer text-xs">
+          <option [value]="5">5</option><option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option>
+        </select>
+        <span>registros</span>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
+            <th (click)="changeCertSort('documentCode')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Código Documento <span class="text-[9px] font-bold text-slate-400 ml-1">{{ certSortColumn() === 'documentCode' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeCertSort('userName')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Participante / DNI <span class="text-[9px] font-bold text-slate-400 ml-1">{{ certSortColumn() === 'userName' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeCertSort('eventTitle')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Curso / Evento <span class="text-[9px] font-bold text-slate-400 ml-1">{{ certSortColumn() === 'eventTitle' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th (click)="changeCertSort('documentIssued')" class="px-6 py-4 text-center cursor-pointer hover:text-white transition-colors select-none">
+              Estado Documento <span class="text-[9px] font-bold text-slate-400 ml-1">{{ certSortColumn() === 'documentIssued' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
+            <th class="px-6 py-4 text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-sm">
+          <ng-container *ngIf="platformService.isLoading()">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-28 font-mono"></div></td>
+              <td class="px-6 py-4"><div class="space-y-2"><div class="h-4 bg-white/10 rounded w-44"></div><div class="h-3 bg-white/10 rounded w-52"></div></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-36"></div></td>
+              <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-24 mx-auto"></div></td>
+              <td class="px-6 py-4 text-right"><div class="h-7 bg-white/10 rounded-lg w-28 ml-auto"></div></td>
+            </tr>
+          </ng-container>
+          <ng-container *ngIf="!platformService.isLoading()">
+            <tr *ngIf="filteredAndPaginatedCertificates().items.length === 0">
+              <td colspan="5" class="text-center py-8 text-slate-500 text-xs">No se encontraron registros de certificados coincidentes.</td>
+            </tr>
+            <tr *ngFor="let r of filteredAndPaginatedCertificates().items" class="hover:bg-white/[0.02]">
+              <td class="px-6 py-4 font-mono font-bold text-amber-300">{{ r.documentCode || 'No asignado' }}</td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-100">{{ r.userName }}</div>
+                <div class="text-xs font-mono text-slate-400">DNI: {{ r.userDni }} | {{ r.userEmail }}</div>
+              </td>
+              <td class="px-6 py-4 text-slate-200 font-medium">{{ r.eventTitle }}</td>
+              <td class="px-6 py-4 text-center">
+                <span *ngIf="r.documentIssued" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Válido</span>
+                <span *ngIf="!r.documentIssued" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Apto para Emisión</span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-end gap-1.5">
+                  <button type="button" (click)="viewAndDownload(r); $event.stopPropagation(); $event.preventDefault();"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors cursor-pointer border-none shadow-sm whitespace-nowrap">
+                    📥 PDF
+                  </button>
+                  <button type="button" (click)="openUploadModal(r); $event.stopPropagation(); $event.preventDefault();"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-slate-100 transition-colors cursor-pointer border border-white/10 shadow-sm whitespace-nowrap">
+                    📎 Subir PDF
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/5 bg-white/[0.01]" *ngIf="platformService.registrations().length > 0">
+      <div class="text-xs text-slate-400 font-medium">
+        Mostrando registros del {{ filteredAndPaginatedCertificates().items.length === 0 ? 0 : (certCurrentPage() - 1) * certPageSize() + 1 }} al
+        {{ getMinRecord(certCurrentPage(), certPageSize(), filteredAndPaginatedCertificates().totalItems) }} de un total de {{ filteredAndPaginatedCertificates().totalItems }} registros
+      </div>
+      <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedCertificates().totalPages > 1">
+        <button type="button" [disabled]="certCurrentPage() === 1" (click)="certCurrentPage.set(certCurrentPage() - 1); $event.stopPropagation();"
+          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
+        <button type="button" *ngFor="let page of getPagesArray(filteredAndPaginatedCertificates().totalPages)" (click)="certCurrentPage.set(page); $event.stopPropagation();"
+          [class]="certCurrentPage() === page ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all' : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
+        <button type="button" [disabled]="certCurrentPage() === filteredAndPaginatedCertificates().totalPages" (click)="certCurrentPage.set(certCurrentPage() + 1); $event.stopPropagation();"
+          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Scanned PDF Modal -->
+<div *ngIf="showUploadModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)">
+  <div class="bg-slate-900 border border-white/10 rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-bold text-slate-100">📎 Subir Certificado Escaneado (PDF)</h3>
+      <button type="button" (click)="closeUploadModal(); $event.stopPropagation();" class="text-slate-400 hover:text-white text-lg leading-none cursor-pointer bg-transparent border-none">✕</button>
+    </div>
+
+    <div *ngIf="uploadTargetReg()" class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 space-y-1 text-xs">
+      <div class="font-bold text-slate-200">{{ uploadTargetReg()!.userName }}</div>
+      <div class="text-slate-400 font-mono">DNI: {{ uploadTargetReg()!.userDni }}</div>
+      <div class="text-slate-400">{{ uploadTargetReg()!.eventTitle }}</div>
+      <div class="text-amber-400 font-mono font-bold" *ngIf="uploadTargetReg()!.documentCode">Código: {{ uploadTargetReg()!.documentCode }}</div>
+    </div>
+
+    <div class="space-y-2">
+      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Seleccionar archivo PDF</label>
+      <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-sky-500/50 hover:bg-sky-500/5 transition-all"
+        [class.border-sky-500]="uploadSelectedFile()">
+        <span *ngIf="!uploadSelectedFile()" class="text-slate-500 text-xs text-center px-4">Arrastra un PDF aquí o haz clic para seleccionar</span>
+        <span *ngIf="uploadSelectedFile()" class="text-sky-400 text-xs font-bold text-center px-4">📄 {{ uploadSelectedFile()!.name }}</span>
+        <input type="file" accept="application/pdf" class="hidden" (change)="onPdfFileSelected($event)" />
+      </label>
+    </div>
+
+    <div *ngIf="uploadError()" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">{{ uploadError() }}</div>
+    <div *ngIf="uploadSuccess()" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2">{{ uploadSuccess() }}</div>
+
+    <div class="flex gap-3 pt-1">
+      <button type="button" (click)="closeUploadModal(); $event.stopPropagation();" class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer transition-all">
+        Cancelar
+      </button>
+      <button type="button" (click)="submitPdfUpload(); $event.stopPropagation();"
+        [disabled]="!uploadSelectedFile() || uploadingPdf()"
+        class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="!uploadingPdf()">📤 Subir al Servidor</span>
+        <span *ngIf="uploadingPdf()">Subiendo...</span>
+      </button>
+    </div>
+  </div>
+</div>

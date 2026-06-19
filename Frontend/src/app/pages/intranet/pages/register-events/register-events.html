@@ -1,0 +1,32 @@
+<div class="space-y-6 animate-fade-in">
+  <h2 class="text-2xl font-bold text-white">Cursos y Eventos Académicos Disponibles</h2>
+
+  <div *ngIf="upcomingEventsForParticipant().length === 0"
+    class="text-center p-12 rounded-3xl border border-white/5 bg-white/[0.01]">
+    <span class="text-3xl">🎉</span>
+    <h3 class="text-base font-bold text-slate-200 mt-2">Ya estás inscrito en todos los eventos disponibles</h3>
+    <p class="text-xs text-slate-500 mt-1">Revisa el catálogo más tarde, pronto habrá nuevos cursos.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div *ngFor="let e of upcomingEventsForParticipant()"
+      class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl flex flex-col justify-between gap-4">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">{{ e.icon }}</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
+            {{ e.type }}
+          </span>
+        </div>
+        <h3 class="text-base font-bold text-slate-100 mb-1">{{ e.title }}</h3>
+        <p class="text-xs text-slate-400 font-mono mb-2">Tutor: {{ e.instructor }} | Duración: {{ e.hours }} horas</p>
+        <p class="text-xs text-slate-500 leading-normal" [innerHTML]="e.description"></p>
+      </div>
+
+      <button (click)="registerQuicklyToEvent(e.id)"
+        class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white text-xs transition-all cursor-pointer">
+        📥 Inscribirse con un Clic
+      </button>
+    </div>
+  </div>
+</div>

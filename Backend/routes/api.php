@@ -10,6 +10,10 @@ use App\Http\Controllers\DataInternaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\EDocumentoController;
+use App\Http\Controllers\PeriodoAcaController;
+use App\Http\Controllers\InvLineaController;
+use App\Http\Controllers\ProyectoController;
+use App\Http\Controllers\ValidarCertificadoController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/tipo-actividades', [TipoActividadController::class, 'index']);
@@ -18,6 +22,10 @@ Route::get('/consulta-dni/{dni}', [DataInternaController::class, 'consultaDni'])
 Route::get('/eventos/{id}/banner-base64', [EventoController::class, 'getBannerBase64']);
 Route::apiResource('eventos', EventoController::class)->only(['index', 'show']);
 Route::post('/matriculas', [MatriculaController::class, 'store']);
+Route::get('/periodo-aca', [PeriodoAcaController::class, 'index']);
+Route::get('/periodo-aca/activo', [PeriodoAcaController::class, 'activo']);
+Route::get('/validar-certificado/{codigo}', [ValidarCertificadoController::class, 'show']);
+Route::get('/resolucion-pdf-base64', [EDocumentoController::class, 'getResolucionBase64']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('eventos', EventoController::class)->except(['index', 'show']);
@@ -31,8 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('matriculas', MatriculaController::class)->except(['store']);
     Route::patch('/matriculas/{id}/validar-pago', [MatriculaController::class, 'validarPago']);
     Route::patch('/matriculas/{id}/emitir-certificado', [MatriculaController::class, 'emitirCertificado']);
+    Route::post('/inscripciones/{id}/upload-pdf-escaneado', [MatriculaController::class, 'uploadPdfEscaneado']);
+    Route::apiResource('periodo-aca', PeriodoAcaController::class)->except(['index'])->parameters(['periodo-aca' => 'id']);
     Route::get('/e-documentos/fondo-base64', [EDocumentoController::class, 'getFondoBase64']);
     Route::apiResource('e-documentos', EDocumentoController::class);
+    Route::apiResource('inv-lineas', InvLineaController::class);
+    Route::apiResource('proyectos', ProyectoController::class);
 });
 
 Route::get('/user', function (Request $request) {

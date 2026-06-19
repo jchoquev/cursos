@@ -31,6 +31,33 @@
   transform: rotate(5deg) scale(1.05);
 }
 
+.search-container {
+  position: relative;
+}
+
+.search-container::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 2rem;
+  left: 50%;
+  width: min(70vw, 760px);
+  height: 260px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(180, 35, 77, 0.12), transparent 68%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.lp-search-title {
+  letter-spacing: -0.045em;
+}
+
+.lp-search-panel {
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28), 0 0 45px rgba(92, 10, 30, 0.09) !important;
+}
+
 /* ==========================================
    LIGHT MODE — SEARCH CERTIFICATES PAGE ONLY
    ========================================== */
@@ -58,13 +85,38 @@ body.light-mode .lp-search-panel {
   box-shadow: 0 10px 30px rgba(0,0,0,0.04) !important;
 }
 
-body.light-mode .lp-search-panel button[type="button"]:not(.bg-gradient-to-r) {
+body.light-mode .lp-search-panel button[type="button"]:not([class*="from-wine-"]):not([class*="from-amber-"]) {
   color: #475569 !important;
 }
 
-body.light-mode .lp-search-panel button[type="button"]:not(.bg-gradient-to-r):hover {
+body.light-mode .lp-search-panel button[type="button"]:not([class*="from-wine-"]):not([class*="from-amber-"]):hover {
   color: #1e293b !important;
-  background-color: rgba(0,0,0,0.04) !important;
+  background-color: rgba(0,0,0,0.06) !important;
+}
+
+/* Toggle inactivo: más visible en modo claro */
+body.light-mode .lp-toggle-inactive {
+  color: #475569 !important;
+}
+body.light-mode .lp-toggle-inactive:hover {
+  color: #1e293b !important;
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Botón submit: no tan transparente cuando está deshabilitado */
+body.light-mode .lp-search-panel button[type="submit"]:disabled {
+  opacity: 0.55 !important;
+  color: #1a0f00 !important;
+}
+
+/* Texto de descripción más oscuro */
+body.light-mode .lp-search-desc {
+  color: #334155 !important;
+}
+
+/* Footer text del panel */
+body.light-mode .lp-search-footer-text {
+  color: #64748b !important;
 }
 
 body.light-mode .lp-search-input-field {
@@ -157,6 +209,109 @@ body.light-mode .lp-modal-content .p-4.rounded-2xl span.text-amber-300 {
 
 body.light-mode .lp-modal-content .p-4.rounded-2xl span.text-slate-200 {
   color: #334155 !important;
+}
+
+/* ==========================================
+   COLORES BASE — modo oscuro (default)
+   ========================================== */
+
+.lp-cert-label         { color: #64748b; }
+.lp-cert-value         { color: #e2e8f0; }
+.lp-cert-value-primary { color: #f1f5f9; }
+.lp-cert-value-accent  { color: #fcd34d; }
+.lp-cert-qr-title      { color: #94a3b8; }
+
+.lp-cert-header-title  { color: #ffffff; }
+.lp-cert-header-sub    { color: #34d399; }
+.lp-cert-badge         { color: #34d399; }
+
+/* Modal resolución — modo oscuro */
+.lp-res-overlay     { background-color: rgba(0,0,0,0.85); }
+.lp-res-modal-bar   { background-color: #1e293b; border-radius: 1rem 1rem 0 0; padding: 0.75rem 1rem; }
+.lp-res-modal-title { color: #f1f5f9; }
+.lp-res-modal-close { background-color: rgba(255,255,255,0.08); color: #cbd5e1; }
+.lp-res-modal-close:hover { background-color: rgba(255,255,255,0.16); }
+.lp-res-modal-body  { background-color: #020617; border-color: rgba(255,255,255,0.1); border-radius: 0 0 1rem 1rem; }
+
+/* ==========================================
+   LIGHT MODE — :host-context() para que Angular
+   no rompa los selectores de ancestro.
+   ========================================== */
+
+:host-context(body.light-mode) .lp-cert-body {
+  background-color: #f1f5f9;
+}
+
+:host-context(body.light-mode) .lp-cert-section-title {
+  color: #334155;
+  border-bottom-color: rgba(0,0,0,0.1);
+}
+
+:host-context(body.light-mode) .lp-cert-card {
+  background-color: #ffffff;
+  border-color: rgba(0,0,0,0.08);
+}
+
+:host-context(body.light-mode) .lp-cert-label {
+  color: #475569;
+}
+
+:host-context(body.light-mode) .lp-cert-value {
+  color: #1e293b;
+}
+
+:host-context(body.light-mode) .lp-cert-value-primary {
+  color: #0f172a;
+}
+
+:host-context(body.light-mode) .lp-cert-value-accent {
+  color: #9f1239;
+}
+
+:host-context(body.light-mode) .lp-cert-qr-title {
+  color: #334155;
+}
+
+:host-context(body.light-mode) .lp-cert-header {
+  background: linear-gradient(to right, rgba(16,185,129,0.15), rgba(20,184,166,0.08));
+  border-bottom-color: rgba(16,185,129,0.3);
+}
+
+:host-context(body.light-mode) .lp-cert-header-title {
+  color: #064e3b;
+}
+
+:host-context(body.light-mode) .lp-cert-header-sub {
+  color: #047857;
+}
+
+:host-context(body.light-mode) .lp-cert-badge {
+  color: #065f46;
+  background-color: rgba(16,185,129,0.12);
+  border-color: rgba(16,185,129,0.35);
+}
+
+/* Modal resolución — modo claro */
+:host-context(body.light-mode) .lp-res-overlay {
+  background-color: rgba(15,23,42,0.45);
+}
+:host-context(body.light-mode) .lp-res-modal-bar {
+  background-color: #f1f5f9;
+}
+:host-context(body.light-mode) .lp-res-modal-title {
+  color: #1e293b;
+}
+:host-context(body.light-mode) .lp-res-modal-close {
+  background-color: rgba(0,0,0,0.06);
+  color: #475569;
+}
+:host-context(body.light-mode) .lp-res-modal-close:hover {
+  background-color: rgba(0,0,0,0.12);
+}
+:host-context(body.light-mode) .lp-res-modal-body {
+  background-color: #f8fafc;
+  border-color: rgba(0,0,0,0.1);
+  border-radius: 0 0 1rem 1rem;
 }
 
 /* ==========================================

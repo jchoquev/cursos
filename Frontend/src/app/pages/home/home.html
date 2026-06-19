@@ -12,52 +12,53 @@
     <div class="lg:col-span-3 lg:order-last space-y-8">
       
       <!-- Fila de Filtros y Conmutadores -->
-      <div class="lp-filter-border flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
-        
+      <div class="lp-filter-border flex flex-col md:flex-row md:items-center justify-between gap-3">
+
         <!-- Categorías de Eventos -->
-        <div class="flex flex-wrap gap-1">
+        <div class="flex flex-wrap gap-1.5 items-center">
+          <span class="text-[9px] font-black uppercase tracking-widest text-slate-600 font-mono hidden md:inline">Categoría:</span>
           <button
             *ngFor="let cat of categories()"
             (click)="selectCategory(cat)"
-            [class]="selectedCategory() === cat 
-              ? 'px-4 py-2 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10 transition-all' 
-              : 'lp-filter-btn px-4 py-2 rounded-full text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all'"
+            [class]="selectedCategory() === cat
+              ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow-md shadow-wine-900/20 transition-all border border-wine-600/30'
+              : 'lp-filter-btn px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:bg-white/5 transition-all border border-transparent hover:border-white/10'"
           >
             {{ cat === 'Todos' ? '📂 Todos' : cat === 'Repositorio' ? '🏛️ Repositorio' : cat }}
           </button>
         </div>
 
         <!-- Conmutador Activos / Pasados (Cursos) -->
-        <div *ngIf="selectedCategory() !== 'Repositorio'" class="lp-filter-toggle flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0">
+        <div *ngIf="selectedCategory() !== 'Repositorio'" class="lp-filter-toggle flex bg-white/[0.04] p-1 rounded-lg border border-white/8 shrink-0">
           <button
             (click)="selectStatus('activo')"
             [class]="selectedStatus() === 'activo'
-              ? 'px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow'
-              : 'lp-filter-toggle-label px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
+              ? 'px-4 py-1.5 rounded-md text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow-sm border border-wine-600/30'
+              : 'lp-filter-toggle-label px-4 py-1.5 rounded-md text-xs font-semibold transition-all'"
           >
-            🔥 Nuevos Eventos
+            🔥 Vigentes
           </button>
           <button
             (click)="selectStatus('pasado')"
             [class]="selectedStatus() === 'pasado'
-              ? 'px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow'
-              : 'lp-filter-toggle-label px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all'"
+              ? 'px-4 py-1.5 rounded-md text-xs font-bold bg-gradient-to-r from-wine-700 to-wine-600 text-white shadow-sm border border-wine-600/30'
+              : 'lp-filter-toggle-label px-4 py-1.5 rounded-md text-xs font-semibold transition-all'"
           >
-            ⌛ Eventos Pasados
+            ⌛ Pasados
           </button>
         </div>
 
-        <!-- Conmutador de Años (Repositorio) -->
-        <div *ngIf="selectedCategory() === 'Repositorio'" class="lp-filter-toggle flex bg-white/[0.04] p-1 rounded-full border border-white/5 shrink-0 items-center">
-          <span class="lp-filter-toggle-label text-[10px] font-black uppercase text-slate-500 px-3 tracking-wider select-none font-mono">Año:</span>
+        <!-- Conmutador de Periodo Académico (Repositorio) -->
+        <div *ngIf="selectedCategory() === 'Repositorio'" class="lp-filter-toggle flex flex-wrap bg-white/[0.04] p-1 rounded-lg border border-white/8 shrink-0 items-center gap-0.5">
+          <span class="lp-filter-toggle-label text-[9px] font-black uppercase tracking-widest px-2 select-none font-mono">Periodo Académico:</span>
           <button
-            *ngFor="let yr of ['Todos', '2026', '2025', '2024', '2023']"
-            (click)="selectYear(yr)"
-            [class]="selectedYear() === yr
-              ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 shadow-md shadow-amber-500/10 transition-all cursor-pointer'
-              : 'px-3 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all cursor-pointer hover:bg-white/5'"
+            *ngFor="let p of periodosAca()"
+            (click)="selectPeriodo(p.Id)"
+            [class]="selectedPeriodo() === p.Id
+              ? 'px-3 py-1.5 rounded-md text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 shadow-sm transition-all cursor-pointer border border-amber-500/30'
+              : 'px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer'"
           >
-            {{ yr }}
+            {{ p.Asig }}
           </button>
         </div>
 
@@ -280,15 +281,19 @@
             [ngModel]="quickCertCode()"
             (ngModelChange)="quickCertCode.set($event)"
             [name]="'quickCertCode'"
-            placeholder="CERT-2026-001"
+            placeholder="26J6V46003"
             class="lp-sidebar-input w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs font-mono font-bold"
           />
           <button
             type="submit"
-            [disabled]="!quickCertCode().trim()"
-            class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white text-xs transition-all cursor-pointer shadow-lg shadow-wine-900/30 disabled:opacity-40"
+            [disabled]="!quickCertCode().trim() || isValidating()"
+            class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-wine-700 to-wine-600 hover:from-wine-600 hover:to-wine-500 text-white text-xs transition-all cursor-pointer shadow-lg shadow-wine-900/30 disabled:opacity-40 flex items-center justify-center gap-2"
           >
-            Verificar Código
+            <svg *ngIf="isValidating()" class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            {{ isValidating() ? 'Verificando...' : 'Verificar Código' }}
           </button>
         </form>
       </div>
@@ -300,45 +305,26 @@
         </h3>
         <ul class="space-y-2 text-xs font-semibold text-slate-400">
           <li>
-            <a routerLink="/" class="flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-white/5 hover:text-white transition-all">
+            <a routerLink="/" class="lp-sidebar-nav-link flex items-center gap-2 py-2 px-3 rounded-xl transition-all">
               <span>🏠</span> Inicio / Catálogo
             </a>
           </li>
           <li>
-            <a routerLink="/buscar-certificados" class="flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-white/5 hover:text-white transition-all">
+            <a routerLink="/" [queryParams]="{ category: 'Repositorio' }" (click)="selectCategory('Repositorio')" class="lp-sidebar-nav-link flex items-center gap-2 py-2 px-3 rounded-xl transition-all">
+              <span>🏛️</span> Repositorio Institucional
+            </a>
+          </li>
+          <li>
+            <a routerLink="/buscar-certificados" class="lp-sidebar-nav-link flex items-center gap-2 py-2 px-3 rounded-xl transition-all">
               <span>🔎</span> Buscar Certificados DNI
             </a>
           </li>
           <li>
-            <a routerLink="/intranet" class="flex items-center gap-2 py-2 px-3 rounded-xl hover:bg-white/5 hover:text-white transition-all">
+            <a routerLink="/intranet" class="lp-sidebar-nav-link flex items-center gap-2 py-2 px-3 rounded-xl transition-all">
               <span>💻</span> Acceso a Intranet
             </a>
           </li>
         </ul>
-      </div>
-
-      <!-- Bloque 3: Novedades Destacadas -->
-      <div class="lp-sidebar-block rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl space-y-4">
-        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-          <span>⭐</span> Destacados de la Semana
-        </h3>
-        
-        <div class="space-y-3">
-          <div class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.02] transition-colors">
-            <span class="text-xl">🔐</span>
-            <div>
-              <h4 class="text-xs font-bold text-slate-200 line-clamp-1">Seminario Criptografía</h4>
-              <span class="lp-sidebar-date text-[10px] text-amber-400 font-mono">02 de Junio, 2026</span>
-            </div>
-          </div>
-          <div class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.02] transition-colors">
-            <span class="text-xl">🅰️</span>
-            <div>
-              <h4 class="text-xs font-bold text-slate-200 line-clamp-1">Angular 21 Pro</h4>
-              <span class="lp-sidebar-date text-[10px] text-rose-400 font-mono">15 de Junio, 2026</span>
-            </div>
-          </div>
-        </div>
       </div>
 
     </div>
@@ -764,9 +750,19 @@
           
           <button
             type="submit"
-            class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10"
+            [disabled]="isRegistering()"
+            class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            ✓ Registrar
+            <ng-container *ngIf="!isRegistering()">
+              ✓ Registrar
+            </ng-container>
+            <ng-container *ngIf="isRegistering()">
+              <svg class="animate-spin h-4 w-4 text-slate-950" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Enviando...
+            </ng-container>
           </button>
         </div>
 
@@ -850,258 +846,64 @@
 
       <ng-container *ngIf="res.success && res.cert">
         <div *ngIf="res.cert as cert" class="flex flex-col gap-6 w-full">
-          <!-- Botones de Control Superiores (Ocultos en impresión) -->
+          <!-- Cabecera -->
           <div class="flex items-center justify-between border-b border-white/10 pb-4 print:hidden">
             <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-              <span>📜</span> {{ showPrintCertModal() ? 'Vista de Diploma Oficial' : 'Verificación de Autenticidad' }}
+              <span>📜</span> Verificación de Autenticidad
             </h3>
-            <div class="flex items-center gap-3">
-              <button
-                *ngIf="showPrintCertModal()"
-                (click)="showPrintCertModal.set(false)"
-                class="px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/15 text-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                👁️ Ver Panel de Verificación
-              </button>
-              <button
-                *ngIf="showPrintCertModal()"
-                (click)="downloadCertificate()"
-                class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-amber-500/10"
-              >
-                🖨️ Imprimir / Descargar PDF
-              </button>
-              <button
-                (click)="closeQuickValidation()"
-                class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-lg font-bold"
-              >
-                ✕
-              </button>
-            </div>
+            <button (click)="closeQuickValidation()"
+              class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 flex items-center justify-center transition-all cursor-pointer text-lg font-bold">✕</button>
           </div>
 
-          <!-- MODO 1: VERIFICACIÓN PROFESIONAL (PÁGINA DE ÉXITO DESTACADO) -->
-          <div *ngIf="!showPrintCertModal()" class="space-y-6 flex-1 overflow-y-auto max-h-[70vh] pr-2">
-            
-            <!-- Encabezado de Validación -->
+          <!-- VERIFICACIÓN -->
+          <div class="space-y-6 flex-1 overflow-y-auto max-h-[70vh] pr-2">
             <div class="flex flex-col items-center text-center my-4">
-              <div class="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 text-3xl shadow-lg shadow-emerald-500/20 mb-3 animate-pulse">
-                ✓
-              </div>
+              <div class="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 text-3xl shadow-lg shadow-emerald-500/20 mb-3 animate-pulse">✓</div>
               <h2 class="text-2xl font-extrabold text-white tracking-widest uppercase">CERTIFICADO VÁLIDO</h2>
-              <p class="text-slate-300 text-sm mt-1.5 max-w-xl leading-relaxed">
-                El certificado ha sido verificado exitosamente en la base de datos institucional.
-              </p>
+              <p class="text-slate-300 text-sm mt-1.5 max-w-xl leading-relaxed">Verificado exitosamente en la base de datos institucional.</p>
             </div>
-
-            <!-- Información del Participante en Tarjetas Organizadas y Responsivas -->
             <div class="space-y-4">
-              <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">
-                👨‍🎓 Datos de la Certificación y Participante
-              </h3>
+              <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-white/5 pb-2">👨‍🎓 Datos de la Certificación</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                
-                <!-- Nombre completo -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 lg:col-span-2">
                   <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nombre Completo</span>
-                  <span class="text-slate-100 font-bold text-sm mt-1 block uppercase">{{ cert.fullName }}</span>
+                  <span class="text-slate-100 font-bold text-sm mt-1 block uppercase">{{ cert.nombres }}</span>
                 </div>
-
-                <!-- Curso / Evento -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all lg:col-span-2">
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">DNI</span>
+                  <span class="text-slate-200 font-mono font-bold text-sm mt-1 block">{{ cert.dni }}</span>
+                </div>
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 lg:col-span-3">
                   <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curso / Evento</span>
-                  <span class="text-amber-300 font-bold text-sm mt-1 block">{{ cert.eventTitle }}</span>
+                  <span class="text-amber-300 font-bold text-sm mt-1 block">{{ cert.evento }}</span>
                 </div>
-
-                <!-- ID del certificado -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                   <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID del Certificado</span>
-                  <span class="text-slate-200 font-mono font-bold text-sm mt-1 block tracking-wider">{{ cert.code }}</span>
+                  <span class="text-slate-200 font-mono font-bold text-sm mt-1 block tracking-wider">{{ cert.codigo }}</span>
                 </div>
-
-                <!-- Duración -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                   <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Duración Lectiva</span>
-                  <span class="text-slate-200 font-semibold text-sm mt-1 block">⏱️ {{ cert.hours }} Horas Académicas</span>
+                  <span class="text-slate-200 font-semibold text-sm mt-1 block">⏱️ {{ cert.horas }} Horas Académicas</span>
                 </div>
-
-                <!-- Modalidad -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
-                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Modalidad</span>
-                  <span class="text-slate-200 font-semibold text-sm mt-1 block">🌐 {{ cert.hours >= 40 ? 'Virtual - Sincrónico' : 'Virtual - Asincrónico' }}</span>
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tipo de Participación</span>
+                  <span class="text-slate-200 font-semibold text-sm mt-1 block">🏅 {{ cert.tipo }}</span>
                 </div>
-
-                <!-- Fecha de inicio -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
-                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fecha de Inicio</span>
-                  <span class="text-slate-200 font-mono text-sm mt-1 block">
-                    📅 10/{{ cert.issueDate.substring(5, 7) === '04' ? '03' : '02' }}/{{ cert.issueDate.substring(0, 4) }}
-                  </span>
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fecha de Certificación</span>
+                  <span class="text-slate-200 font-mono text-sm mt-1 block">📅 {{ cert.fecha ? cert.fecha.substring(8,10)+'/'+cert.fecha.substring(5,7)+'/'+cert.fecha.substring(0,4) : '—' }}</span>
                 </div>
-
-                <!-- Fecha de finalización -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
-                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fecha de Finalización</span>
-                  <span class="text-slate-200 font-mono text-sm mt-1 block">
-                    📅 {{ cert.issueDate.substring(8, 10) }}/{{ cert.issueDate.substring(5, 7) }}/{{ cert.issueDate.substring(0, 4) }}
-                  </span>
-                </div>
-
-                <!-- Tipo de certificación -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
-                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tipo de Certificación</span>
-                  <span class="text-slate-200 font-semibold text-sm mt-1 block">🏆 Aprobación</span>
-                </div>
-
-                <!-- Institución -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all lg:col-span-2">
+                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 lg:col-span-2">
                   <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Institución</span>
-                  <span class="text-slate-200 font-semibold text-xs mt-1 block">🏛️ IESTP Chojata (Moquegua)</span>
+                  <span class="text-slate-200 font-semibold text-xs mt-1 block">🏛️ IESTP Chojata — Moquegua, Perú</span>
                 </div>
-
-                <!-- Área organizadora -->
-                <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all lg:col-span-1">
-                  <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Área Organizadora</span>
-                  <span class="text-slate-200 font-semibold text-xs mt-1 block">🔬 Jefatura de Unidad Académica</span>
-                </div>
-
               </div>
             </div>
-
-            <!-- Nueva Sección: Resolución de Aprobación -->
-            <div class="p-6 rounded-3xl bg-gradient-to-r from-wine-950/40 to-slate-900/60 border border-wine-500/20 relative overflow-hidden">
-              <div class="absolute -right-16 -top-16 w-32 h-32 bg-wine-500/10 rounded-full blur-3xl pointer-events-none"></div>
-              
-              <h4 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
-                <span>📄</span> Resolución de Aprobación
-              </h4>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                <div>
-                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Número de Resolución</span>
-                  <span class="text-slate-200 font-mono font-bold block">RD-025-2026-CHOJATA</span>
-                </div>
-                <div>
-                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Fecha de Emisión</span>
-                  <span class="text-slate-200 block font-mono">15/03/2026</span>
-                </div>
-                <div>
-                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Emitido Por</span>
-                  <span class="text-slate-200 block">Jefatura de Unidad Académica</span>
-                </div>
-                <div>
-                  <span class="block text-slate-500 uppercase font-bold tracking-wider mb-0.5">Estado de Resolución</span>
-                  <span class="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    Vigente
-                  </span>
-                </div>
-              </div>
-
-              <!-- Botones de Acción de la Resolución -->
-              <div class="flex flex-wrap items-center gap-3 mt-6 border-t border-white/5 pt-4">
-                <button
-                  (click)="viewResolutionPdf(cert)"
-                  class="px-5 py-2.5 rounded-full text-xs font-bold bg-wine-700 hover:bg-wine-600 text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-wine-800/30"
-                >
-                  📄 Ver Resolución PDF
-                </button>
-                <button
-                  (click)="showPrintCertModal.set(true)"
-                  class="px-5 py-2.5 rounded-full text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  🎓 Ver Diploma Imprimible
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- MODO 2: DIPLOMA IMPRIMIBLE ORIGINAL -->
-          <div *ngIf="showPrintCertModal()" class="certificate-canvas-wrapper overflow-auto flex-1 flex justify-center bg-slate-950 p-6 rounded-2xl border border-white/5">
-            <div id="certificate-print-area" class="certificate-sheet relative w-[800px] h-[560px] bg-slate-950 text-slate-200 border-[12px] border-wine-800 p-12 flex flex-col justify-between overflow-hidden shadow-2xl shrink-0">
-              
-              <!-- Fondo Marca de Agua e Hilos de Seguridad -->
-              <div class="absolute inset-0 bg-[radial-gradient(#ffffff04_1.5px,transparent_1.5px)] [background-size:16px_16px] pointer-events-none"></div>
-              <div class="absolute -right-24 -top-24 w-80 h-80 bg-wine-800/10 rounded-full blur-3xl pointer-events-none"></div>
-              <div class="absolute -left-24 -bottom-24 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
-              
-              <!-- Marco Interno de Oro Fino -->
-              <div class="absolute inset-2 border-[2px] border-amber-500/30 rounded pointer-events-none"></div>
-              
-              <!-- Encabezado del Certificado -->
-              <div class="text-center relative z-10">
-                <div class="flex justify-center items-center gap-3 mb-2">
-                  <span class="text-4xl text-amber-400">🎓</span>
-                  <div class="text-left">
-                    <div class="text-xs font-bold tracking-widest uppercase text-amber-500 font-mono">IESTP CHOJATA</div>
-                    <div class="text-[9px] text-slate-400 font-mono tracking-wider">RESOLUCIÓN DIRECTORAL N° 0451-2026-CHOJATA</div>
-                  </div>
-                </div>
-                <div class="h-[1px] w-48 mx-auto bg-gradient-to-r from-transparent via-amber-500/50 to-transparent mt-3 mb-4"></div>
-                
-                <h2 class="text-xs font-bold tracking-[0.3em] uppercase text-slate-400 font-mono mb-2">OTORGA EL PRESENTE</h2>
-                <h1 class="text-4xl font-serif font-bold text-amber-300 italic tracking-wide">Certificado de Aprobación</h1>
-              </div>
-
-              <!-- Cuerpo del Certificado -->
-              <div class="text-center px-8 relative z-10">
-                <p class="text-xs text-slate-400 italic mb-2">Por cuanto se ha acreditado el cumplimiento y asistencia de:</p>
-                <h3 class="text-2xl font-bold tracking-wide text-white uppercase font-sans mb-3 underline decoration-amber-500/40 decoration-wavy underline-offset-4">
-                  {{ cert.fullName }}
-                </h3>
-                <p class="text-xs text-slate-400 leading-relaxed max-w-xl mx-auto">
-                  Por haber participado y aprobado satisfactoriamente en calidad de participante en el evento académico:
-                  <strong class="text-slate-100 font-semibold block text-sm mt-1 mb-2 font-serif text-amber-200">"{{ cert.eventTitle }}"</strong>
-                  realizado en nuestras instalaciones académicas y plataforma virtual institucional, con una duración lectiva de
-                  <strong class="text-amber-400 font-mono">{{ cert.hours }} horas académicas</strong>.
-                </p>
-              </div>
-
-              <!-- Pie del Certificado con Firmas, QR y Sello de Oro -->
-              <div class="flex justify-between items-end relative z-10 mt-2">
-                
-                <!-- Código QR para validación -->
-                <div class="flex items-center gap-3 w-1/3">
-                  <div class="w-20 h-20 bg-white p-1 rounded border border-amber-500/30 flex items-center justify-center shadow-lg" [innerHTML]="getQrCodeSvg(cert.code)">
-                  </div>
-                  <div class="text-[9px] font-mono text-slate-500 leading-normal">
-                    <div class="font-bold text-slate-400">VALIDACIÓN OFICIAL</div>
-                    <div>Código: <span class="text-amber-400 font-bold">{{ cert.code }}</span></div>
-                    <div>Estado: <span class="text-emerald-400 font-bold">VÁLIDO</span></div>
-                  </div>
-                </div>
-
-                <!-- Sello Universitario de Oro Metálico -->
-                <div class="w-1/3 flex justify-center pb-2">
-                  <div class="relative w-20 h-20 rounded-full border-4 border-amber-600/30 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex flex-col items-center justify-center text-center shadow-2xl shadow-amber-500/20 font-bold select-none cursor-default">
-                    <div class="absolute inset-1 rounded-full border border-dashed border-amber-900/40"></div>
-                    <span class="text-[8px] tracking-widest font-mono uppercase font-bold leading-none text-amber-950">SELLO</span>
-                    <span class="text-xs text-amber-950 font-extrabold my-0.5">IESTP-CH</span>
-                    <span class="text-[7px] font-mono font-semibold text-amber-950">OFICIAL</span>
-                  </div>
-                </div>
-
-                <!-- Firma Digital Firma -->
-                <div class="w-1/3 text-center">
-                  <div class="inline-block relative">
-                    <!-- Firma Caligráfica Vectorial Mock -->
-                    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-12 opacity-80 pointer-events-none select-none">
-                      <svg viewBox="0 0 100 40" class="w-full h-full text-indigo-400" stroke="currentColor" fill="none" stroke-width="1.5">
-                        <path d="M10,30 Q25,5 35,25 T55,10 T75,30 T90,20 M15,22 L85,22 M30,12 C40,0 45,35 60,25" />
-                      </svg>
-                    </div>
-                    <div class="h-[1px] w-36 bg-slate-600 mx-auto mt-8 mb-2"></div>
-                    <div class="text-[10px] font-bold text-slate-300 leading-tight uppercase font-mono">{{ cert.signatureName }}</div>
-                    <div class="text-[8px] text-slate-500 font-mono tracking-wide mt-0.5">{{ cert.signatureRole }}</div>
-                  </div>
-                </div>
-
-              </div>
-
-              <!-- Código y Metadato en los extremos inferiores -->
-              <div class="absolute bottom-2 left-6 text-[8px] font-mono text-slate-600">
-                ID Emisión: {{ cert.dni }}-{{ cert.eventId }} | Fecha de registro: {{ cert.issueDate }}
-              </div>
-
+            <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-white/5">
+              <button (click)="viewResolutionPdf()"
+                class="px-6 py-2.5 rounded-full text-xs font-extrabold bg-gradient-to-r from-wine-600 to-wine-500 hover:from-wine-500 hover:to-wine-400 !text-white shadow-lg shadow-wine-900/40 ring-1 ring-white/15 transition-all cursor-pointer flex items-center gap-2">
+                <span>📄</span> Ver Resolución PDF
+              </button>
             </div>
           </div>
         </div>
@@ -1125,8 +927,20 @@
             ✕
           </button>
 
-          <!-- PDF Decree Content Page -->
-          <div class="pdf-decree-sheet bg-white p-8 sm:p-12 border border-slate-300 rounded shadow-inner max-h-[75vh] overflow-y-auto font-serif relative">
+          <!-- Visor del PDF real de la resolución subida al servidor -->
+          <div *ngIf="resolucionPdfUrl()" class="w-full">
+            <iframe [src]="resolucionPdfUrl()" class="w-full h-[75vh] rounded-xl border border-slate-300 bg-slate-100" title="Resolución PDF"></iframe>
+          </div>
+
+          <!-- Mensaje cuando no hay PDF de resolución -->
+          <div *ngIf="resolucionError()" class="text-center py-16 px-6">
+            <div class="text-5xl mb-4">📄</div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Resolución no disponible</h3>
+            <p class="text-slate-500 text-sm max-w-md mx-auto">{{ resolucionError() }}</p>
+          </div>
+
+          <!-- PDF Decree Content Page (respaldo institucional si no hay PDF cargado) -->
+          <div *ngIf="!resolucionPdfUrl() && !resolucionError()" class="pdf-decree-sheet bg-white p-8 sm:p-12 border border-slate-300 rounded shadow-inner max-h-[75vh] overflow-y-auto font-serif relative">
             <!-- Watermark Shield -->
             <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
               <svg viewBox="0 0 100 100" class="w-[300px] h-[300px] text-slate-950">
@@ -1179,12 +993,12 @@
                 <strong>Artículo 1°.-</strong> <strong>APROBAR</strong> con validez legal plena y oficial el certificado electrónico institucional correspondiente a los registros oficiales del participante:
               </p>
               <div class="bg-slate-50 p-4 border border-slate-200 rounded-xl my-4 font-sans text-xs space-y-2">
-                <div><strong>Código de Certificado:</strong> <span class="font-mono text-slate-900 font-bold bg-slate-200/60 px-2 py-0.5 rounded">{{ cert.code }}</span></div>
-                <div><strong>Participante Validado:</strong> <span class="text-slate-900 font-bold uppercase">{{ cert.fullName }}</span></div>
+                <div><strong>Código de Certificado:</strong> <span class="font-mono text-slate-900 font-bold bg-slate-200/60 px-2 py-0.5 rounded">{{ cert.codigo }}</span></div>
+                <div><strong>Participante Validado:</strong> <span class="text-slate-900 font-bold uppercase">{{ cert.nombres }}</span></div>
                 <div><strong>Documento Nacional de Identidad:</strong> <span class="font-mono text-slate-900">{{ cert.dni }}</span></div>
-                <div><strong>Programa o Curso Académico:</strong> <span class="text-slate-900 font-semibold">"{{ cert.eventTitle }}"</span></div>
-                <div><strong>Carga Lectiva Acreditada:</strong> <span class="text-slate-900 font-semibold">{{ cert.hours }} Horas Académicas</span></div>
-                <div><strong>Fecha Oficial de Registro:</strong> <span class="text-slate-900 font-semibold">{{ cert.issueDate }}</span></div>
+                <div><strong>Programa o Curso Académico:</strong> <span class="text-slate-900 font-semibold">"{{ cert.evento }}"</span></div>
+                <div><strong>Carga Lectiva Acreditada:</strong> <span class="text-slate-900 font-semibold">{{ cert.horas }} Horas Académicas</span></div>
+                <div><strong>Fecha Oficial de Registro:</strong> <span class="text-slate-900 font-semibold">{{ cert.fecha ? cert.fecha.substring(8,10)+'/'+cert.fecha.substring(5,7)+'/'+cert.fecha.substring(0,4) : '—' }}</span></div>
               </div>
               <p>
                 <strong>Artículo 2°.-</strong> <strong>DECLARAR</strong> en condición de <strong>VIGENTE</strong> y sin restricciones el registro del certificado a fin de acreditar el perfil académico institucional del participante para los fines convenientes.

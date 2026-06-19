@@ -1,0 +1,51 @@
+<div class="space-y-6 animate-fade-in">
+  <h2 class="text-2xl font-bold text-white">Estado de mis Inscripciones</h2>
+
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] overflow-hidden">
+
+    <div *ngIf="myRegistrations().length === 0" class="text-center p-12 text-slate-500">
+      <span class="text-3xl">📂</span>
+      <h3 class="text-base font-bold text-slate-200 mt-2">No tienes inscripciones registradas</h3>
+      <p class="text-xs text-slate-500 mt-1">Revisa el catálogo e inscríbete a cursos y eventos académicos libres.</p>
+    </div>
+
+    <div *ngIf="myRegistrations().length > 0" class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="bg-white/[0.04] text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-white/5">
+            <th class="px-6 py-4">Curso / Evento</th>
+            <th class="px-6 py-4">Fecha de Solicitud</th>
+            <th class="px-6 py-4 text-center">Estado de Matrícula</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          <ng-container *ngIf="platformService.isLoading()">
+            <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-48"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-24"></div></td>
+              <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-20 mx-auto"></div></td>
+            </tr>
+          </ng-container>
+
+          <ng-container *ngIf="!platformService.isLoading()">
+            <tr *ngFor="let r of myRegistrations()" class="hover:bg-white/[0.01]">
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-100">{{ r.eventTitle }}</div>
+              </td>
+              <td class="px-6 py-4 font-mono text-slate-400">{{ r.date }}</td>
+              <td class="px-6 py-4 text-center">
+                <span [class]="'px-3 py-1 rounded-full text-[10px] font-bold border ' +
+                  (r.status === 'Aprobado' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                   r.status === 'Rechazado' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                   'bg-amber-500/10 text-amber-400 border-amber-500/20')">
+                  {{ r.status }}
+                </span>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

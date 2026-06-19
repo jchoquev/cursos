@@ -8,6 +8,17 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
+  <script>
+    (() => {
+      const saved = localStorage.getItem('app-theme');
+      const mode = saved === 'light' || saved === 'dark'
+        ? saved
+        : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.classList.add(`${mode}-mode`);
+      document.body.classList.add(`${mode}-mode`);
+      document.documentElement.style.colorScheme = mode;
+    })();
+  </script>
   <app-root></app-root>
 </body>
 </html>

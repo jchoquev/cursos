@@ -1,13 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import 'sweetalert2/dist/sweetalert2.min.css';
 @import "tailwindcss";
 
 @theme {
+  --color-wine-50: #fff7f8;
+  --color-wine-100: #ffe9ed;
+  --color-wine-200: #ffd0d9;
+  --color-wine-300: #fca5b6;
+  --color-wine-400: #f56b89;
+  --color-wine-500: #df365f;
   --color-wine-900: #3b0010;
   --color-wine-800: #5c0a1e;
   --color-wine-700: #7a1030;
   --color-wine-600: #9b1942;
   --color-wine-950: #250008;
+  --color-gold-300: #efd28c;
+  --color-gold-400: #d9b45c;
+  --color-gold-500: #bd9134;
   --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+  --institution-wine: #7a1030;
+  --institution-wine-bright: #b4234d;
+  --institution-wine-deep: #250008;
+  --institution-gold: #d9b45c;
+  --surface-base: #0b0507;
+  --surface-raised: rgba(29, 12, 17, 0.88);
+  --surface-soft: rgba(255, 255, 255, 0.035);
+  --border-soft: rgba(255, 255, 255, 0.075);
+  --border-brand: rgba(180, 35, 77, 0.28);
+  --shadow-soft: 0 16px 45px rgba(0, 0, 0, 0.24);
+  --shadow-brand: 0 18px 50px rgba(92, 10, 30, 0.2);
 }
 
 html {
@@ -16,11 +41,187 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #0a0618;
+  background-color: var(--surface-base);
+  background-image:
+    radial-gradient(circle at 10% -10%, rgba(180, 35, 77, 0.14), transparent 30rem),
+    radial-gradient(circle at 95% 20%, rgba(217, 180, 92, 0.055), transparent 26rem),
+    linear-gradient(180deg, #100609 0%, #090507 48%, #0c0608 100%);
+  background-attachment: fixed;
   color: #e2e8f0;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* ============================================================
+   DNA LOADER — GLOBAL THEME
+   ============================================================ */
+.dna-loader-overlay {
+  background: rgba(2, 6, 23, 0.93);
+}
+
+body.light-mode .dna-loader-overlay {
+  background: rgba(248, 242, 243, 0.94);
+}
+
+body.light-mode .dna-loader-overlay p.text-white {
+  color: #32101a !important;
+}
+
+body.light-mode .dna-loader-overlay p.text-slate-500 {
+  color: #6b7280 !important;
+}
+
+/* ============================================================
+   INTRANET LOGIN PAGE — LIGHT MODE
+   ============================================================ */
+body.light-mode .intranet-login-page {
+  background: radial-gradient(circle at 10% 0%, rgba(122, 16, 48, 0.08), transparent 28rem),
+              linear-gradient(145deg, #fbf7f8, #f6f0f1) !important;
+}
+
+body.light-mode .intranet-login-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(92, 10, 30, 0.12) !important;
+  box-shadow: 0 20px 60px rgba(92, 10, 30, 0.08) !important;
+}
+
+body.light-mode .intranet-login-card h2,
+body.light-mode .intranet-login-card .text-white {
+  color: #1e293b !important;
+}
+
+body.light-mode .intranet-login-card .text-slate-400,
+body.light-mode .intranet-login-card .text-slate-500 {
+  color: #64748b !important;
+}
+
+body.light-mode .intranet-login-card input {
+  background: #f8fafc !important;
+  border-color: rgba(92, 10, 30, 0.15) !important;
+  color: #1e293b !important;
+}
+
+body.light-mode .intranet-login-card input::placeholder {
+  color: #94a3b8 !important;
+}
+
+body.light-mode .intranet-login-card .text-slate-300 {
+  color: #475569 !important;
+}
+
+/* ============================================================
+   INTRANET LOGIN QUICK-ACCESS BUTTONS — LIGHT MODE
+   ============================================================ */
+body.light-mode .intranet-login-quick-btn {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(92, 10, 30, 0.15) !important;
+  color: #334155 !important;
+}
+
+body.light-mode .intranet-login-quick-btn:hover {
+  background: rgba(122, 16, 48, 0.06) !important;
+  border-color: rgba(122, 16, 48, 0.25) !important;
+}
+
+::selection {
+  color: #fff;
+  background: rgba(180, 35, 77, 0.65);
+}
+
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid rgba(217, 180, 92, 0.9);
+  outline-offset: 3px;
+}
+
+:where(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Shared institutional surfaces */
+:where(.lp-card, .lp-sidebar-block, .lp-search-panel, .lp-results-card, .lp-empty-state) {
+  border-color: var(--border-soft) !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.016)) !important;
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+:where(.lp-card, .lp-sidebar-block, .lp-search-panel, .lp-results-card) {
+  position: relative;
+}
+
+:where(.lp-card, .lp-sidebar-block, .lp-search-panel, .lp-results-card)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(180, 35, 77, 0.07), transparent 34%, rgba(217, 180, 92, 0.025));
+}
+
+.lp-card:hover {
+  border-color: var(--border-brand) !important;
+  box-shadow: var(--shadow-brand), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Consistent controls across public pages and dashboard */
+:where(input, select, textarea) {
+  accent-color: var(--institution-wine-bright);
+}
+
+:where(.lp-modal-content, .dashboard-shell-layout) :where(input, select, textarea),
+:where(.lp-search-panel, .lp-sidebar-block) :where(input, select, textarea) {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background-color: rgba(8, 3, 5, 0.62) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+:where(.lp-modal-content, .dashboard-shell-layout, .lp-search-panel, .lp-sidebar-block)
+  :where(input, select, textarea):focus {
+  border-color: rgba(180, 35, 77, 0.72) !important;
+  box-shadow: 0 0 0 3px rgba(180, 35, 77, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Refined brand buttons. Existing utility colors remain as semantic fallbacks. */
+:where(button, a)[class*="from-wine-"] {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 9px 22px rgba(92, 10, 30, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Texto blanco en todos los botones/links con gradiente wine, en modo claro */
+body.light-mode :where(button, a)[class*="from-wine-"] {
+  color: #ffffff !important;
+}
+
+:where(button, a)[class*="from-amber-"],
+:where(button, a)[class*="bg-amber-500"] {
+  background-image: linear-gradient(135deg, #e4c478, #bd9134) !important;
+  color: #291507 !important;
+  border-color: rgba(255, 235, 185, 0.38) !important;
+  box-shadow: 0 8px 20px rgba(189, 145, 52, 0.16);
+}
+
+/* Elegant global scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(180, 35, 77, 0.42) rgba(255, 255, 255, 0.025);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(180, 35, 77, 0.48);
+  background-clip: padding-box;
 }
 
 /* ============================================
@@ -28,11 +229,41 @@ body {
    ============================================ */
 
 body.light-mode {
-  background-color: #fffbfb !important;
+  color-scheme: light;
+  --surface-base: #fcf9f8;
+  --surface-raised: rgba(255, 255, 255, 0.92);
+  --surface-soft: rgba(92, 10, 30, 0.035);
+  --border-soft: rgba(92, 10, 30, 0.1);
+  --border-brand: rgba(122, 16, 48, 0.24);
+  --shadow-soft: 0 14px 38px rgba(92, 10, 30, 0.07);
+  --shadow-brand: 0 18px 45px rgba(92, 10, 30, 0.12);
+  background-color: #fcf9f8 !important;
   background-image: 
-    radial-gradient(circle at 10% 20%, rgba(190, 18, 60, 0.03) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.02) 0%, transparent 40%) !important;
+    radial-gradient(circle at 8% 5%, rgba(122, 16, 48, 0.065) 0%, transparent 34%),
+    radial-gradient(circle at 92% 82%, rgba(189, 145, 52, 0.055) 0%, transparent 34%),
+    linear-gradient(180deg, #fffdfc 0%, #faf6f5 100%) !important;
   color: #1e293b !important;
+}
+
+body.light-mode :where(.lp-card, .lp-sidebar-block, .lp-search-panel, .lp-results-card, .lp-empty-state) {
+  color: #334155;
+  border-color: var(--border-soft) !important;
+  background: linear-gradient(145deg, #ffffff, #fcf8f8) !important;
+  box-shadow: var(--shadow-soft), inset 0 1px 0 #ffffff !important;
+}
+
+body.light-mode :where(.lp-card, .lp-sidebar-block, .lp-search-panel, .lp-results-card)::before {
+  background: linear-gradient(135deg, rgba(122, 16, 48, 0.035), transparent 34%, rgba(189, 145, 52, 0.025));
+}
+
+body.light-mode :where(.lp-search-panel, .lp-sidebar-block) :where(input, select, textarea) {
+  color: #334155 !important;
+  background-color: #ffffff !important;
+  border-color: rgba(92, 10, 30, 0.14) !important;
+}
+
+body.light-mode :where(.lp-search-panel, .lp-sidebar-block) :where(input, textarea)::placeholder {
+  color: #94a3b8 !important;
 }
 
 /* --- Header / Navbar --- */
@@ -147,6 +378,7 @@ body.light-mode .lp-sidebar-input {
   color: #1e293b !important;
 }
 body.light-mode .lp-sidebar-input::placeholder { color: #94a3b8 !important; }
+body.light-mode .lp-sidebar-block button[class*="from-wine-"] { color: #ffffff !important; }
 
 /* --- Filter Bar --- */
 body.light-mode .lp-filter-border { border-bottom-color: rgba(0,0,0,0.08) !important; }
@@ -182,8 +414,8 @@ body.light-mode .lp-modal-content {
 }
 body.light-mode .lp-modal-content h3,
 body.light-mode .lp-modal-content h2 { color: #1e293b !important; }
+body.light-mode .lp-modal-content h4 { color: #334155 !important; }
 body.light-mode .lp-modal-content p { color: #64748b !important; }
-body.light-mode .lp-modal-content span { color: #475569 !important; }
 body.light-mode .lp-modal-content label { color: #64748b !important; }
 body.light-mode .lp-modal-input {
   background: #f8fafc !important;
@@ -425,3 +657,282 @@ body.light-mode .lp-repo-card button:hover {
   margin: 0;
 }
 
+/* ============================================================
+   LIGHT MODE — CORRECCIONES DE VISIBILIDAD DE BOTONES Y TEXTO
+   ============================================================ */
+
+/* --- Filter toggle labels e inactive buttons --- */
+body.light-mode .lp-filter-toggle-label {
+  color: #5c0a1e !important;
+}
+body.light-mode .lp-filter-toggle-label:hover {
+  color: #be123c !important;
+  background: rgba(190, 18, 60, 0.08) !important;
+}
+
+/* Year/status filter buttons without active gradient */
+body.light-mode .lp-filter-toggle button:not([class*="from-"]) {
+  color: #5c0a1e !important;
+}
+body.light-mode .lp-filter-toggle button:not([class*="from-"]):hover {
+  color: #be123c !important;
+  background: rgba(190, 18, 60, 0.08) !important;
+}
+
+/* --- Card content text colors (solo el área de texto, no el banner/imagen) --- */
+body.light-mode .lp-card .lp-card-title { color: #1e293b !important; }
+body.light-mode .lp-card .lp-card-desc { color: #64748b !important; }
+body.light-mode .lp-card .lp-card-meta { color: #b45309 !important; }
+body.light-mode .lp-card .lp-card-footer { border-top-color: rgba(0,0,0,0.07) !important; }
+
+/* --- Sidebar text --- */
+body.light-mode .lp-sidebar-block .text-white,
+body.light-mode .lp-sidebar-block .text-slate-100 { color: #0f172a !important; }
+body.light-mode .lp-sidebar-block .text-slate-200 { color: #1e293b !important; }
+body.light-mode .lp-sidebar-block .text-slate-300 { color: #334155 !important; }
+body.light-mode .lp-sidebar-block .text-slate-400 { color: #64748b !important; }
+body.light-mode .lp-sidebar-block .text-amber-400 { color: #b45309 !important; }
+
+/* --- Modal text colors (text-white/slate-* inside modals) --- */
+body.light-mode .lp-modal-content .text-white,
+body.light-mode .lp-modal-content .text-slate-100 { color: #0f172a !important; }
+body.light-mode .lp-modal-content .text-slate-200 { color: #1e293b !important; }
+body.light-mode .lp-modal-content .text-slate-300 { color: #334155 !important; }
+body.light-mode .lp-modal-content .text-slate-400 { color: #64748b !important; }
+body.light-mode .lp-modal-content .text-slate-500 { color: #94a3b8 !important; }
+body.light-mode .lp-modal-content .text-amber-400 { color: #b45309 !important; }
+body.light-mode .lp-modal-content .text-amber-300 { color: #be123c !important; }
+body.light-mode .lp-modal-content .text-slate-200.font-mono { color: #334155 !important; }
+
+/* --- Botones genéricos (close/cancel/ghost) dentro de modales ---
+   Aplica a todos los buttons que no tengan colores accent definidos */
+body.light-mode .lp-modal-content button:not([class*="amber"]):not([class*="emerald"]):not([class*="rose"]):not([class*="wine"]):not([class*="from-"]) {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #475569 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+body.light-mode .lp-modal-content button:not([class*="amber"]):not([class*="emerald"]):not([class*="rose"]):not([class*="wine"]):not([class*="from-"]):hover {
+  background-color: rgba(0, 0, 0, 0.09) !important;
+  color: #1e293b !important;
+}
+
+/* --- Search overlay text & buttons --- */
+body.light-mode .lp-search-overlay-content .text-white,
+body.light-mode .lp-search-overlay-content .text-slate-200 { color: #0f172a !important; }
+body.light-mode .lp-search-overlay-content .text-slate-300 { color: #334155 !important; }
+body.light-mode .lp-search-overlay-content .text-slate-500 { color: #64748b !important; }
+body.light-mode .lp-search-overlay-content button:not([class*="amber"]) {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #475569 !important;
+}
+body.light-mode .lp-search-overlay-content button:not([class*="amber"]):hover {
+  background-color: rgba(0, 0, 0, 0.09) !important;
+  color: #1e293b !important;
+}
+
+/* --- Repo card text in light mode --- */
+body.light-mode .lp-repo-card .text-slate-100 { color: #0f172a !important; }
+body.light-mode .lp-repo-card .text-slate-200 { color: #1e293b !important; }
+body.light-mode .lp-repo-card .text-slate-300 { color: #334155 !important; }
+body.light-mode .lp-repo-card .text-slate-400 { color: #64748b !important; }
+body.light-mode .lp-repo-card .text-amber-400 { color: #b45309 !important; }
+
+/* ============================================================
+   DISEÑO EDUCATIVO-MODERNO — MEJORAS GLOBALES
+   ============================================================ */
+
+/* Dark mode: mejora efecto glass en cards */
+.lp-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease;
+}
+
+/* Badges de tipo (Curso, Taller, etc.) en cards */
+.lp-card .absolute.top-4.left-4 {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+/* Filter pills — look más académico */
+.lp-filter-border {
+  padding: 10px 14px;
+}
+
+/* Light mode: filter bar aspecto académico cálido */
+body.light-mode .lp-filter-border {
+  background: rgba(255, 253, 251, 0.95) !important;
+  border: 1px solid rgba(122, 16, 48, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(122, 16, 48, 0.06), 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+
+/* Light mode: sidebar blocks aspecto educativo */
+body.light-mode .lp-sidebar-block {
+  background: #ffffff !important;
+  border-color: rgba(122, 16, 48, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(92,10,30,0.05), 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+
+/* Light mode: cards aspecto académico mejorado */
+body.light-mode .lp-card {
+  background: #ffffff !important;
+  border-color: rgba(122, 16, 48, 0.1) !important;
+  box-shadow: 0 1px 4px rgba(92,10,30,0.04), 0 8px 28px rgba(92,10,30,0.04) !important;
+}
+body.light-mode .lp-card:hover {
+  box-shadow: 0 6px 20px rgba(92,10,30,0.09), 0 20px 48px rgba(92,10,30,0.07) !important;
+  border-color: rgba(190, 18, 60, 0.22) !important;
+}
+
+/* Modal internals light: detail boxes */
+body.light-mode .lp-modal-content .bg-white\/\[0\.02\],
+body.light-mode .lp-modal-content [class*="bg-white/[0.02]"] {
+  background-color: #f8fafc !important;
+  border-color: rgba(0,0,0,0.07) !important;
+}
+
+/* --- Sidebar nav links (dark + light mode seguros) --- */
+.lp-sidebar-nav-link {
+  color: #94a3b8;
+}
+.lp-sidebar-nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.07);
+}
+body.light-mode .lp-sidebar-nav-link {
+  color: #475569 !important;
+}
+body.light-mode .lp-sidebar-nav-link:hover {
+  color: #1e293b !important;
+  background: rgba(92, 10, 30, 0.06) !important;
+}
+
+/* Mobile drawer en light mode */
+body.light-mode .lp-mobile-drawer .text-white { color: #0f172a !important; }
+body.light-mode .lp-mobile-drawer .text-slate-300 { color: #334155 !important; }
+body.light-mode .lp-mobile-drawer button:not([class*="from-"]):not([class*="bg-"]) {
+  color: #475569 !important;
+}
+
+/* Theme toggle button en light mode */
+body.light-mode .theme-toggle-btn {
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: #475569 !important;
+}
+body.light-mode .theme-toggle-btn:hover {
+  background: rgba(0,0,0,0.08) !important;
+}
+
+/* ============================================================
+   NAVBAR — estilos base aquí para evitar FOUC (app.css se inyecta tarde)
+   ============================================================ */
+.navbar {
+  background: rgba(92, 10, 30, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(92, 10, 30, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.navbar:hover {
+  background: rgba(92, 10, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    0 6px 16px rgba(92, 10, 30, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================
+   BUSCAR CERTIFICADOS — MODO CLARO (global, fuera de Angular scope)
+   ============================================================ */
+
+/* Título principal */
+body.light-mode .lp-search-title {
+  background-image: linear-gradient(to right, #5c0a1e, #be123c) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+}
+
+/* Descripción */
+body.light-mode .lp-search-desc {
+  color: #334155 !important;
+}
+
+/* Panel contenedor */
+body.light-mode .lp-search-panel {
+  background-color: #ffffff !important;
+  border-color: rgba(0,0,0,0.08) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06) !important;
+}
+
+/* Toggle inactivo: texto visible */
+body.light-mode .lp-toggle-inactive {
+  color: #475569 !important;
+}
+body.light-mode .lp-toggle-inactive:hover {
+  color: #1e293b !important;
+  background-color: rgba(0,0,0,0.06) !important;
+}
+
+/* Input de búsqueda */
+body.light-mode .lp-search-input-field {
+  background-color: #f8fafc !important;
+  border-color: rgba(0,0,0,0.12) !important;
+  color: #1e293b !important;
+}
+body.light-mode .lp-search-input-field::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Botón "Buscar Certificado" deshabilitado */
+body.light-mode .lp-search-panel button[type="submit"]:disabled {
+  opacity: 0.6 !important;
+  color: #1a0f00 !important;
+}
+
+/* Texto de pie del panel */
+body.light-mode .lp-search-footer-text {
+  color: #64748b !important;
+}
+
+/* Badge de verificación */
+body.light-mode .lp-badge-amber {
+  background-color: rgba(217,119,6,0.1) !important;
+  color: #b45309 !important;
+  border-color: rgba(217,119,6,0.2) !important;
+}
+
+
+
+/* ── SweetAlert2 — tema oscuro / light mode ── */
+.lp-swal-popup {
+  border-radius: 1.5rem !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5) !important;
+  font-family: inherit !important;
+}
+.lp-swal-title { font-size: 1rem !important; font-weight: 800 !important; }
+.lp-swal-html  { font-size: 0.8rem !important; color: #94a3b8 !important; }
+.lp-swal-confirm, .lp-swal-cancel {
+  border-radius: 0.75rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 0.55rem 1.25rem !important;
+}
+.swal2-timer-progress-bar { background: rgba(16,185,129,0.7) !important; }
+
+/* Light mode overrides for Swal */
+body.light-mode .lp-swal-popup {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border-color: rgba(92,10,30,0.12) !important;
+}
+body.light-mode .lp-swal-title { color: #1e293b !important; }
+body.light-mode .lp-swal-html  { color: #475569 !important; }
+body.light-mode .swal2-icon { border-color: transparent !important; }

@@ -32,6 +32,7 @@ class StoreEventoRequest extends FormRequest
             'DonceteExp'    => 'required',
             'CapMaxima'     => 'required|integer|min:1',
             'Estado'        => 'required|boolean',
+            'Id_PeriodoAca' => 'required|exists:periodo_aca,Id',
         ];
     }
 
@@ -54,6 +55,8 @@ class StoreEventoRequest extends FormRequest
             'DonceteExp.required'    => 'Los docentes expositores son obligatorios.',
             'CapMaxima.required'     => 'La capacidad máxima es obligatoria.',
             'Estado.required'        => 'El estado es obligatorio.',
+            'Id_PeriodoAca.required' => 'El periodo académico es obligatorio.',
+            'Id_PeriodoAca.exists'   => 'El periodo académico seleccionado no existe.',
         ];
     }
 }
