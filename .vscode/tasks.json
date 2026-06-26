@@ -16,7 +16,7 @@
         {
             "label": "Iniciar Frontend",
             "type": "shell",
-            "command": "ng serve",
+            "command": "ng serve --port=8080",
             "options": {
                 "cwd": "${workspaceFolder}/Frontend"
             },
