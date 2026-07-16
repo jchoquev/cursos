@@ -39,9 +39,12 @@ export class Home implements OnInit {
 
   constructor() {
     effect(() => {
-      const periods = this.platformService.periodosAca();
+      const periods = this.sortedPeriods();
+      console.log('Constructor effect triggered. Periods:', periods, 'Current selectedPeriodo:', this.selectedPeriodo());
       if (periods.length > 0 && this.selectedPeriodo() === 'Todos') {
-        this.selectedPeriodo.set(periods[0].Id);
+        const defaultId = periods[0].Id;
+        console.log('Setting default selectedPeriodo to:', defaultId);
+        this.selectedPeriodo.set(defaultId);
       }
     });
   }
@@ -56,11 +59,26 @@ export class Home implements OnInit {
 
   // Filters state
   selectedCategory = signal<string>('Todos');
-  selectedStatus = signal<'activo' | 'pasado'>('activo');
   selectedPeriodo = signal<string>('Todos');
 
   // Periodos Académicos cargados desde el backend
   periodosAca = this.platformService.periodosAca;
+
+  // Helper to compare period strings (e.g. "2026-I" vs "2025-II")
+  comparePeriods(a: string, b: string): number {
+    const parse = (s: string) => {
+      const parts = s.split('-');
+      const year = parseInt(parts[0], 10) || 0;
+      const sem = parts[1] === 'II' ? 2 : 1;
+      return year * 10 + sem;
+    };
+    return parse(a) - parse(b);
+  }
+
+  readonly sortedPeriods = computed(() => {
+    const list = [...this.periodosAca()];
+    return list.sort((a, b) => this.comparePeriods(b.Asig, a.Asig));
+  });
 
   readonly categories = computed(() => {
     const types = this.platformService.activityTypes().map(t => t.tipActividad);
@@ -112,9 +130,10 @@ export class Home implements OnInit {
   readonly filteredEvents = computed(() => {
     const list = this.platformService.events();
     const cat = this.selectedCategory();
-    const stat = this.selectedStatus();
     const periodo = this.selectedPeriodo();
-    const periodos = this.periodosAca();
+    const periodos = this.sortedPeriods();
+
+    console.log('filteredEvents computed running. Period:', periodo, 'List length:', list.length);
 
     return list.map((e) => {
       // Map static/mock repositorios that don't have Id_PeriodoAca
@@ -144,13 +163,9 @@ export class Home implements OnInit {
       }
       return e;
     }).filter((e) => {
-      if (cat === 'Repositorio') {
-        return e.type === 'Repositorio' && e.Id_PeriodoAca === periodo;
-      } else {
-        const matchStatus = e.status === stat;
-        const matchCategory = cat === 'Todos' ? e.type !== 'Repositorio' : e.type === cat;
-        return matchStatus && matchCategory;
-      }
+      const matchPeriod = periodo === 'Todos' || e.Id_PeriodoAca === periodo;
+      const matchCategory = cat === 'Todos' ? e.type !== 'Repositorio' : e.type === cat;
+      return matchPeriod && matchCategory;
     });
   });
 
@@ -160,12 +175,61 @@ export class Home implements OnInit {
     this.selectedCategory.set(cat);
   }
 
-  selectStatus(stat: 'activo' | 'pasado'): void {
-    this.selectedStatus.set(stat);
-  }
-
   selectPeriodo(periodoId: string): void {
     this.selectedPeriodo.set(periodoId);
+  }
+
+  readonly selectedPeriodoAsig = computed(() => {
+    const activeId = this.selectedPeriodo();
+    const periods = this.sortedPeriods();
+    const found = periods.find(p => p.Id === activeId);
+    console.log('selectedPeriodoAsig computed. activeId:', activeId, 'found:', found);
+    return found ? found.Asig : 'Todos';
+  });
+
+  readonly isOldestPeriod = computed(() => {
+    const periods = this.sortedPeriods();
+    if (periods.length === 0) return true;
+    const currentId = this.selectedPeriodo();
+    const currentIndex = periods.findIndex(p => p.Id === currentId);
+    return currentIndex === periods.length - 1;
+  });
+
+  readonly isNewestPeriod = computed(() => {
+    const periods = this.sortedPeriods();
+    if (periods.length === 0) return true;
+    const currentId = this.selectedPeriodo();
+    const currentIndex = periods.findIndex(p => p.Id === currentId);
+    return currentIndex === 0;
+  });
+
+
+  selectPreviousPeriod(): void {
+    const periods = this.sortedPeriods();
+    console.log('selectPreviousPeriod clicked. Periods:', periods);
+    if (periods.length === 0) return;
+    const currentId = this.selectedPeriodo();
+    const currentIndex = periods.findIndex(p => p.Id === currentId);
+    console.log('selectPreviousPeriod current index:', currentIndex);
+    if (currentIndex > 0) {
+      const targetId = periods[currentIndex - 1].Id;
+      console.log('Setting period to:', targetId);
+      this.selectedPeriodo.set(targetId);
+    }
+  }
+
+  selectNextPeriod(): void {
+    const periods = this.sortedPeriods();
+    console.log('selectNextPeriod clicked. Periods:', periods);
+    if (periods.length === 0) return;
+    const currentId = this.selectedPeriodo();
+    const currentIndex = periods.findIndex(p => p.Id === currentId);
+    console.log('selectNextPeriod current index:', currentIndex);
+    if (currentIndex < periods.length - 1) {
+      const targetId = periods[currentIndex + 1].Id;
+      console.log('Setting period to:', targetId);
+      this.selectedPeriodo.set(targetId);
+    }
   }
 
   // Carga de periodos académicos delegada a PlatformService para mostrar el DNA Loader global en el inicio
