@@ -850,4 +850,66 @@ export class PlatformService {
   }
 
   // Attendance Check-in
-  checkAttendance(eventId: an
+  checkAttendance(eventId: any, sessionDate: string, email: string, attended: boolean): void {
+    this.attendances.update((list) => {
+      const idx = list.findIndex((a) => a.eventId === eventId && a.sessionDate === sessionDate);
+      if (idx !== -1) {
+        const copy = [...list];
+        copy[idx] = {
+          ...copy[idx],
+          records: {
+            ...copy[idx].records,
+            [email]: attended
+          }
+        };
+        return copy;
+      }
+      return list;
+    });
+  }
+
+  // Revoke/Revalidate Certificate (Admin)
+  toggleCertificateStatus(code: string): void {
+    this.certificates.update((list) =>
+      list.map((c) =>
+        c.code === code ? { ...c, status: c.status === 'Válido' ? 'Revocado' : 'Válido' } : c
+      )
+    );
+  }
+
+  // Public/Private search tools
+  findCertificateByCode(code: string): Certificate | undefined {
+    return this.certificates().find((c) => c.code.trim().toUpperCase() === code.trim().toUpperCase());
+  }
+
+  findCertificatesByDni(dni: string): Certificate[] {
+    return this.certificates().filter((c) => c.dni.trim() === dni.trim());
+  }
+
+  // Advanced Excel CSV Mock Export
+  exportToCsv(filename: string, headers: string[], data: any[][]): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    let csvContent = '\uFEFF'; // Add BOM for Excel UTF-8 display
+    csvContent += headers.join(';') + '\n';
+    
+    data.forEach((row) => {
+      const cleanRow = row.map((cell) => {
+        const strVal = String(cell ?? '');
+        return '"' + strVal.replace(/"/g, '""') + '"';
+      });
+      csvContent += cleanRow.join(';') + '\n';
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename + '_' + new Date().toISOString().split('T')[0] + '.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+}
