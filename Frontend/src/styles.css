@@ -20,6 +20,78 @@
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
+/* ============================================================
+   MODALES — viewport estable y scroll interno
+   El fondo nunca debe desplazarse: solo el contenido del cuadro.
+   ============================================================ */
+.modal-backdrop,
+.lp-modal-bg,
+.lp-search-overlay,
+.lp-res-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  overscroll-behavior: contain;
+}
+
+/* Cubre también los modales antiguos que aún no tienen una clase semántica. */
+[class~="fixed"][class~="inset-0"]:not([hidden]) {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  overscroll-behavior: contain;
+}
+
+/* Equivalente al comportamiento de Bootstrap: al abrir un modal desaparece
+   el scrollbar de la página y el documento conserva su posición. */
+html:has([class~="fixed"][class~="inset-0"]:not([hidden])),
+body:has([class~="fixed"][class~="inset-0"]:not([hidden])) {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+[class~="fixed"][class~="inset-0"]:not([hidden]) > div {
+  min-height: 0;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Los modales legacy que antes se abrían desde arriba también deben quedar
+   centrados después de eliminar el scroll del overlay. */
+[class~="fixed"][class~="inset-0"]:not([hidden])[class~="items-start"] {
+  align-items: center !important;
+  padding-top: 1rem !important;
+}
+
+.modal-content,
+.lp-modal-content {
+  min-height: 0 !important;
+  max-height: calc(100vh - 2rem) !important;
+  overflow: hidden !important;
+}
+
+/* En los modales legacy con formulario, el formulario funciona como body. */
+.modal-content > form,
+.lp-modal-content > form {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 640px) {
+  .modal-content,
+  .lp-modal-content {
+    max-height: calc(100vh - 2rem) !important;
+  }
+}
+
 :root {
   color-scheme: dark;
   --institution-wine: #7a1030;

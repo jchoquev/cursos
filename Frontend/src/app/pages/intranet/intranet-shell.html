@@ -1,6 +1,6 @@
 <!-- PANEL DE DASHBOARD INTERNO -->
 <div *ngIf="platformService.currentUser() as user"
-  class="dashboard-shell-layout relative flex min-h-screen w-full gap-0 text-slate-100 bg-[#0c0305]/95 backdrop-blur-xl animate-fade-in print:hidden">
+  class="dashboard-shell-layout relative flex min-h-screen w-full gap-0 text-slate-100 bg-[#0c0305]/95 animate-fade-in print:hidden">
 
   <!-- SIDEBAR -->
   <aside
@@ -222,7 +222,7 @@
      MODAL: VALIDACIÓN DE PAGO
      ========================================== -->
 <div
-  class="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto"
+  class="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
   *ngIf="showPaymentModal()" (click)="showPaymentModal.set(false)">
   <div
     class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-6"

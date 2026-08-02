@@ -7,11 +7,12 @@ import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { NgxEditorModule, Editor, Toolbar } from 'ngx-editor';
 import { AlertService } from '../../../../services/alert.service';
 import { environment } from '../../../../../environments/environment';
+import { ModalComponent } from '../../../../components/modal/modal.component';
 
 @Component({
   selector: 'app-courses',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxEditorModule],
+  imports: [CommonModule, FormsModule, NgxEditorModule, ModalComponent],
   templateUrl: './courses.html',
 })
 export class CoursesComponent implements OnInit, OnDestroy {
