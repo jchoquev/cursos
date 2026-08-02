@@ -91,7 +91,8 @@ export class CoursesComponent implements OnInit, OnDestroy {
     if (query) {
       list = list.filter(e =>
         e.title.toLowerCase().includes(query) || e.instructor.toLowerCase().includes(query) ||
-        e.type.toLowerCase().includes(query) || e.date.toLowerCase().includes(query)
+        e.type.toLowerCase().includes(query) || e.date.toLowerCase().includes(query) ||
+        this.getAcademicPeriodName(e).toLowerCase().includes(query)
       );
     }
     list.sort((a: any, b: any) => {
@@ -110,6 +111,11 @@ export class CoursesComponent implements OnInit, OnDestroy {
 
   getPagesArray(n: number): number[] { return Array.from({ length: n }, (_, i) => i + 1); }
   getMinRecord(page: number, size: number, total: number): number { return Math.min(page * size, total); }
+
+  getAcademicPeriodName(event: EventItem): string {
+    if (event.periodoAsig) return event.periodoAsig;
+    return this.academicPeriods().find(period => period.Id === event.Id_PeriodoAca)?.Asig || 'Sin periodo';
+  }
 
   constructor() {
     afterNextRender(() => {

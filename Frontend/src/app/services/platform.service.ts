@@ -28,6 +28,7 @@ export interface EventItem {
   courseEndDate?: string;
   created_at?: string;
   Id_PeriodoAca?: string | null;
+  periodoAsig?: string;
   projectPeriod?: string;
   projectLine?: string;
   projectStatus?: string;
@@ -210,6 +211,7 @@ export class PlatformService {
       courseEndDate: this.formatDate(item.FnCurso),
       created_at: item.created_at,
       Id_PeriodoAca: item.Id_PeriodoAca,
+      periodoAsig: item.periodo_academico?.Asig || item.periodo_aca?.Asig || '',
     };
   }
 

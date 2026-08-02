@@ -16,7 +16,7 @@ class EventoController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Evento::with('tipoActividad');
+        $query = Evento::with(['tipoActividad', 'periodoAcademico']);
 
         if ($request->has('periodo_id') && !empty($request->input('periodo_id'))) {
             $query->where('Id_PeriodoAca', $request->input('periodo_id'));

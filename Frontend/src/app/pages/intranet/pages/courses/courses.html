@@ -39,6 +39,9 @@
             <th (click)="changeEventSort('date')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
               Fecha <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'date' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
             </th>
+            <th (click)="changeEventSort('periodoAsig')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Periodo Académico <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'periodoAsig' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
             <th (click)="changeEventSort('status')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none text-center">
               Estado <span class="text-[9px] font-bold text-slate-400 ml-1">{{ eventSortColumn() === 'status' ? (eventSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
             </th>
@@ -58,7 +61,7 @@
           </ng-container>
           <ng-container *ngIf="!platformService.isLoading()">
             <tr *ngIf="filteredAndPaginatedEvents().items.length === 0">
-              <td colspan="6" class="text-center py-8 text-slate-500 text-xs">No se encontraron eventos coincidentes.</td>
+              <td colspan="7" class="text-center py-8 text-slate-500 text-xs">No se encontraron eventos coincidentes.</td>
             </tr>
             <tr *ngFor="let e of filteredAndPaginatedEvents().items" class="hover:bg-white/[0.02]">
               <td class="px-6 py-4">
@@ -73,6 +76,11 @@
               <td class="px-6 py-4 text-slate-300 font-medium">{{ e.instructor }}</td>
               <td class="px-6 py-4 font-mono text-slate-300">{{ e.registeredCount }} / <span class="text-slate-500">{{ e.capacity }}</span></td>
               <td class="px-6 py-4 font-mono text-slate-400">{{ e.date }}</td>
+              <td class="px-6 py-4">
+                <span class="inline-block px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold font-mono">
+                  {{ getAcademicPeriodName(e) }}
+                </span>
+              </td>
               <td class="px-6 py-4 text-center">
                 <span [class]="e.status === 'activo' ? 'inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-slate-500/15 text-slate-400 border border-slate-500/20'">
                   {{ e.status === 'activo' ? 'Activo' : 'Concluido' }}
