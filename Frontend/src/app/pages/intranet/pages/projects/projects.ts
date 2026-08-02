@@ -11,6 +11,13 @@ export interface InvLinea {
   Id: string;
   Id_PeriodoAca: string;
   Linea: string;
+  periodo_aca?: PeriodoAca;
+}
+
+export interface PeriodoAca {
+  Id: string;
+  Asig: string;
+  Activo: boolean;
 }
 
 export interface Proyecto {
@@ -21,6 +28,7 @@ export interface Proyecto {
   Responsable: string[];
   Asesor: string[];
   Id_Linea: string;
+  Id_PeriodoAca: string;
   Inicio: string;
   Fin?: string;
   Estado: string;
@@ -28,6 +36,7 @@ export interface Proyecto {
   ImgCaratula?: string | null;
   PdfDocumento?: string | null;
   linea?: InvLinea;
+  periodo_aca?: PeriodoAca;
 }
 
 @Component({
@@ -42,7 +51,7 @@ export class ProjectsComponent implements OnInit {
   private readonly alert = inject(AlertService);
   private readonly sanitizer = inject(DomSanitizer);
 
-  // --- PDF Modals & States (Frontend simulated for design demonstration) ---
+  // --- PDF Modals & States ---
   showUploadPdfModal = signal<boolean>(false);
   showPreviewPdfModal = signal<boolean>(false);
   selectedProjectForPdf = signal<Proyecto | null>(null);
@@ -55,6 +64,7 @@ export class ProjectsComponent implements OnInit {
   // --- Lista y estado ---
   proyectos = signal<Proyecto[]>([]);
   lineas = signal<InvLinea[]>([]);
+  periodos = signal<PeriodoAca[]>([]);
   isLoading = signal<boolean>(false);
   loadError = signal<string>('');
 
@@ -67,9 +77,14 @@ export class ProjectsComponent implements OnInit {
   // --- Búsqueda ---
   searchQuery = signal<string>('');
   tempSearch = signal<string>('');
+  periodoFiltro = signal<string>('');
 
   readonly totalPages = computed(() => this.lastPage());
   readonly pagesArray = computed(() => Array.from({ length: this.lastPage() }, (_, i) => i + 1));
+  readonly lineasDelPeriodo = computed(() => {
+    const periodoId = this.form().Id_PeriodoAca;
+    return this.lineas().filter(linea => !periodoId || linea.Id_PeriodoAca === periodoId);
+  });
 
   // --- Modal ---
   showModal = signal<boolean>(false);
@@ -80,9 +95,9 @@ export class ProjectsComponent implements OnInit {
   asesorText = signal<string>('');
 
   form = signal<{
-    Id: string; Titulo: string; Resumen: string; Id_Linea: string;
+    Id: string; Titulo: string; Resumen: string; Id_Linea: string; Id_PeriodoAca: string;
     Inicio: string; Fin: string; Estado: string; Ganador: boolean;
-  }>({ Id: '', Titulo: '', Resumen: '', Id_Linea: '', Inicio: '', Fin: '', Estado: 'Planteamiento', Ganador: false });
+  }>({ Id: '', Titulo: '', Resumen: '', Id_Linea: '', Id_PeriodoAca: '', Inicio: '', Fin: '', Estado: 'Planteamiento', Ganador: false });
 
   readonly stats = computed(() => {
     const list = this.proyectos();
@@ -97,6 +112,7 @@ export class ProjectsComponent implements OnInit {
   ngOnInit(): void {
     this.loadProyectos();
     this.loadLineas();
+    this.loadPeriodos();
   }
 
   loadProyectos(): void {
@@ -104,6 +120,7 @@ export class ProjectsComponent implements OnInit {
     this.loadError.set('');
     const params: any = { page: this.currentPage(), per_page: this.perPage() };
     if (this.searchQuery()) params['search'] = this.searchQuery();
+    if (this.periodoFiltro()) params['periodo_id'] = this.periodoFiltro();
 
     this.apiService.get<any>('/proyectos', params).subscribe({
       next: (res) => {
@@ -136,6 +153,18 @@ export class ProjectsComponent implements OnInit {
     });
   }
 
+  loadPeriodos(): void {
+    this.apiService.get<PeriodoAca[]>('/periodo-aca').subscribe({
+      next: (data) => {
+        if (Array.isArray(data)) {
+          data.sort((a, b) => b.Asig.localeCompare(a.Asig, undefined, { numeric: true, sensitivity: 'base' }));
+          this.periodos.set(data);
+        }
+      },
+      error: () => {}
+    });
+  }
+
   applySearch(): void {
     this.searchQuery.set(this.tempSearch());
     this.currentPage.set(1);
@@ -145,6 +174,12 @@ export class ProjectsComponent implements OnInit {
   clearSearch(): void {
     this.tempSearch.set('');
     this.searchQuery.set('');
+    this.currentPage.set(1);
+    this.loadProyectos();
+  }
+
+  changePeriodoFiltro(periodoId: string): void {
+    this.periodoFiltro.set(periodoId);
     this.currentPage.set(1);
     this.loadProyectos();
   }
@@ -163,7 +198,8 @@ export class ProjectsComponent implements OnInit {
 
   openAdd(): void {
     this.isEditing.set(false);
-    this.form.set({ Id: '', Titulo: '', Resumen: '', Id_Linea: '', Inicio: new Date().toISOString().split('T')[0], Fin: '', Estado: 'Planteamiento', Ganador: false });
+    const activo = this.periodos().find(p => p.Activo) || this.periodos()[0];
+    this.form.set({ Id: '', Titulo: '', Resumen: '', Id_Linea: '', Id_PeriodoAca: activo?.Id || '', Inicio: new Date().toISOString().split('T')[0], Fin: '', Estado: 'Planteamiento', Ganador: false });
     this.responsableText.set('');
     this.asesorText.set('');
     this.saveError.set('');
@@ -174,6 +210,7 @@ export class ProjectsComponent implements OnInit {
     this.isEditing.set(true);
     this.form.set({
       Id: p.Id, Titulo: p.Titulo, Resumen: p.Resumen, Id_Linea: p.Id_Linea,
+      Id_PeriodoAca: p.Id_PeriodoAca || p.periodo_aca?.Id || p.linea?.Id_PeriodoAca || '',
       Inicio: p.Inicio?.split('T')[0] || '', Fin: p.Fin?.split('T')[0] || '',
       Estado: p.Estado, Ganador: p.Ganador,
     });
@@ -183,10 +220,20 @@ export class ProjectsComponent implements OnInit {
     this.showModal.set(true);
   }
 
+  changePeriodo(periodoId: string): void {
+    this.form.update(f => ({
+      ...f,
+      Id_PeriodoAca: periodoId,
+      Id_Linea: this.lineas().some(linea => linea.Id === f.Id_Linea && linea.Id_PeriodoAca === periodoId)
+        ? f.Id_Linea
+        : '',
+    }));
+  }
+
   save(): void {
     const f = this.form();
-    if (!f.Titulo.trim() || !f.Id_Linea || !f.Inicio) {
-      this.saveError.set('Título, línea de investigación e inicio son obligatorios.');
+    if (!f.Titulo.trim() || !f.Id_Linea || !f.Id_PeriodoAca || !f.Inicio) {
+      this.saveError.set('Título, periodo académico, línea de investigación e inicio son obligatorios.');
       return;
     }
     const responsable = this.responsableText().split(',').map(s => s.trim()).filter(Boolean);
@@ -230,6 +277,15 @@ export class ProjectsComponent implements OnInit {
     return this.lineas().find(l => l.Id === id)?.Linea || '—';
   }
 
+  getPeriodoNombre(id: string): string {
+    return this.periodos().find(p => p.Id === id)?.Asig || '—';
+  }
+
+  hasPdfDocument(project: Proyecto): boolean {
+    const path = project.PdfDocumento?.trim().toLowerCase();
+    return !!path && path !== 'null' && path !== 'undefined';
+  }
+
   // --- PDF Actions (Simuladas en Frontend para feedback de diseño) ---
   openUploadPdf(p: Proyecto): void {
     this.selectedProjectForPdf.set(p);
@@ -260,27 +316,73 @@ export class ProjectsComponent implements OnInit {
     this.isUploadingPdf.set(true);
     this.pdfUploadError.set('');
 
-    setTimeout(() => {
-      this.isUploadingPdf.set(false);
-      this.showUploadPdfModal.set(false);
+    this.createCoverImage(file)
+      .then((coverImage) => {
+        const formData = new FormData();
+        formData.append('pdf', file, file.name);
+        formData.append('cover_image', coverImage, `${project.Id}.jpg`);
 
-      // Actualizar localmente para ver el diseño funcionando de inmediato
-      this.proyectos.update(list =>
-        list.map(p => p.Id === project.Id ? { ...p, PdfDocumento: 'uploads/proyectos/mock_project_doc.pdf' } : p)
-      );
+        this.apiService.postFormData<any>(`/proyectos/${project.Id}/upload-files`, formData).subscribe({
+          next: (response) => {
+            this.isUploadingPdf.set(false);
+            this.showUploadPdfModal.set(false);
+            const savedProject = response?.data;
+            this.proyectos.update(list => list.map(p =>
+              p.Id === project.Id ? { ...p, ...(savedProject || {}) } : p
+            ));
+            this.alert.success('Documento PDF subido', 'El PDF y la portada fueron guardados correctamente.');
+          },
+          error: (err) => {
+            this.isUploadingPdf.set(false);
+            this.pdfUploadError.set(err?.error?.message || 'No se pudo guardar el PDF y la portada.');
+          },
+        });
+      })
+      .catch((error: unknown) => {
+        this.isUploadingPdf.set(false);
+        const detail = error instanceof Error ? ` (${error.message})` : '';
+        this.pdfUploadError.set(`No se pudo convertir la primera página del PDF en imagen.${detail}`);
+      });
+  }
 
-      this.alert.success(
-        'Documento PDF subido',
-        `El archivo "${file.name}" fue cargado correctamente al proyecto "${project.Titulo}".`
-      );
-    }, 1500);
+  /** Convierte la primera página a una imagen A6 (1/4 del área de una hoja A4). */
+  private async createCoverImage(file: File): Promise<File> {
+    const pdfjs = await import('pdfjs-dist');
+    // El worker se copia a assets desde angular.json para que pdfjs pueda cargarlo.
+    pdfjs.GlobalWorkerOptions.workerSrc = '/assets/pdfjs/pdf.worker.mjs';
+    const { getDocument } = pdfjs;
+    const pdf = await getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+    const page = await pdf.getPage(1);
+    const sourceViewport = page.getViewport({ scale: 1 });
+    const canvas = document.createElement('canvas');
+    // A6 = 1/4 del área de A4 (105 x 148 mm, a 96 DPI: 397 x 561 px).
+    canvas.width = 397;
+    canvas.height = 561;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas no disponible');
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    const scale = Math.min(canvas.width / sourceViewport.width, canvas.height / sourceViewport.height);
+    const renderedWidth = sourceViewport.width * scale;
+    const renderedHeight = sourceViewport.height * scale;
+
+    await page.render({
+      canvas,
+      canvasContext: context,
+      viewport: sourceViewport,
+      transform: [scale, 0, 0, scale, (canvas.width - renderedWidth) / 2, (canvas.height - renderedHeight) / 2],
+    }).promise;
+
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    if (!blob) throw new Error('No se pudo generar la imagen');
+    return new File([blob], `${this.selectedProjectForPdf()?.Id || 'proyecto'}.jpg`, { type: 'image/jpeg' });
   }
 
   previewProjectPdf(p: Proyecto): void {
     this.previewProject.set(p);
-    // Usamos un PDF dummy para la previsualización interactiva en el iframe
-    const mockPdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
-    this.previewPdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(mockPdfUrl));
+    const pdfUrl = this.hasPdfDocument(p) ? `http://localhost:8000/storage/${p.PdfDocumento}` : null;
+    this.previewPdfUrl.set(pdfUrl ? this.sanitizer.bypassSecurityTrustResourceUrl(pdfUrl) : null);
     this.showPreviewPdfModal.set(true);
   }
 }

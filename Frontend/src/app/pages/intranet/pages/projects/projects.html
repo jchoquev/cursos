@@ -43,6 +43,11 @@
       class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-400 transition-all cursor-pointer border border-white/10 whitespace-nowrap">
       ✕ Limpiar
     </button>
+    <select [ngModel]="periodoFiltro()" (ngModelChange)="changePeriodoFiltro($event)" name="periodoFiltro"
+      class="w-full sm:w-auto bg-slate-900 border border-white/10 text-white rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer">
+      <option value="">Todos los periodos</option>
+      <option *ngFor="let p of periodos()" [value]="p.Id">{{ p.Asig }}{{ p.Activo ? ' (Activo)' : '' }}</option>
+    </select>
     <div class="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap">
       <span>Mostrar</span>
       <select [ngModel]="perPage()" (ngModelChange)="changePerPage(+$event)"
@@ -74,6 +79,7 @@
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Responsable(s)</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Asesor(es)</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Línea</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Periodo</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Inicio</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-center">Estado</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-center">Ganador</th>
@@ -90,6 +96,7 @@
               <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-28"></div></td>
               <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-20"></div></td>
               <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-20"></div></td>
+              <td class="px-6 py-4"><div class="h-4 bg-white/10 rounded w-20"></div></td>
               <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-20 mx-auto"></div></td>
               <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-10 mx-auto"></div></td>
               <td class="px-6 py-4 text-center"><div class="h-5 bg-white/10 rounded-full w-20 mx-auto"></div></td>
@@ -98,7 +105,7 @@
           </ng-container>
           <ng-container *ngIf="!isLoading()">
             <tr *ngIf="proyectos().length === 0">
-              <td colspan="10" class="text-center py-10 text-slate-500 text-xs">No se encontraron proyectos registrados.</td>
+              <td colspan="11" class="text-center py-10 text-slate-500 text-xs">No se encontraron proyectos registrados.</td>
             </tr>
             <tr *ngFor="let p of proyectos()" class="hover:bg-white/[0.02] transition-colors">
               <td class="px-6 py-4 font-mono text-amber-300 font-bold text-[11px]">{{ p.Id }}</td>
@@ -114,6 +121,14 @@
               <td class="px-6 py-4">
                 <span class="inline-block px-2.5 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 text-[10px] font-semibold border border-amber-500/20">
                   {{ p.linea?.Linea || getLinea(p.Id_Linea) }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
+                  [class]="p.periodo_aca?.Activo
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : 'bg-slate-500/10 text-slate-400 border-slate-500/20'">
+                  {{ p.periodo_aca?.Asig || getPeriodoNombre(p.Id_PeriodoAca) }}
                 </span>
               </td>
               <td class="px-6 py-4 font-mono text-slate-400 text-xs">{{ p.Inicio | dateFormat }}</td>
@@ -132,14 +147,12 @@
                 <span *ngIf="!p.Ganador" class="text-slate-700 text-xs">—</span>
               </td>
               <td class="px-6 py-4 text-center">
-                <!-- Botón Ver Proyecto (ícono PDF) -->
-                <button (click)="previewProjectPdf(p)"
-                  class="px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border inline-flex items-center gap-1.5"
-                  [class]="p.PdfDocumento 
-                    ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'">
+                <!-- Mostrar el visor únicamente cuando existe un PDF guardado -->
+                <button *ngIf="hasPdfDocument(p)" (click)="previewProjectPdf(p)"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20">
                   <span>📕</span> Ver Proyecto
                 </button>
+                <span *ngIf="!hasPdfDocument(p)" class="text-slate-700 text-xs" title="Sin documento PDF">—</span>
               </td>
               <td class="px-6 py-4 text-right">
                 <div class="flex items-center justify-end gap-2">
@@ -193,11 +206,11 @@
 </div>
 
 <!-- Modal Nuevo / Editar Proyecto -->
-<div *ngIf="showModal()" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto animate-fade-in p-4">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl my-6">
+<div *ngIf="showModal()" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto animate-fade-in p-3 sm:p-5">
+  <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-3xl shadow-2xl my-2 sm:my-5 max-h-[calc(100vh-2rem)] flex flex-col">
 
     <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-3 border-b border-white/5">
+    <div class="flex items-center justify-between px-6 sm:px-8 py-4 border-b border-white/5 shrink-0">
       <div>
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           🔬 {{ isEditing() ? 'Editar Proyecto de Investigación' : 'Nuevo Proyecto de Investigación' }}
@@ -207,57 +220,82 @@
       <button (click)="showModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold border-none">✕</button>
     </div>
 
-    <form (submit)="save(); $event.preventDefault()" class="px-6 pt-3 pb-4 space-y-3">
+    <form (submit)="save(); $event.preventDefault()" class="px-6 sm:px-8 pt-5 pb-6 space-y-6 overflow-y-auto">
 
-      <!-- Título -->
-      <div>
-        <label class="block text-[11px] text-slate-400 mb-1">Título del Proyecto <span class="text-rose-400">*</span></label>
+      <!-- Datos generales -->
+      <section class="space-y-3">
+        <div class="flex items-center gap-2 border-b border-white/5 pb-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">01</span>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Datos generales</h4>
+        </div>
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Título del Proyecto <span class="text-rose-400">*</span></label>
         <input type="text" [ngModel]="form().Titulo" (ngModelChange)="form.update(f => ({...f, Titulo: $event}))" name="Titulo"
           placeholder="Título completo del proyecto de investigación"
           class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs"
           required />
-      </div>
+        </div>
 
       <!-- Resumen -->
-      <div>
+        <div>
         <label class="block text-[11px] text-slate-400 mb-1">Resumen <span class="text-rose-400">*</span></label>
         <textarea [ngModel]="form().Resumen" (ngModelChange)="form.update(f => ({...f, Resumen: $event}))" name="Resumen"
-          rows="2" placeholder="Descripción breve del proyecto..."
+          rows="3" placeholder="Descripción breve del proyecto..."
           class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs resize-none"></textarea>
-      </div>
+        </div>
+      </section>
 
-      <!-- Grid: Participantes + Clasificación -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Equipo responsable -->
+      <section class="space-y-3">
+        <div class="flex items-center gap-2 border-b border-white/5 pb-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">02</span>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Equipo responsable</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
 
-        <!-- Columna Izquierda -->
-        <div class="space-y-3">
-          <div>
+        <div>
             <label class="block text-[11px] text-slate-400 mb-1">Responsable(s) <span class="text-rose-400">*</span></label>
             <input type="text" [ngModel]="responsableText()" (ngModelChange)="responsableText.set($event)" name="Responsable"
               placeholder="Nombre 1, Nombre 2, ..."
               class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs" />
             <p class="text-[10px] text-slate-600 mt-1">Separar múltiples nombres con comas</p>
-          </div>
-
-          <div>
+        </div>
+        <div>
             <label class="block text-[11px] text-slate-400 mb-1">Asesor(es) <span class="text-rose-400">*</span></label>
             <input type="text" [ngModel]="asesorText()" (ngModelChange)="asesorText.set($event)" name="Asesor"
               placeholder="Nombre 1, Nombre 2, ..."
               class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-xs" />
             <p class="text-[10px] text-slate-600 mt-1">Separar múltiples nombres con comas</p>
-          </div>
         </div>
+        </div>
+      </section>
 
-        <!-- Columna Derecha -->
-        <div class="space-y-3">
+      <!-- Planificación -->
+      <section class="space-y-3">
+        <div class="flex items-center gap-2 border-b border-white/5 pb-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">03</span>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Planificación</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4 items-start">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Periodo Académico <span class="text-rose-400">*</span></label>
+            <select [ngModel]="form().Id_PeriodoAca" (ngModelChange)="changePeriodo($event)" name="Id_PeriodoAca"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold cursor-pointer">
+              <option value="">— Seleccione un periodo —</option>
+              <option *ngFor="let p of periodos()" [value]="p.Id">
+                {{ p.Asig }}{{ p.Activo ? ' (Activo)' : '' }}
+              </option>
+            </select>
+          </div>
+
           <div>
             <label class="block text-[11px] text-slate-400 mb-1">Línea de Investigación <span class="text-rose-400">*</span></label>
             <select [ngModel]="form().Id_Linea" (ngModelChange)="form.update(f => ({...f, Id_Linea: $event}))" name="Id_Linea"
               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold cursor-pointer">
               <option value="">— Seleccione una línea —</option>
-              <option *ngFor="let l of lineas()" [value]="l.Id">{{ l.Linea }}</option>
+              <option *ngFor="let l of lineasDelPeriodo()" [value]="l.Id">{{ l.Linea }}</option>
             </select>
-            <p *ngIf="lineas().length === 0" class="text-[10px] text-amber-500/80 mt-1">⚠️ No hay líneas de investigación registradas.</p>
+            <p *ngIf="lineasDelPeriodo().length === 0" class="text-[10px] text-amber-500/80 mt-1">⚠️ No hay líneas para este periodo académico.</p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -285,9 +323,10 @@
             </select>
           </div>
         </div>
+      </section>
 
-        <!-- Ganador — ancho completo -->
-        <div class="md:col-span-2 flex items-center gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/15">
+      <!-- Reconocimiento institucional -->
+      <div class="flex items-center gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/15">
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" [ngModel]="form().Ganador" (ngModelChange)="form.update(f => ({...f, Ganador: $event}))" name="Ganador" class="sr-only peer" />
             <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
@@ -296,7 +335,6 @@
             <div class="text-xs font-bold text-amber-300">🏆 Proyecto Ganador / Destacado</div>
             <div class="text-[10px] text-slate-500">Marcar si este proyecto fue reconocido, premiado o seleccionado institucionalmente.</div>
           </div>
-        </div>
       </div>
 
       <!-- Error -->

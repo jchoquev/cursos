@@ -24,6 +24,7 @@
     "@types/qrcode-generator": "^0.0.16",
     "express": "^5.1.0",
     "ngx-editor": "^19.0.0-beta.1",
+    "pdfjs-dist": "^6.2.108",
     "qrcode": "^1.5.4",
     "qrcode-generator": "^2.0.4",
     "rxjs": "~7.8.0",

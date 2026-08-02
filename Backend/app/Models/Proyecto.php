@@ -22,6 +22,7 @@ class Proyecto extends Model
         'Responsable',
         'Asesor',
         'Id_Linea',
+        'Id_PeriodoAca',
         'Inicio',
         'Fin',
         'Estado',
@@ -57,5 +58,10 @@ class Proyecto extends Model
     public function linea(): BelongsTo
     {
         return $this->belongsTo(InvLinea::class, 'Id_Linea', 'Id');
+    }
+
+    public function periodoAca(): BelongsTo
+    {
+        return $this->belongsTo(PeriodoAca::class, 'Id_PeriodoAca', 'Id');
     }
 }

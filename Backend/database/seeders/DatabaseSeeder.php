@@ -49,65 +49,12 @@ class DatabaseSeeder extends Seeder
             'password' => \Illuminate\Support\Facades\Hash::make('investigacion123'),
         ]);
 
-        if (\App\Models\Evento::count() === 0) {
-            $periodoActive = \App\Models\PeriodoAca::where('Activo', true)->first();
-            $periodoId = $periodoActive ? $periodoActive->Id : null;
-
-            \App\Models\Evento::create([
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'titulo' => 'Desarrollo Frontend con Angular Avanzado',
-                'RBanner' => '',
-                'descripcion' => 'Domina Angular Signals, Server-Side Rendering (SSR), standalone architecture y optimizaciones.',
-                'HAcademica' => 40,
-                'InInscripcion' => now()->subDays(5),
-                'FnInscripcion' => now()->addDays(5),
-                'InCurso' => now()->addDays(6),
-                'FnCurso' => now()->addDays(15),
-                'TActividad' => 1,
-                'DonceteExp' => ['Dr. Alejandro Benítez'],
-                'CapMaxima' => 35,
-                'Estado' => true,
-                'Id_PeriodoAca' => $periodoId,
-            ]);
-
-            \App\Models\Evento::create([
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'titulo' => 'Diseño de Interfaces Web Premium y UX/UI',
-                'RBanner' => '',
-                'descripcion' => 'Crea experiencias inmersivas aplicando glassmorphism, esquemas HSL sofisticados y micro-animaciones.',
-                'HAcademica' => 20,
-                'InInscripcion' => now()->subDays(3),
-                'FnInscripcion' => now()->addDays(7),
-                'InCurso' => now()->addDays(8),
-                'FnCurso' => now()->addDays(12),
-                'TActividad' => 2,
-                'DonceteExp' => ['MSc. Elena Rostova'],
-                'CapMaxima' => 25,
-                'Estado' => true,
-                'Id_PeriodoAca' => $periodoId,
-            ]);
-
-            \App\Models\Evento::create([
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
-                'titulo' => 'Seminario de Seguridad y Criptografía Aplicada',
-                'RBanner' => '',
-                'descripcion' => 'Análisis de protocolos modernos de seguridad, blockchain y firmas criptográficas en entornos corporativos.',
-                'HAcademica' => 15,
-                'InInscripcion' => now()->subDays(10),
-                'FnInscripcion' => now()->addDays(2),
-                'InCurso' => now()->addDays(3),
-                'FnCurso' => now()->addDays(5),
-                'TActividad' => 3,
-                'DonceteExp' => ['Ing. Carlos Mendoza'],
-                'CapMaxima' => 50,
-                'Estado' => true,
-                'Id_PeriodoAca' => $periodoId,
-            ]);
-        }
-
         $this->call([
+            DataInternaSeeder::class,
+            PeriodoAcaSeeder::class,
             InvLineaSeeder::class,
             ProyectoSeeder::class,
+            InvestigacionSeeder::class,
             MatriculaSeeder::class,
         ]);
     }

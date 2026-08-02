@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('e-documentos', EDocumentoController::class);
     Route::apiResource('inv-lineas', InvLineaController::class);
     Route::apiResource('proyectos', ProyectoController::class);
+    Route::post('/proyectos/{id}/upload-files', [ProyectoController::class, 'uploadFiles']);
 });
 
 Route::get('/user', function (Request $request) {
