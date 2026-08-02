@@ -6,6 +6,7 @@ import { ApiService } from '../../../../services/api.service';
 import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { NgxEditorModule, Editor, Toolbar } from 'ngx-editor';
 import { AlertService } from '../../../../services/alert.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-courses',
@@ -14,6 +15,7 @@ import { AlertService } from '../../../../services/alert.service';
   templateUrl: './courses.html',
 })
 export class CoursesComponent implements OnInit, OnDestroy {
+  readonly backendUrl = environment.backendUrl;
   readonly platformService = inject(PlatformService);
   private readonly apiService = inject(ApiService);
   private readonly platformId = inject(PLATFORM_ID);

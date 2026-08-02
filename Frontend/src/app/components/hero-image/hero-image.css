@@ -1,7 +1,88 @@
 .hero-wrapper {
+  height: 420px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.hero-slide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.hero-slide.is-active {
+  visibility: visible;
+}
+
+.hero-image {
+  transform: scale(1.1);
+  will-change: transform;
 }
 
 .hero-overlay {
   background: linear-gradient(to bottom, rgba(10, 5, 30, 0.2), rgba(10, 5, 30, 0.7));
+}
+
+.hero-overlay-1 {
+  background: linear-gradient(120deg, rgba(12, 35, 64, 0.7), rgba(63, 25, 100, 0.45));
+}
+
+.hero-overlay-2 {
+  background: linear-gradient(120deg, rgba(20, 18, 55, 0.68), rgba(18, 95, 110, 0.45));
+}
+
+.hero-content {
+  z-index: 1;
+}
+
+.hero-control {
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9999px;
+  color: white;
+  background: rgba(15, 10, 40, 0.42);
+  font-size: 2rem;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 180ms ease, background 180ms ease;
+}
+
+.group:hover .hero-control,
+.hero-control:focus-visible {
+  opacity: 1;
+}
+
+.hero-control:hover {
+  background: rgba(112, 67, 180, 0.75);
+}
+
+.hero-control-prev { left: 1rem; }
+.hero-control-next { right: 1rem; }
+
+.hero-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.5);
+  transition: width 220ms ease, background 220ms ease;
+}
+
+.hero-dot.is-active {
+  width: 1.5rem;
+  background: white;
+}
+
+@media (max-width: 640px) {
+  .hero-wrapper { height: 360px; }
+  .hero-subtitle { max-width: 19rem; font-size: 1rem; }
+  .hero-control { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-control, .hero-dot { transition: none; }
 }

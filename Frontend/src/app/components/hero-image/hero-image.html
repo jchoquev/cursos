@@ -1,16 +1,36 @@
-<div class="hero-wrapper relative w-full overflow-hidden rounded-2xl">
+<div #heroRoot class="hero-wrapper group relative w-full overflow-hidden rounded-2xl"
+     (mouseenter)="pauseAutoplay()" (mouseleave)="resumeAutoplay()">
+  <div class="hero-slides h-full">
+    <article *ngFor="let slide of slides; let i = index"
+             class="hero-slide absolute inset-0"
+             [class.is-active]="i === activeIndex()">
+      <img src="hero-banner.png" [alt]="slide.title" class="hero-image block h-full w-full object-cover" />
+      <div class="hero-overlay absolute inset-0" [class]="'hero-overlay hero-overlay-' + i"></div>
+      <div class="hero-content absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
+        <span class="hero-eyebrow mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-white/75 md:text-sm">
+          {{ slide.eyebrow }}
+        </span>
+        <h1 class="hero-title mb-3 text-4xl font-extrabold tracking-tight text-white drop-shadow-lg md:text-5xl">
+          {{ slide.title }}
+        </h1>
+        <p class="hero-subtitle text-lg font-normal text-white/85 drop-shadow-md">
+          {{ slide.subtitle }}
+        </p>
+      </div>
+    </article>
+  </div>
 
-  <img src="hero-banner.png"
-       alt="Hero Banner - Plataforma de Cursos"
-       class="block h-[420px] w-full object-cover transition-transform duration-700 hover:scale-[1.03]" />
+  <button type="button" class="hero-control hero-control-prev" aria-label="Diapositiva anterior" (click)="previousSlide()">
+    ‹
+  </button>
+  <button type="button" class="hero-control hero-control-next" aria-label="Siguiente diapositiva" (click)="nextSlide()">
+    ›
+  </button>
 
-  <div class="hero-overlay absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
-    <h1 class="mb-3 text-4xl font-extrabold tracking-tight text-white drop-shadow-lg md:text-5xl">
-      Aprende sin límites
-    </h1>
-    <p class="text-lg font-normal text-white/85 drop-shadow-md">
-      Explora cursos diseñados para llevarte al siguiente nivel
-    </p>
+  <div class="hero-dots absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+    <button *ngFor="let slide of slides; let i = index" type="button"
+            class="hero-dot" [class.is-active]="i === activeIndex()"
+            [attr.aria-label]="'Ver diapositiva ' + (i + 1)" (click)="goTo(i)"></button>
   </div>
 
 </div>

@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Observable, of, forkJoin } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { environment } from '../../environments/environment';
 
 export interface EventItem {
   id: any;
@@ -190,7 +191,7 @@ export class PlatformService {
       }
     }
 
-    const coverUrl = item.RBanner ? `http://localhost:8000/storage/${item.RBanner}` : '';
+    const coverUrl = item.RBanner ? `${environment.backendUrl}/storage/${item.RBanner}` : '';
 
     return {
       id: item.id,
@@ -236,7 +237,7 @@ export class PlatformService {
       if (!normalizedPath || normalizedPath.toLowerCase() === 'null' || normalizedPath.toLowerCase() === 'undefined') {
         return '';
       }
-      return `http://localhost:8000/storage/${normalizedPath.replace(/^\/+/, '')}`;
+      return `${environment.backendUrl}/storage/${normalizedPath.replace(/^\/+/, '')}`;
     };
     const start = item.Inicio || item.created_at || '';
     const end = item.Fin || '';

@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 export interface LoginResponse {
   status: 'success' | 'error';
@@ -24,7 +25,7 @@ export class ApiService {
   private readonly platformId = inject(PLATFORM_ID);
 
   /** URL base del backend Laravel */
-  private readonly baseUrl = 'http://localhost:8000/api';
+  private readonly baseUrl = environment.apiUrl;
 
   // ----------------------------------------------------------------
   // Helpers

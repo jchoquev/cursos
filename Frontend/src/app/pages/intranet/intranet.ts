@@ -9,6 +9,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ThemeService } from '../../services/theme.service';
 import { DnaLoaderService } from '../../services/dna-loader.service';
 import { AlertService } from '../../services/alert.service';
+import { environment } from '../../../environments/environment';
 import { DnaLoaderComponent } from '../../components/dna-loader/dna-loader';
 
 @Component({
@@ -19,6 +20,7 @@ import { DnaLoaderComponent } from '../../components/dna-loader/dna-loader';
   styleUrl: './intranet.css',
 })
 export class IntranetComponent implements OnInit, OnDestroy {
+  readonly backendUrl = environment.backendUrl;
   readonly platformService = inject(PlatformService);
   private readonly apiService = inject(ApiService);
   private readonly platformId = inject(PLATFORM_ID);

@@ -319,7 +319,7 @@
             <div class="flex items-center gap-2">
               <input type="file" id="resolucionPdfInput" accept=".pdf" (change)="onPdfFileChange($event)"
                 class="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
-              <a *ngIf="docsForm().pdfResolucion" [href]="'http://localhost:8000/storage/' + docsForm().pdfResolucion" target="_blank"
+              <a *ngIf="docsForm().pdfResolucion" [href]="backendUrl + '/storage/' + docsForm().pdfResolucion" target="_blank"
                 class="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1 transition-all">📥 Ver</a>
             </div>
           </div>
@@ -341,7 +341,7 @@
             <div class="flex items-center gap-2">
               <input type="file" id="docsFondoInput" accept="image/*" (change)="onFondoFileChange($event)"
                 class="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
-              <a *ngIf="docsForm().Fondo" [href]="'http://localhost:8000/storage/' + docsForm().Fondo" target="_blank"
+              <a *ngIf="docsForm().Fondo" [href]="backendUrl + '/storage/' + docsForm().Fondo" target="_blank"
                 class="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1 transition-all">👁️ Ver</a>
             </div>
           </div>

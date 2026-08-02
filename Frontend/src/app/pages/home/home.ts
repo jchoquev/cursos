@@ -10,6 +10,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { DnaLoaderService } from '../../services/dna-loader.service';
+import { gsap } from 'gsap';
 
 export interface PeriodoAca {
   Id: string;
@@ -47,6 +48,47 @@ export class Home implements OnInit {
         this.selectedPeriodo.set(defaultId);
       }
     });
+
+    // Ejecuta la animación cada vez que cambia el catálogo por carga, categoría o periodo.
+    effect(() => {
+      this.filteredEvents();
+      if (!isPlatformBrowser(this.platformId)) return;
+      window.setTimeout(() => this.animatePublicHome(), 0);
+    });
+  }
+
+  private animatePublicHome(): void {
+    if (!isPlatformBrowser(this.platformId) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const filterBar = document.querySelector('.lp-filter-border');
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.lp-card, .lp-repo-card'));
+    const sidebar = Array.from(document.querySelectorAll<HTMLElement>('.lp-sidebar-block'));
+
+    if (filterBar) {
+      gsap.fromTo(filterBar, { autoAlpha: 0, y: -12 }, { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out' });
+    }
+    if (cards.length) {
+      gsap.killTweensOf(cards);
+      gsap.fromTo(cards, { autoAlpha: 0, y: 22, scale: 0.98 }, {
+        autoAlpha: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.6,
+        stagger: 0.07,
+        ease: 'power3.out',
+        overwrite: 'auto',
+      });
+    }
+    if (sidebar.length) {
+      gsap.fromTo(sidebar, { autoAlpha: 0, x: -18 }, {
+        autoAlpha: 1,
+        x: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power3.out',
+        overwrite: 'auto',
+      });
+    }
   }
 
   ngOnInit(): void {

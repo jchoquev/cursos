@@ -5,6 +5,7 @@ import { DateFormatPipe } from '../../../../pipes/date-format.pipe';
 import { ApiService } from '../../../../services/api.service';
 import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { AlertService } from '../../../../services/alert.service';
+import { environment } from '../../../../../environments/environment';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 export interface InvLinea {
@@ -49,6 +50,7 @@ export interface Proyecto {
   templateUrl: './projects.html',
 })
 export class ProjectsComponent implements OnInit {
+  readonly backendUrl = environment.backendUrl;
   private readonly apiService = inject(ApiService);
   private readonly dnaLoader = inject(DnaLoaderService);
   private readonly alert = inject(AlertService);
@@ -411,7 +413,7 @@ export class ProjectsComponent implements OnInit {
 
   previewProjectPdf(p: Proyecto): void {
     this.previewProject.set(p);
-    const pdfUrl = this.hasPdfDocument(p) ? `http://localhost:8000/storage/${p.PdfDocumento}` : null;
+    const pdfUrl = this.hasPdfDocument(p) ? `${this.backendUrl}/storage/${p.PdfDocumento}` : null;
     this.previewPdfUrl.set(pdfUrl ? this.sanitizer.bypassSecurityTrustResourceUrl(pdfUrl) : null);
     this.showPreviewPdfModal.set(true);
   }
