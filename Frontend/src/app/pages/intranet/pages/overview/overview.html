@@ -1,181 +1,89 @@
 <div class="space-y-6 animate-fade-in">
-
-  <!-- KPI Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-    <div class="kpi-metric-card relative overflow-hidden">
-      <div class="flex justify-between items-start">
-        <div class="space-y-1">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Usuarios Registrados</span>
-          <h3 class="text-3xl font-black text-white tracking-tight mt-1">{{ stats().totalUsers }}</h3>
-        </div>
-        <div class="kpi-trend bg-emerald-500/10 text-emerald-400 font-bold text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
-          <span>↑</span> 67%
-        </div>
+  <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Panel operativo</p>
+        <h2 class="text-2xl font-black text-white mt-1">{{ roleTitle() }}</h2>
+        <p class="text-xs text-slate-400 mt-2">Datos actualizados desde los módulos disponibles para tu usuario.</p>
       </div>
-      <div class="mt-5 space-y-1.5">
-        <div class="w-full bg-white/[0.04] h-1.5 rounded-full overflow-hidden">
-          <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-1000" style="width: 67%"></div>
-        </div>
-        <div class="flex justify-between text-[9px] font-bold text-slate-500 uppercase font-mono">
-          <span>Capacidad</span><span>67% Registrado</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="kpi-metric-card relative overflow-hidden">
-      <div class="flex justify-between items-start">
-        <div class="space-y-1">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Solicitudes de Matrícula</span>
-          <h3 class="text-3xl font-black text-white tracking-tight mt-1">{{ stats().totalRegistrations }}</h3>
-        </div>
-        <div class="kpi-trend bg-rose-500/10 text-rose-400 font-bold text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
-          <span>↓</span> 36%
-        </div>
-      </div>
-      <div class="mt-5 space-y-1.5">
-        <div class="w-full bg-white/[0.04] h-1.5 rounded-full overflow-hidden">
-          <div class="bg-gradient-to-r from-wine-600 to-gold-400 h-full rounded-full transition-all duration-1000" style="width: 36%"></div>
-        </div>
-        <div class="flex justify-between text-[9px] font-bold text-slate-500 uppercase font-mono">
-          <span>Tasa Procesada</span><span>36% En Espera</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="kpi-metric-card relative overflow-hidden">
-      <div class="flex justify-between items-start">
-        <div class="space-y-1">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Certificados Emitidos</span>
-          <h3 class="text-3xl font-black text-white tracking-tight mt-1">{{ stats().totalCertificates }}</h3>
-        </div>
-        <div class="kpi-trend bg-emerald-500/10 text-emerald-400 font-bold text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1">
-          <span>↑</span> 80%
-        </div>
-      </div>
-      <div class="mt-5 space-y-1.5">
-        <div class="w-full bg-white/[0.04] h-1.5 rounded-full overflow-hidden">
-          <div class="bg-gradient-to-r from-[#00c6ff] to-[#0072ff] h-full rounded-full transition-all duration-1000" style="width: 80%"></div>
-        </div>
-        <div class="flex justify-between text-[9px] font-bold text-slate-500 uppercase font-mono">
-          <span>Tasa Graduación</span><span>80% Emitido</span>
-        </div>
-      </div>
+      <span class="self-start px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        {{ role() || 'Sesión' }}
+      </span>
     </div>
   </div>
 
-  <!-- Grid: Charts + Earnings Widget -->
-  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-
-    <!-- Left: Charts -->
-    <div class="xl:col-span-2 space-y-6 min-w-0">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <!-- Bar Chart -->
-        <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl flex flex-col justify-between">
-          <h3 class="text-sm font-bold text-slate-200 mb-4">📢 Participantes Registrados por Categoría</h3>
-          <div class="h-44 w-full flex items-end justify-between px-4 pb-6 pt-2 relative">
-            <div class="absolute inset-x-0 bottom-6 border-b border-white/5"></div>
-            <div class="absolute inset-x-0 bottom-16 border-b border-white/5"></div>
-            <div class="absolute inset-x-0 bottom-28 border-b border-white/5"></div>
-            <div class="flex flex-col items-center flex-1 z-10">
-              <div class="text-[10px] font-bold text-rose-400 mb-2 font-mono">20 Alumnos</div>
-              <div class="w-10 bg-gradient-to-t from-wine-800 to-rose-600 rounded-t-lg shadow-lg" style="height: 80px;"></div>
-              <span class="text-[10px] font-semibold text-slate-400 mt-2">Cursos</span>
-            </div>
-            <div class="flex flex-col items-center flex-1 z-10">
-              <div class="text-[10px] font-bold text-amber-400 mb-2 font-mono">8 Alumnos</div>
-              <div class="w-10 bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-lg shadow-lg" style="height: 32px;"></div>
-              <span class="text-[10px] font-semibold text-slate-400 mt-2">Talleres</span>
-            </div>
-            <div class="flex flex-col items-center flex-1 z-10">
-              <div class="text-[10px] font-bold text-rose-400 mb-2 font-mono">22 Alumnos</div>
-              <div class="w-10 bg-gradient-to-t from-wine-800 to-rose-500 rounded-t-lg shadow-lg" style="height: 55px;"></div>
-              <span class="text-[10px] font-semibold text-slate-400 mt-2">Seminarios</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Circular Gauge -->
-        <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl text-center flex flex-col justify-between">
-          <h3 class="text-sm font-bold text-slate-200 text-left mb-2">🎓 Relación de Certificados Emitidos</h3>
-          <div class="flex-1 flex items-center justify-center py-4">
-            <div class="relative w-36 h-36">
-              <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
-                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path class="text-amber-500" stroke-dasharray="75, 100" stroke-width="3.5" stroke-linecap="round"
-                  stroke="currentColor" fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <span class="text-3xl font-black text-white">75%</span>
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Tasa Éxito</span>
-              </div>
-            </div>
-          </div>
-          <p class="text-xs text-slate-400 leading-normal px-4">
-            El <strong>75%</strong> de alumnos inscritos en eventos pasados han cumplido satisfactoriamente la
-            asistencia y ya cuentan con diploma emitido.
-          </p>
-        </div>
-
-      </div>
+  <!-- Administrador -->
+  <ng-container *ngIf="role() === 'Administrador'">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="kpi-metric-card"><span class="kpi-label">Usuarios</span><strong>{{ adminStats().users }}</strong><small>cuentas registradas</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Eventos activos</span><strong>{{ adminStats().activeEvents }}</strong><small>{{ adminStats().events }} eventos en total</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Pagos pendientes</span><strong>{{ adminStats().pendingPayments }}</strong><small>de {{ adminStats().registrations }} matrículas</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Proyectos publicados</span><strong>{{ adminStats().publishedProjects }}</strong><small>{{ adminStats().projects }} proyectos gestionados</small></div>
     </div>
 
-    <!-- Right: Earnings Widget -->
-    <div class="xl:col-span-1 space-y-6">
-      <div class="earnings-premium-widget relative overflow-hidden p-6 rounded-3xl text-left">
-        <div class="absolute -right-16 -top-16 w-36 h-36 bg-white/10 rounded-full blur-2xl"></div>
-        <div class="space-y-1 z-10 relative">
-          <div class="flex justify-between items-center">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-white/70">Rendimiento Académico</span>
-            <span class="text-lg">📈</span>
-          </div>
-          <h2 class="text-3xl font-black text-white mt-2 flex items-center gap-2">
-            {{ stats().attendanceRate }}%
-            <span class="text-xs font-bold bg-white/20 px-2 py-0.5 rounded-full">↑ Activo</span>
-          </h2>
-          <p class="text-[9px] font-bold uppercase tracking-wider text-white/60 font-mono mt-1">Tasa de Asistencia Global</p>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
+        <h3 class="text-sm font-bold text-slate-200 mb-4">⚡ Accesos de administración</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <a routerLink="/intranet/users" class="overview-action">👥 Usuarios</a>
+          <a routerLink="/intranet/registrations" class="overview-action">📥 Matrículas</a>
+          <a routerLink="/intranet/projects" class="overview-action">🔬 Proyectos</a>
+          <a routerLink="/intranet/courses" class="overview-action">📅 Eventos</a>
         </div>
-        <div class="mt-6 h-32 w-full relative z-10">
-          <svg viewBox="0 0 100 40" class="w-full h-full overflow-visible" preserveAspectRatio="none">
-            <defs>
-              <filter id="white-glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#ffffff" flood-opacity="0.5" />
-              </filter>
-            </defs>
-            <path d="M 5,32 Q 23,20 41,28 T 77,10 T 95,4" fill="none" stroke="#ffffff" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round" filter="url(#white-glow)" />
-            <circle cx="5" cy="32" r="2.5" fill="#ffffff" stroke="#0099ff" stroke-width="1.2" />
-            <circle cx="23" cy="20" r="2.5" fill="#ffffff" stroke="#0099ff" stroke-width="1.2" />
-            <circle cx="41" cy="28" r="2.5" fill="#ffffff" stroke="#0099ff" stroke-width="1.2" />
-            <circle cx="59" cy="18" r="2.5" fill="#ffffff" stroke="#0099ff" stroke-width="1.2" />
-            <circle cx="77" cy="10" r="2.5" fill="#ffffff" stroke="#0099ff" stroke-width="1.2" />
-            <circle cx="95" cy="4" r="2.5" fill="#ffffff" stroke="#0099ff" stroke-width="1.2" />
-          </svg>
-          <div class="flex justify-between text-[8px] font-bold text-white/80 mt-2 px-1 font-mono uppercase tracking-wider select-none font-sans">
-            <span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span><span>Jun</span>
-          </div>
+      </section>
+      <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
+        <h3 class="text-sm font-bold text-slate-200 mb-4">📊 Estado global</h3>
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div><span class="text-slate-500 block">Certificados emitidos</span><b class="text-amber-400 text-xl">{{ adminStats().issuedCertificates }}</b></div>
+          <div><span class="text-slate-500 block">Proyectos ocultos</span><b class="text-rose-400 text-xl">{{ adminStats().projects - adminStats().publishedProjects }}</b></div>
         </div>
-      </div>
-
-      <div class="rounded-3xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl relative overflow-hidden text-left">
-        <div class="absolute -left-12 -bottom-12 w-24 h-24 bg-wine-500/5 rounded-full blur-2xl"></div>
-        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 mb-3 font-sans">
-          <span>⚡</span> Accesos de Soporte
-        </h4>
-        <p class="text-[11px] text-slate-400 leading-relaxed mb-4 font-sans">
-          ¿Necesita registrar firmas o revocar credenciales? Use la sección de emisión general. Si requiere
-          asistencia sobre los pagos, diríjase al control de Caja.
-        </p>
-        <div class="text-center text-[10px] font-bold font-sans">
-          <a routerLink="/buscar-certificados"
-            class="block w-full p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-slate-200 no-underline transition-all">
-            🔍 Buscar QR
-          </a>
-        </div>
-      </div>
+      </section>
     </div>
+  </ng-container>
 
-  </div>
+  <!-- Caja -->
+  <ng-container *ngIf="role() === 'Caja'">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="kpi-metric-card"><span class="kpi-label">Matrículas</span><strong>{{ cashStats().total }}</strong><small>solicitudes recibidas</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Por validar</span><strong class="text-amber-400">{{ cashStats().pending }}</strong><small>requieren revisión de pago</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Validadas</span><strong class="text-emerald-400">{{ cashStats().validated }}</strong><small>pagos confirmados</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Monto registrado</span><strong>S/ {{ cashStats().collected | number:'1.2-2' }}</strong><small>según recibos cargados</small></div>
+    </div>
+    <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
+      <div class="flex items-center justify-between mb-4"><h3 class="text-sm font-bold text-slate-200">🧾 Últimas matrículas</h3><a routerLink="/intranet/registrations" class="overview-link">Ver todas →</a></div>
+      <div class="space-y-2" *ngIf="recentRegistrations().length; else noCashData">
+        <div *ngFor="let registration of recentRegistrations()" class="overview-row"><div><b>{{ registration.userName }}</b><span>{{ registration.eventTitle }}</span></div><span [class]="registration.isPaymentValidated ? 'status-ok' : 'status-pending'">{{ registration.isPaymentValidated ? 'Validado' : 'Pendiente' }}</span></div>
+      </div>
+      <ng-template #noCashData><p class="empty-overview">No hay matrículas registradas.</p></ng-template>
+    </section>
+  </ng-container>
+
+  <!-- Formación Continua -->
+  <ng-container *ngIf="role() === 'Formación Continua'">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="kpi-metric-card"><span class="kpi-label">Eventos activos</span><strong>{{ formationStats().activeEvents }}</strong><small>{{ formationStats().totalEvents }} eventos gestionados</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Eventos concluidos</span><strong>{{ formationStats().pastEvents }}</strong><small>historial académico</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Participantes</span><strong>{{ formationStats().registrations }}</strong><small>matrículas registradas</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Certificados</span><strong class="text-emerald-400">{{ formationStats().certificates }}</strong><small>documentos emitidos</small></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div *ngFor="let item of eventTypeSummary()" class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl"><span class="text-[10px] uppercase tracking-wider text-slate-500">{{ item.type }}</span><div class="text-3xl font-black text-white mt-2">{{ item.total }}</div><p class="text-xs text-emerald-400 mt-1">{{ item.active }} activos</p></div>
+    </div>
+    <div class="flex gap-3"><a routerLink="/intranet/courses" class="overview-primary">📅 Gestionar eventos</a><a routerLink="/intranet/certificates" class="overview-secondary">🎓 Emitir certificados</a></div>
+  </ng-container>
+
+  <!-- Investigación -->
+  <ng-container *ngIf="role() === 'Investigación'">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="kpi-metric-card"><span class="kpi-label">Proyectos</span><strong>{{ researchStats().total }}</strong><small>registros de investigación</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Publicados</span><strong class="text-emerald-400">{{ researchStats().published }}</strong><small>visibles en repositorio</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">En ejecución</span><strong class="text-amber-400">{{ researchStats().inProgress }}</strong><small>proyectos en desarrollo</small></div>
+      <div class="kpi-metric-card"><span class="kpi-label">Concluidos</span><strong>{{ researchStats().completed }}</strong><small>investigaciones finalizadas</small></div>
+    </div>
+    <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
+      <div class="flex items-center justify-between mb-4"><h3 class="text-sm font-bold text-slate-200">🔬 Proyectos recientes</h3><a routerLink="/intranet/projects" class="overview-link">Gestionar →</a></div>
+      <div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-white/5"><th class="py-3 pr-3">Proyecto</th><th class="py-3 pr-3">Periodo</th><th class="py-3 pr-3">Inicio</th><th class="py-3">Estado</th></tr></thead><tbody><tr *ngFor="let project of recentProjects()" class="border-b border-white/5 text-slate-300"><td class="py-3 pr-3 font-semibold min-w-56">{{ project.Titulo }}</td><td class="py-3 pr-3 text-amber-400">{{ project.periodo_aca?.Asig || '—' }}</td><td class="py-3 pr-3 font-mono">{{ project.Inicio | date:'dd/MM/yyyy' }}</td><td class="py-3"><span [class]="project.hidden ? 'status-pending' : 'status-ok'">{{ project.hidden ? 'Oculto' : (project.Estado || 'Publicado') }}</span></td></tr></tbody></table></div>
+      <p *ngIf="!recentProjects().length" class="empty-overview">No hay proyectos disponibles.</p>
+    </section>
+  </ng-container>
 </div>

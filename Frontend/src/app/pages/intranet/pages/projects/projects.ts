@@ -33,6 +33,9 @@ export interface Proyecto {
   Fin?: string;
   Estado: string;
   Ganador: boolean;
+  hidden: boolean;
+  /** Estado visual del panel: es la inversión de hidden. */
+  visible?: boolean;
   ImgCaratula?: string | null;
   PdfDocumento?: string | null;
   linea?: InvLinea;
@@ -124,7 +127,11 @@ export class ProjectsComponent implements OnInit {
 
     this.apiService.get<any>('/proyectos', params).subscribe({
       next: (res) => {
-        this.proyectos.set(Array.isArray(res.data) ? res.data : []);
+        const proyectos = Array.isArray(res.data) ? res.data : [];
+        this.proyectos.set(proyectos.map((project: Proyecto) => ({
+          ...project,
+          visible: !this.isHidden(project.hidden),
+        })));
         this.total.set(res.total ?? 0);
         this.currentPage.set(res.current_page ?? 1);
         this.lastPage.set(res.last_page ?? 1);
@@ -135,6 +142,29 @@ export class ProjectsComponent implements OnInit {
         this.loadError.set(err?.error?.message || 'Error al cargar proyectos');
       }
     });
+  }
+
+  toggleHidden(project: Proyecto): void {
+    const currentVisible = project.visible ?? !this.isHidden(project.hidden);
+    const nextVisible = !currentVisible;
+    const nextHidden = !nextVisible;
+    this.apiService.patch<any>(`/proyectos/${project.Id}/hidden`, { hidden: nextHidden }).subscribe({
+      next: (response) => {
+        const savedProject = response?.data;
+        this.proyectos.update(list => list.map(p =>
+          p.Id === project.Id
+            ? { ...p, ...(savedProject || {}), hidden: nextHidden, visible: nextVisible }
+            : p
+        ));
+      },
+      error: (err) => this.alert.error('Error al cambiar visibilidad', err?.error?.message || 'Error del servidor')
+    });
+  }
+
+  isHidden(value: unknown): boolean {
+    return value === true || value === 1
+      || String(value).toLowerCase() === 'true'
+      || String(value) === '1';
   }
 
   loadLineas(): void {

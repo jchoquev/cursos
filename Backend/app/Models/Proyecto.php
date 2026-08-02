@@ -27,6 +27,7 @@ class Proyecto extends Model
         'Fin',
         'Estado',
         'Ganador',
+        'hidden',
         'ImgCaratula',
         'PdfDocumento'
     ];
@@ -35,6 +36,7 @@ class Proyecto extends Model
         'Responsable' => 'array',
         'Asesor' => 'array',
         'Ganador' => 'boolean',
+        'hidden' => 'boolean',
         'Inicio' => 'date:Y-m-d',
         'Fin' => 'date:Y-m-d',
     ];

@@ -18,6 +18,11 @@ class ProyectoController extends Controller
     {
         $query = Proyecto::with(['linea', 'periodoAca']);
 
+        // Solo la ruta pública solicita explícitamente los proyectos publicados.
+        if ($request->boolean('public_only')) {
+            $query->where('hidden', false);
+        }
+
         if ($request->filled('linea_id')) {
             $query->where('Id_Linea', $request->query('linea_id'));
         }
@@ -51,6 +56,42 @@ class ProyectoController extends Controller
         ]);
     }
 
+    /** Listado público del repositorio: solo proyectos publicados. */
+    public function publicIndex(Request $request): JsonResponse
+    {
+        $request->merge(['public_only' => true]);
+        return $this->index($request);
+    }
+
+    /** Devuelve la portada del proyecto publicado como Data URI Base64. */
+    public function publicImageBase64(string $id): JsonResponse
+    {
+        $proyecto = Proyecto::query()->where('hidden', false)->find($id);
+
+        if (!$proyecto) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Proyecto no encontrado.',
+            ], 404);
+        }
+
+        if (!$proyecto->ImgCaratula) {
+            return response()->json(['status' => 'success', 'base64' => null]);
+        }
+
+        $disk = Storage::disk('public');
+        if (!$disk->exists($proyecto->ImgCaratula)) {
+            return response()->json(['status' => 'success', 'base64' => null]);
+        }
+
+        $mimeType = $disk->mimeType($proyecto->ImgCaratula) ?: 'image/jpeg';
+
+        return response()->json([
+            'status' => 'success',
+            'base64' => 'data:' . $mimeType . ';base64,' . base64_encode($disk->get($proyecto->ImgCaratula)),
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -67,6 +108,7 @@ class ProyectoController extends Controller
             'Fin' => 'nullable|date',
             'Estado' => 'required|string',
             'Ganador' => 'sometimes|boolean',
+            'hidden' => 'sometimes|boolean',
             'ImgCaratula' => 'nullable|string',
             'PdfDocumento' => 'nullable|string',
         ]);
@@ -135,6 +177,7 @@ class ProyectoController extends Controller
             'Fin' => 'nullable|date',
             'Estado' => 'sometimes|required|string',
             'Ganador' => 'sometimes|boolean',
+            'hidden' => 'sometimes|boolean',
             'ImgCaratula' => 'nullable|string',
             'PdfDocumento' => 'nullable|string',
         ]);
@@ -163,6 +206,38 @@ class ProyectoController extends Controller
             'status' => 'success',
             'message' => 'Proyecto actualizado correctamente.',
             'data' => $proyecto->fresh(['linea', 'periodoAca'])
+        ]);
+    }
+
+    /** Cambia la visibilidad pública del proyecto desde el panel de gestión. */
+    public function toggleHidden(Request $request, string $id): JsonResponse
+    {
+        $proyecto = Proyecto::find($id);
+        if (!$proyecto) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Proyecto no encontrado.'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'hidden' => 'required|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El estado hidden debe ser booleano.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $proyecto->update(['hidden' => $request->boolean('hidden')]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Visibilidad del proyecto actualizada.',
+            'data' => $proyecto->fresh(['linea', 'periodoAca']),
         ]);
     }
 

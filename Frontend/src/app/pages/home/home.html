@@ -181,28 +181,29 @@
               *ngIf="ev.type === 'Repositorio'"
               class="lp-repo-card col-span-1 md:col-span-2 group rounded-3xl border border-[#be123c]/20 hover:border-[#be123c]/40 bg-white/[0.02] hover:bg-white/[0.04] p-5 shadow-xl relative overflow-hidden flex flex-col sm:flex-row gap-6 transition-all duration-300 hover:-translate-y-1"
             >
-              <!-- Portada del Documento en CSS Puro de Alta Fidelidad -->
+              <!-- Portada del proyecto guardada en la tabla projects -->
               <div class="w-32 h-44 rounded-xl bg-white flex-shrink-0 flex flex-col justify-between p-2 shadow-lg border border-slate-300/40 relative overflow-hidden select-none">
+                <img *ngIf="ev.coverUrl" [src]="ev.coverUrl" [alt]="'Portada de ' + ev.title" class="absolute inset-0 w-full h-full object-cover" />
                 <!-- Top blue stripe -->
-                <div class="absolute top-0 left-0 right-0 h-2 bg-[#0c3c60] flex items-center justify-center">
+                <div *ngIf="!ev.coverUrl" class="absolute top-0 left-0 right-0 h-2 bg-[#0c3c60] flex items-center justify-center">
                   <span class="text-[3px] text-white font-sans tracking-[0.2px] scale-90">IESTP CHOJATA</span>
                 </div>
                 
                 <!-- Logo Chojata en miniatura -->
-                <img src="/logo-chojata.png" alt="Emblema" class="w-8 h-8 object-contain mx-auto mt-2.5 opacity-95" />
+                <img *ngIf="!ev.coverUrl" src="/logo-chojata.png" alt="Emblema" class="w-8 h-8 object-contain mx-auto mt-2.5 opacity-95" />
                 
                 <!-- Título formal en mayúsculas -->
-                <div class="text-[5.5px] font-black text-slate-800 text-center leading-tight my-1 uppercase px-0.5 line-clamp-4">
+                <div *ngIf="!ev.coverUrl" class="text-[5.5px] font-black text-slate-800 text-center leading-tight my-1 uppercase px-0.5 line-clamp-4">
                   {{ ev.title }}
                 </div>
                 
                 <!-- Presentado por -->
-                <div class="text-[4px] text-slate-500 font-semibold text-center mt-auto uppercase tracking-wider line-clamp-1 border-t border-slate-100 pt-1">
+                <div *ngIf="!ev.coverUrl" class="text-[4px] text-slate-500 font-semibold text-center mt-auto uppercase tracking-wider line-clamp-1 border-t border-slate-100 pt-1">
                   {{ ev.authors?.split(';')?.[0] }}
                 </div>
                 
                 <!-- Ciudad y año -->
-                <div class="text-[4px] text-slate-400 font-bold text-center uppercase tracking-widest font-mono">
+                <div *ngIf="!ev.coverUrl" class="text-[4px] text-slate-400 font-bold text-center uppercase tracking-widest font-mono">
                   MOQUEGUA - PERÚ
                 </div>
               </div>
@@ -212,7 +213,7 @@
                 <div>
                   <!-- Blue badge Thesis -->
                   <span class="px-3 py-1 rounded-full text-[9px] font-black bg-[#0c3c60] text-white uppercase tracking-wider select-none shadow-sm">
-                    {{ ev.docType || 'Thesis' }}
+                    Proyecto
                   </span>
                   
                   <!-- Título del Repositorio -->
@@ -239,7 +240,7 @@
                     <span>🔍</span> Ver Resumen Completo
                   </button>
                   
-                  <a href="https://iestpchojata.edu.pe/repositorio/tesis-mock.pdf" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#be123c]/15 border border-[#be123c]/35 hover:bg-[#be123c]/25 text-[#f43f5e] no-underline transition-all shadow-sm">
+                  <a *ngIf="ev.pdfUrl?.trim()" [href]="ev.pdfUrl" target="_blank" rel="noopener" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#be123c]/15 border border-[#be123c]/35 hover:bg-[#be123c]/25 text-[#f43f5e] no-underline transition-all shadow-sm">
                     📥 Descargar PDF
                   </a>
                 </div>
@@ -351,8 +352,8 @@
         </button>
       </div>
 
-      <!-- Grid de Información Técnica -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+      <!-- Información técnica de cursos y eventos -->
+      <div *ngIf="ev.type !== 'Repositorio'" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         
         <!-- Columna 1: Fechas del Curso -->
         <div class="bg-white/[0.02] p-4 rounded-2xl border border-white/5 space-y-3">
@@ -422,8 +423,50 @@
 
       </div>
 
+      <!-- Detalle propio del repositorio -->
+      <div *ngIf="ev.type === 'Repositorio'" class="space-y-4 border-t border-white/5 pt-4">
+        <div class="rounded-2xl bg-white/[0.02] border border-white/5 p-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-2">
+            <span>👥</span> Responsables del proyecto
+          </h4>
+          <p class="text-sm text-slate-200 font-medium">
+            {{ ev.authors || 'Sin responsables registrados.' }}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="rounded-2xl bg-white/[0.02] border border-white/5 p-4">
+            <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500">Periodo académico</span>
+            <span class="block text-sm text-amber-400 font-bold font-mono mt-1">{{ ev.projectPeriod || 'No especificado' }}</span>
+          </div>
+          <div class="rounded-2xl bg-white/[0.02] border border-white/5 p-4">
+            <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500">Etapa / estado</span>
+            <span class="block text-sm text-emerald-400 font-bold mt-1">{{ ev.projectStatus || 'No especificado' }}</span>
+          </div>
+          <div class="rounded-2xl bg-white/[0.02] border border-white/5 p-4">
+            <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500">Línea de investigación</span>
+            <span class="block text-sm text-slate-200 font-medium mt-1">{{ ev.projectLine || 'No especificada' }}</span>
+          </div>
+          <div class="rounded-2xl bg-white/[0.02] border border-white/5 p-4">
+            <span class="block text-[10px] font-black uppercase tracking-wider text-slate-500">Periodo del proyecto</span>
+            <span class="block text-sm text-slate-200 font-medium font-mono mt-1">
+              {{ ev.date || 'No especificado' }}<span *ngIf="ev.courseEndDate"> → {{ ev.courseEndDate }}</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-white/[0.02] border border-white/5 p-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-2">
+            <span>📖</span> Descripción del proyecto
+          </h4>
+          <p class="text-sm text-slate-300 leading-relaxed font-medium whitespace-pre-line">
+            {{ ev.fullDescription || ev.description || 'Sin descripción disponible.' }}
+          </p>
+        </div>
+      </div>
+
       <!-- Acerca de la Actividad (Descripción) -->
-      <div class="space-y-2 border-t border-white/5 pt-4">
+      <div *ngIf="ev.type !== 'Repositorio'" class="space-y-2 border-t border-white/5 pt-4">
         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <span>📖</span> Acerca de la Actividad
         </h4>
@@ -434,7 +477,7 @@
       <!-- Botones de Acción -->
       <div class="flex items-center gap-3 pt-2">
         <button
-          *ngIf="ev.status === 'activo'"
+          *ngIf="ev.type !== 'Repositorio' && ev.status === 'activo'"
           (click)="startRegistrationFlow(ev); closeEventDetailsModal()"
           [disabled]="ev.registeredCount >= ev.capacity"
           class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 text-xs transition-all cursor-pointer text-center"

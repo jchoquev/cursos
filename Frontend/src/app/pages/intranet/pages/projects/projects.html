@@ -76,6 +76,7 @@
           <tr>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Código</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Título</th>
+            <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-center">Visible</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Responsable(s)</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Asesor(es)</th>
             <th class="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Línea</th>
@@ -105,12 +106,26 @@
           </ng-container>
           <ng-container *ngIf="!isLoading()">
             <tr *ngIf="proyectos().length === 0">
-              <td colspan="11" class="text-center py-10 text-slate-500 text-xs">No se encontraron proyectos registrados.</td>
+              <td colspan="12" class="text-center py-10 text-slate-500 text-xs">No se encontraron proyectos registrados.</td>
             </tr>
             <tr *ngFor="let p of proyectos()" class="hover:bg-white/[0.02] transition-colors">
               <td class="px-6 py-4 font-mono text-amber-300 font-bold text-[11px]">{{ p.Id }}</td>
               <td class="px-6 py-4 text-slate-200 font-semibold max-w-[200px]">
                 <div class="truncate" [title]="p.Titulo">{{ p.Titulo }}</div>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <button type="button" (click)="toggleHidden(p)"
+                  class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer"
+                  [attr.aria-label]="p.visible ? 'Ocultar proyecto' : 'Mostrar proyecto'"
+                  [ngClass]="p.visible ? 'bg-emerald-500/15 border-emerald-400/30' : 'bg-slate-500/10 border-slate-500/20'"
+                  [title]="p.visible ? 'Visible. Clic para ocultar' : 'Oculto. Clic para mostrar'">
+                  <span class="relative inline-block w-9 h-5 rounded-full transition-colors"
+                    [class.bg-emerald-500]="p.visible"
+                    [class.bg-slate-700]="!p.visible">
+                    <span class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"
+                      [class.translate-x-4]="p.visible"></span>
+                  </span>
+                </button>
               </td>
               <td class="px-6 py-4 text-slate-400 max-w-[140px]">
                 <span *ngFor="let r of p.Responsable; let last = last">{{ r }}<span *ngIf="!last">, </span></span>

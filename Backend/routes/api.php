@@ -26,6 +26,9 @@ Route::get('/periodo-aca', [PeriodoAcaController::class, 'index']);
 Route::get('/periodo-aca/activo', [PeriodoAcaController::class, 'activo']);
 Route::get('/validar-certificado/{codigo}', [ValidarCertificadoController::class, 'show']);
 Route::get('/resolucion-pdf-base64', [EDocumentoController::class, 'getResolucionBase64']);
+// El repositorio institucional es público; la gestión consulta /proyectos autenticado.
+Route::get('/proyectos/publicos', [ProyectoController::class, 'publicIndex']);
+Route::get('/proyectos/{id}/imagen-base64', [ProyectoController::class, 'publicImageBase64']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('eventos', EventoController::class)->except(['index', 'show']);
@@ -45,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('e-documentos', EDocumentoController::class);
     Route::apiResource('inv-lineas', InvLineaController::class);
     Route::apiResource('proyectos', ProyectoController::class);
+    Route::patch('/proyectos/{id}/hidden', [ProyectoController::class, 'toggleHidden']);
     Route::post('/proyectos/{id}/upload-files', [ProyectoController::class, 'uploadFiles']);
 });
 

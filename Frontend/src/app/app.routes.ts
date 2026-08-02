@@ -13,7 +13,12 @@ export const intranetGuard: CanActivateChildFn = (route, state) => {
 
   if (platformService.isLoggedIn()) {
     if (isLoginPath) {
-      // Si ya inició sesión, redirigir a la vista principal de la intranet
+      // Si el guard llegó al login durante la restauración de sesión,
+      // conserva la sección que el usuario había solicitado originalmente.
+      const returnUrl = new URLSearchParams(state.url.split('?')[1] || '').get('returnUrl');
+      if (returnUrl?.startsWith('/intranet/') && returnUrl !== '/intranet/login') {
+        return router.parseUrl(returnUrl);
+      }
       return router.createUrlTree(['/intranet/overview']);
     }
     return true;
@@ -21,8 +26,10 @@ export const intranetGuard: CanActivateChildFn = (route, state) => {
     if (isLoginPath) {
       return true;
     }
-    // Si no está logueado, redirigir a login
-    return router.createUrlTree(['/intranet/login']);
+    // Conserva la ruta solicitada para volver allí después del login.
+    return router.createUrlTree(['/intranet/login'], {
+      queryParams: { returnUrl: state.url },
+    });
   }
 };
 

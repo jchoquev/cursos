@@ -21,12 +21,16 @@ export interface EventItem {
   authors?: string;
   docType?: 'Thesis' | 'Artículo' | 'Proyecto';
   coverUrl?: string;
+  pdfUrl?: string;
   registrationStartDate?: string;
   registrationEndDate?: string;
   courseStartDate?: string;
   courseEndDate?: string;
   created_at?: string;
   Id_PeriodoAca?: string | null;
+  projectPeriod?: string;
+  projectLine?: string;
+  projectStatus?: string;
 }
 
 export interface PeriodoAca {
@@ -209,6 +213,57 @@ export class PlatformService {
     };
   }
 
+  mapBackendProyectoToEventItem(item: any): EventItem {
+    const authors = (value: unknown): string => {
+      if (Array.isArray(value)) return value.filter(Boolean).join('; ');
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed.filter(Boolean).join('; ') : value;
+        } catch {
+          return value;
+        }
+      }
+      return '';
+    };
+
+    const storageUrl = (path: string | null | undefined): string => {
+      const normalizedPath = String(path ?? '').trim();
+      if (!normalizedPath || normalizedPath.toLowerCase() === 'null' || normalizedPath.toLowerCase() === 'undefined') {
+        return '';
+      }
+      return `http://localhost:8000/storage/${normalizedPath.replace(/^\/+/, '')}`;
+    };
+    const start = item.Inicio || item.created_at || '';
+    const end = item.Fin || '';
+
+    return {
+      id: item.Id,
+      title: item.Titulo || 'Proyecto sin título',
+      type: 'Repositorio',
+      date: this.formatDate(start),
+      description: item.Resumen || 'Sin resumen disponible.',
+      fullDescription: item.Resumen || 'Sin resumen disponible.',
+      imageGradient: 'from-amber-600 via-rose-700 to-amber-600',
+      icon: '🔬',
+      status: 'activo',
+      hours: 0,
+      instructor: authors(item.Asesor),
+      capacity: 0,
+      registeredCount: 0,
+      authors: authors(item.Responsable),
+      docType: 'Proyecto',
+      coverUrl: storageUrl(item.ImgCaratula),
+      pdfUrl: storageUrl(item.PdfDocumento),
+      courseEndDate: this.formatDate(end),
+      created_at: item.created_at,
+      Id_PeriodoAca: item.Id_PeriodoAca || null,
+      projectPeriod: item.periodo_aca?.Asig || item.periodoAca?.Asig || '',
+      projectLine: item.linea?.Linea || '',
+      projectStatus: item.Estado || '',
+    };
+  }
+
   readonly periodosAca = signal<PeriodoAca[]>([]);
   private periodosLoaded = false;
 
@@ -216,10 +271,24 @@ export class PlatformService {
     if (!isPlatformBrowser(this.platformId)) return;
     if (!force && this.eventsLoaded && this.periodosLoaded) return;
     this.isLoading.set(true);
-    // Clear previous database events to prevent duplicate/lingering elements during loading
-    this.events.update(list => list.filter(e => e.type === 'Repositorio'));
+    // El repositorio se reconstruye desde la tabla `proyectos` en cada carga.
+    // Así no permanecen las tarjetas de demostración ni se duplican registros.
+    this.events.set([]);
 
-    const events$ = this.apiService.get<any[]>('/eventos');
+    const events$ = this.apiService.get<any[]>('/eventos').pipe(
+      catchError(err => {
+        // Un fallo en eventos no debe impedir que se muestre el repositorio.
+        console.error('Error loading events:', err);
+        return of([] as any[]);
+      })
+    );
+    const projects$ = this.apiService.get<any>('/proyectos/publicos', { per_page: 999 }).pipe(
+      map(response => Array.isArray(response) ? response : (response?.data || [])),
+      catchError(err => {
+        console.error('Error loading repository projects:', err);
+        return of([] as any[]);
+      })
+    );
     const periodos$ = this.apiService.get<PeriodoAca[]>('/periodo-aca').pipe(
       catchError(err => {
         console.error('Error loading periods in PlatformService:', err);
@@ -227,8 +296,8 @@ export class PlatformService {
       })
     );
 
-    forkJoin([events$, periodos$]).subscribe({
-      next: ([eventsData, periodosData]) => {
+    forkJoin([events$, projects$, periodos$]).subscribe({
+      next: ([eventsData, projectsData, periodosData]) => {
         // 1. Process Periodos
         if (Array.isArray(periodosData) && periodosData.length > 0) {
           // Sort periodos descending by Asig (e.g. 2026-I, 2025-II, 2025-I)
@@ -237,9 +306,12 @@ export class PlatformService {
           this.periodosLoaded = true;
         }
 
-        // 2. Process Events
+        // 2. Process Events and repository projects from the projects table
         if (Array.isArray(eventsData)) {
           const mapped = eventsData.map(item => this.mapBackendEventoToEventItem(item));
+          const mappedProjects = Array.isArray(projectsData)
+            ? projectsData.map(item => this.mapBackendProyectoToEventItem(item))
+            : [];
           
           const bannerRequests = mapped.map(event => {
             if (event.id && event.coverUrl) {
@@ -256,25 +328,40 @@ export class PlatformService {
             return of(event);
           });
 
-          if (bannerRequests.length > 0) {
-            forkJoin(bannerRequests).subscribe({
-              next: (updatedEvents) => {
-                const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
-                this.events.set([...updatedEvents, ...staticRepositorios]);
+          const projectImageRequests = mappedProjects.map(project => {
+            if (project.id && project.coverUrl) {
+              return this.apiService.get<{ base64: string | null }>(`/proyectos/${project.id}/imagen-base64`).pipe(
+                catchError(() => of({ base64: null })),
+                map(res => {
+                  if (res?.base64) {
+                    project.coverUrl = res.base64;
+                  }
+                  return project;
+                })
+              );
+            }
+            return of(project);
+          });
+
+          const imageRequests = [...bannerRequests, ...projectImageRequests];
+          if (imageRequests.length > 0) {
+            forkJoin(imageRequests).subscribe({
+              next: (updatedItems) => {
+                const updatedEvents = updatedItems.slice(0, bannerRequests.length);
+                const updatedProjects = updatedItems.slice(bannerRequests.length);
+                this.events.set([...updatedEvents, ...updatedProjects]);
                 this.eventsLoaded = true;
                 this.isLoading.set(false);
               },
               error: (err) => {
                 console.error('Error loading banners:', err);
-                const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
-                this.events.set([...mapped, ...staticRepositorios]);
+                this.events.set([...mapped, ...mappedProjects]);
                 this.eventsLoaded = true;
                 this.isLoading.set(false);
               }
             });
           } else {
-            const staticRepositorios = this.events().filter(e => e.type === 'Repositorio');
-            this.events.set([...mapped, ...staticRepositorios]);
+            this.events.set([...mapped, ...mappedProjects]);
             this.eventsLoaded = true;
             this.isLoading.set(false);
           }

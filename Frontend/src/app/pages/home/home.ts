@@ -163,6 +163,7 @@ export class Home implements OnInit {
       }
       return e;
     }).filter((e) => {
+      // Los proyectos públicos también respetan el periodo seleccionado.
       const matchPeriod = periodo === 'Todos' || e.Id_PeriodoAca === periodo;
       const matchCategory = cat === 'Todos' ? e.type !== 'Repositorio' : e.type === cat;
       return matchPeriod && matchCategory;

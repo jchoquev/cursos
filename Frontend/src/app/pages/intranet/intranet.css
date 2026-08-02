@@ -218,6 +218,61 @@
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25), 0 0 20px rgba(112, 15, 36, 0.1);
 }
 
+.kpi-metric-card .kpi-label {
+  display: block;
+  color: rgb(148 163 184);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.kpi-metric-card strong {
+  display: block;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-top: 10px;
+}
+
+.kpi-metric-card small {
+  display: block;
+  color: rgb(100 116 139);
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+.overview-action,
+.overview-primary,
+.overview-secondary {
+  align-items: center;
+  border-radius: 12px;
+  display: flex;
+  font-size: 12px;
+  font-weight: 700;
+  justify-content: center;
+  padding: 12px;
+  text-decoration: none;
+  transition: all .2s ease;
+}
+
+.overview-action { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: #e2e8f0; }
+.overview-action:hover { background: rgba(190,18,60,.18); border-color: rgba(244,63,94,.35); color: #fff; }
+.overview-primary { background: linear-gradient(135deg, #9f1239, #be123c); color: #fff; }
+.overview-secondary { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0; }
+.overview-primary:hover, .overview-secondary:hover { transform: translateY(-1px); filter: brightness(1.12); }
+.overview-link { color: #fbbf24; font-size: 11px; font-weight: 700; text-decoration: none; }
+.overview-link:hover { color: #fde68a; }
+.overview-row { align-items: center; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.05); border-radius: 12px; display: flex; justify-content: space-between; padding: 11px 13px; gap: 12px; }
+.overview-row b, .overview-row span { display: block; }
+.overview-row b { color: #e2e8f0; font-size: 12px; }
+.overview-row div span { color: rgb(100 116 139); font-size: 10px; margin-top: 3px; }
+.status-ok, .status-pending { border-radius: 999px; display: inline-block; font-size: 10px; font-weight: 800; padding: 4px 8px; white-space: nowrap; }
+.status-ok { background: rgba(16,185,129,.12); color: #34d399; }
+.status-pending { background: rgba(245,158,11,.12); color: #fbbf24; }
+.empty-overview { color: rgb(100 116 139); font-size: 12px; padding: 16px 0; text-align: center; }
+
 .earnings-premium-widget {
   background: linear-gradient(135deg, #a5224a 0%, #6d0d29 55%, #3b0010 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
