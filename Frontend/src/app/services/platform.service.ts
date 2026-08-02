@@ -55,6 +55,8 @@ export interface Registration {
   userDni: string;
   eventId: any;
   eventTitle: string;
+  periodoId?: string | null;
+  periodoAsig?: string;
   date: string;
   status: 'Pendiente' | 'Aprobado' | 'Rechazado';
   // Payment Validation fields
@@ -874,6 +876,8 @@ export class PlatformService {
               userDni: item.DNI,
               eventId: item.evento_id,
               eventTitle: item.evento_titulo || item.evento?.titulo || 'Evento Académico',
+              periodoId: item.periodo_id || item.evento?.Id_PeriodoAca || null,
+              periodoAsig: item.periodo_asig || item.evento?.periodo_academico?.Asig || '',
               date: this.formatDate(item.created_at),
               status: (isPaymentValidated ? 'Aprobado' : 'Pendiente') as 'Aprobado' | 'Pendiente' | 'Rechazado',
               isPaymentValidated: isPaymentValidated,

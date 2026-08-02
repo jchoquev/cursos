@@ -46,17 +46,16 @@ export class CertificatesComponent implements OnInit, OnDestroy {
     const size = this.certPageSize();
     let list = [...this.platformService.registrations().filter(r => r.isPaymentValidated)];
     if (periodId) {
-      const periodEventIds = new Set(
-        this.availableEvents().map(e => String(e.id))
-      );
-      list = list.filter(r => periodEventIds.has(String(r.eventId)));
+      list = list.filter(r => String(r.periodoId || '') === String(periodId));
     }
     if (eventId) list = list.filter(r => String(r.eventId) === String(eventId));
     if (query) list = list.filter(r =>
-      r.userName?.toLowerCase().includes(query) || r.userDni?.includes(query) || r.userEmail?.toLowerCase().includes(query)
+      r.userName?.toLowerCase().includes(query) || r.userDni?.includes(query) || r.userEmail?.toLowerCase().includes(query) ||
+      this.getAcademicPeriodName(r).toLowerCase().includes(query)
     );
     list.sort((a: any, b: any) => {
-      const valA = a[sortCol] || ''; const valB = b[sortCol] || '';
+      const valA = sortCol === 'periodoAsig' ? this.getAcademicPeriodName(a) : a[sortCol] || '';
+      const valB = sortCol === 'periodoAsig' ? this.getAcademicPeriodName(b) : b[sortCol] || '';
       return sortDir === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
     });
     const start = (page - 1) * size;
@@ -102,6 +101,19 @@ export class CertificatesComponent implements OnInit, OnDestroy {
 
   getPagesArray(n: number): number[] { return Array.from({ length: n }, (_, i) => i + 1); }
   getMinRecord(page: number, size: number, total: number): number { return Math.min(page * size, total); }
+
+  getAcademicPeriodName(registration: Registration): string {
+    if (registration.periodoAsig) return registration.periodoAsig;
+    const event = this.platformService.events().find(item => String(item.id) === String(registration.eventId))
+      || this.availableEvents().find(item => String(item.id) === String(registration.eventId));
+    if (event?.periodoAsig) return event.periodoAsig;
+    return this.academicPeriods().find(period => String(period.Id) === String(event?.Id_PeriodoAca))?.Asig || 'Sin periodo';
+  }
+
+  getParticipantType(registration: Registration): string {
+    const type = (registration.tipoAsistente || 'PARTICIPANTE').trim().toUpperCase();
+    return type === 'ASISTENTE' ? 'PARTICIPANTE' : type;
+  }
 
   ngOnInit(): void {
     this.platformService.loadRegistrations();

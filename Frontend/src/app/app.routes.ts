@@ -63,6 +63,7 @@ export const routes: Routes = [
           { path: 'register-events', loadComponent: () => import('./pages/intranet/pages/register-events/register-events').then(m => m.RegisterEventsComponent) },
           { path: 'internal-data', loadComponent: () => import('./pages/intranet/pages/internal-data/internal-data').then(m => m.InternalDataComponent) },
           { path: 'periodo-aca', loadComponent: () => import('./pages/intranet/pages/periodo-aca/periodo-aca').then(m => m.PeriodoAcaComponent) },
+          { path: 'tipo-asistentes', loadComponent: () => import('./pages/intranet/pages/tipo-asistentes/tipo-asistentes').then(m => m.TipoAsistentesComponent) },
         ]
       }
     ]

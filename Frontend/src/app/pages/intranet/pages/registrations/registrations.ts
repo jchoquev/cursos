@@ -107,6 +107,11 @@ export class RegistrationsComponent implements OnInit {
   getPagesArray(n: number): number[] { return Array.from({ length: n }, (_, i) => i + 1); }
   getMinRecord(page: number, size: number, total: number): number { return Math.min(page * size, total); }
 
+  getParticipantType(registration: Registration): string {
+    const type = (registration.tipoAsistente || 'PARTICIPANTE').trim().toUpperCase();
+    return type === 'ASISTENTE' ? 'PARTICIPANTE' : type;
+  }
+
   ngOnInit(): void {
     this.platformService.loadRegistrations();
     this.platformService.loadEvents();

@@ -14,6 +14,7 @@ use App\Http\Controllers\PeriodoAcaController;
 use App\Http\Controllers\InvLineaController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ValidarCertificadoController;
+use App\Http\Controllers\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/tipo-actividades', [TipoActividadController::class, 'index']);
@@ -31,6 +32,7 @@ Route::get('/proyectos/publicos', [ProyectoController::class, 'publicIndex']);
 Route::get('/proyectos/{id}/imagen-base64', [ProyectoController::class, 'publicImageBase64']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::apiResource('eventos', EventoController::class)->except(['index', 'show']);
     Route::apiResource('data-interna', DataInternaController::class)->parameters([
         'data-interna' => 'dni'
@@ -44,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/matriculas/{id}/emitir-certificado', [MatriculaController::class, 'emitirCertificado']);
     Route::post('/inscripciones/{id}/upload-pdf-escaneado', [MatriculaController::class, 'uploadPdfEscaneado']);
     Route::apiResource('periodo-aca', PeriodoAcaController::class)->except(['index'])->parameters(['periodo-aca' => 'id']);
+    Route::apiResource('tipo-asistentes', App\Http\Controllers\TipoAsistenteController::class)->except(['index'])->parameters(['tipo-asistentes' => 'id']);
     Route::get('/e-documentos/fondo-base64', [EDocumentoController::class, 'getFondoBase64']);
     Route::apiResource('e-documentos', EDocumentoController::class);
     Route::apiResource('inv-lineas', InvLineaController::class);

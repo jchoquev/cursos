@@ -144,6 +144,7 @@ export class IntranetShellComponent implements OnInit {
       'projects': 'Gestión de Proyectos',
       'register-events': 'Registro de Eventos',
       'internal-data': 'Información Interna',
+      'tipo-asistentes': 'Administración — Tipos de Asistente',
     };
     return map[seg] || seg;
   });
@@ -165,6 +166,7 @@ export class IntranetShellComponent implements OnInit {
       'internal-data': '📥 Gestión de Información Interna',
       'periodo-aca': '🗓️ Administración — Periodo Académico',
       'inv-lineas': '🧭 Investigación — Líneas de Investigación',
+      'tipo-asistentes': '🎫 Administración — Tipos de Asistente',
     };
     return map[seg] || seg;
   });

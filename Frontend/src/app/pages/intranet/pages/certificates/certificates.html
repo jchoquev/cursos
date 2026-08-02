@@ -60,6 +60,9 @@
             <th (click)="changeCertSort('eventTitle')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
               Curso / Evento <span class="text-[9px] font-bold text-slate-400 ml-1">{{ certSortColumn() === 'eventTitle' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
             </th>
+            <th (click)="changeCertSort('periodoAsig')" class="px-6 py-4 cursor-pointer hover:text-white transition-colors select-none">
+              Periodo Académico <span class="text-[9px] font-bold text-slate-400 ml-1">{{ certSortColumn() === 'periodoAsig' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
+            </th>
             <th (click)="changeCertSort('documentIssued')" class="px-6 py-4 text-center cursor-pointer hover:text-white transition-colors select-none">
               Estado Documento <span class="text-[9px] font-bold text-slate-400 ml-1">{{ certSortColumn() === 'documentIssued' ? (certSortDirection() === 'asc' ? '▲' : '▼') : '↕' }}</span>
             </th>
@@ -78,7 +81,7 @@
           </ng-container>
           <ng-container *ngIf="!platformService.isLoading()">
             <tr *ngIf="filteredAndPaginatedCertificates().items.length === 0">
-              <td colspan="5" class="text-center py-8 text-slate-500 text-xs">No se encontraron registros de certificados coincidentes.</td>
+              <td colspan="6" class="text-center py-8 text-slate-500 text-xs">No se encontraron registros de certificados coincidentes.</td>
             </tr>
             <tr *ngFor="let r of filteredAndPaginatedCertificates().items" class="hover:bg-white/[0.02]">
               <td class="px-6 py-4 font-mono font-bold text-amber-300">{{ r.documentCode || 'No asignado' }}</td>
@@ -86,7 +89,17 @@
                 <div class="font-bold text-slate-100">{{ r.userName }}</div>
                 <div class="text-xs font-mono text-slate-400">DNI: {{ r.userDni }} | {{ r.userEmail }}</div>
               </td>
-              <td class="px-6 py-4 text-slate-200 font-medium">{{ r.eventTitle }}</td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-100">{{ r.eventTitle }}</div>
+                <div class="text-[10px] font-bold uppercase tracking-wider text-sky-400 mt-1">
+                  {{ getParticipantType(r) }}
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-block px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold font-mono">
+                  {{ getAcademicPeriodName(r) }}
+                </span>
+              </td>
               <td class="px-6 py-4 text-center">
                 <span *ngIf="r.documentIssued" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Válido</span>
                 <span *ngIf="!r.documentIssued" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Apto para Emisión</span>

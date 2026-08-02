@@ -1,89 +1,49 @@
 <div class="space-y-6 animate-fade-in">
   <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl shadow-xl">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div>
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Panel operativo</p>
-        <h2 class="text-2xl font-black text-white mt-1">{{ roleTitle() }}</h2>
-        <p class="text-xs text-slate-400 mt-2">Datos actualizados desde los módulos disponibles para tu usuario.</p>
-      </div>
-      <span class="self-start px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-[10px] font-bold uppercase tracking-wider text-slate-400">
-        {{ role() || 'Sesión' }}
-      </span>
+      <div><p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Panel operativo en tiempo real</p><h2 class="text-2xl font-black text-white mt-1">{{ roleTitle() }}</h2><p class="text-xs text-slate-400 mt-2">Indicadores calculados desde matrículas, eventos, proyectos y documentos.</p></div>
+      <div class="flex items-center gap-2 self-start"><span class="px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-bold uppercase text-emerald-400">● Datos en vivo</span><span class="px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-[10px] font-bold uppercase text-slate-400">{{ dashboard()?.period?.name || 'Sin periodo' }}</span></div>
     </div>
   </div>
 
-  <!-- Administrador -->
-  <ng-container *ngIf="role() === 'Administrador'">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div class="kpi-metric-card"><span class="kpi-label">Usuarios</span><strong>{{ adminStats().users }}</strong><small>cuentas registradas</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Eventos activos</span><strong>{{ adminStats().activeEvents }}</strong><small>{{ adminStats().events }} eventos en total</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Pagos pendientes</span><strong>{{ adminStats().pendingPayments }}</strong><small>de {{ adminStats().registrations }} matrículas</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Proyectos publicados</span><strong>{{ adminStats().publishedProjects }}</strong><small>{{ adminStats().projects }} proyectos gestionados</small></div>
-    </div>
+  <div *ngIf="isLoading()" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div *ngFor="let item of [1,2,3,4]" class="kpi-metric-card animate-pulse"><div class="h-3 bg-white/10 rounded w-24"></div><div class="h-9 bg-white/10 rounded w-16 mt-4"></div><div class="h-3 bg-white/10 rounded w-32 mt-3"></div></div>
+  </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
-        <h3 class="text-sm font-bold text-slate-200 mb-4">⚡ Accesos de administración</h3>
-        <div class="grid grid-cols-2 gap-3">
-          <a routerLink="/intranet/users" class="overview-action">👥 Usuarios</a>
-          <a routerLink="/intranet/registrations" class="overview-action">📥 Matrículas</a>
-          <a routerLink="/intranet/projects" class="overview-action">🔬 Proyectos</a>
-          <a routerLink="/intranet/courses" class="overview-action">📅 Eventos</a>
-        </div>
-      </section>
-      <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
-        <h3 class="text-sm font-bold text-slate-200 mb-4">📊 Estado global</h3>
-        <div class="grid grid-cols-2 gap-4 text-xs">
-          <div><span class="text-slate-500 block">Certificados emitidos</span><b class="text-amber-400 text-xl">{{ adminStats().issuedCertificates }}</b></div>
-          <div><span class="text-slate-500 block">Proyectos ocultos</span><b class="text-rose-400 text-xl">{{ adminStats().projects - adminStats().publishedProjects }}</b></div>
-        </div>
-      </section>
-    </div>
-  </ng-container>
-
-  <!-- Caja -->
-  <ng-container *ngIf="role() === 'Caja'">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div class="kpi-metric-card"><span class="kpi-label">Matrículas</span><strong>{{ cashStats().total }}</strong><small>solicitudes recibidas</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Por validar</span><strong class="text-amber-400">{{ cashStats().pending }}</strong><small>requieren revisión de pago</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Validadas</span><strong class="text-emerald-400">{{ cashStats().validated }}</strong><small>pagos confirmados</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Monto registrado</span><strong>S/ {{ cashStats().collected | number:'1.2-2' }}</strong><small>según recibos cargados</small></div>
-    </div>
-    <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-sm font-bold text-slate-200">🧾 Últimas matrículas</h3><a routerLink="/intranet/registrations" class="overview-link">Ver todas →</a></div>
-      <div class="space-y-2" *ngIf="recentRegistrations().length; else noCashData">
-        <div *ngFor="let registration of recentRegistrations()" class="overview-row"><div><b>{{ registration.userName }}</b><span>{{ registration.eventTitle }}</span></div><span [class]="registration.isPaymentValidated ? 'status-ok' : 'status-pending'">{{ registration.isPaymentValidated ? 'Validado' : 'Pendiente' }}</span></div>
+  <ng-container *ngIf="dashboard() as data">
+    <!-- Administrador -->
+    <ng-container *ngIf="role() === 'Administrador'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="kpi-metric-card"><span class="kpi-label">Recaudación del periodo</span><strong class="text-emerald-400">S/ {{ data.summary.revenue | number:'1.2-2' }}</strong><small>{{ data.summary.validated_payments }} pagos validados</small></div>
+        <div class="kpi-metric-card"><span class="kpi-label">Pagos pendientes</span><strong class="text-amber-400">{{ data.summary.pending_payments }}</strong><small>de {{ data.summary.registrations }} matrículas</small></div>
+        <div class="kpi-metric-card"><span class="kpi-label">Eventos activos</span><strong>{{ data.summary.active_events }}</strong><small>{{ data.summary.events }} eventos del periodo</small></div>
+        <div class="kpi-metric-card"><span class="kpi-label">Proyectos publicados</span><strong class="text-sky-400">{{ data.summary.published_projects }}</strong><small>{{ data.summary.projects }} proyectos registrados</small></div>
       </div>
-      <ng-template #noCashData><p class="empty-overview">No hay matrículas registradas.</p></ng-template>
-    </section>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <section class="overview-panel"><div class="flex justify-between items-center mb-5"><h3 class="overview-title">📊 Eventos por tipo</h3><a routerLink="/intranet/courses" class="overview-link">Gestionar →</a></div><div class="space-y-4"><div *ngFor="let item of data.charts.event_types"><div class="flex justify-between text-xs mb-1.5"><span class="text-slate-300 font-semibold">{{ item.label }}</span><b class="text-amber-400">{{ item.value }}</b></div><div class="h-2 rounded-full bg-white/5 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-rose-700 to-amber-400 transition-all duration-700" [style.width]="chartWidth(item.value, data.charts.event_types)"></div></div></div><p *ngIf="!data.charts.event_types.length" class="empty-overview">No hay eventos en el periodo activo.</p></div></section>
+        <section class="overview-panel"><div class="flex justify-between items-center mb-5"><h3 class="overview-title">💰 Estado de recaudación</h3><a routerLink="/intranet/registrations" class="overview-link">Ver pagos →</a></div><div class="space-y-4"><div *ngFor="let item of data.charts.payment_states"><div class="flex justify-between text-xs mb-1.5"><span class="text-slate-300 font-semibold">{{ item.label }}</span><b [class]="item.label === 'Validados' ? 'text-emerald-400' : 'text-amber-400'">{{ item.value }}</b></div><div class="h-2 rounded-full bg-white/5 overflow-hidden"><div class="h-full rounded-full transition-all duration-700" [class]="item.label === 'Validados' ? 'bg-emerald-500' : 'bg-amber-500'" [style.width]="chartWidth(item.value, data.charts.payment_states)"></div></div></div></div></section>
+      </div>
+    </ng-container>
+
+    <!-- Caja -->
+    <ng-container *ngIf="role() === 'Caja'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"><div class="kpi-metric-card"><span class="kpi-label">Recaudado</span><strong class="text-emerald-400">S/ {{ data.summary.revenue | number:'1.2-2' }}</strong><small>periodo {{ data.period?.name || 'actual' }}</small></div><div class="kpi-metric-card"><span class="kpi-label">Pendientes</span><strong class="text-amber-400">{{ data.summary.pending_payments }}</strong><small>pagos por validar</small></div><div class="kpi-metric-card"><span class="kpi-label">Validados</span><strong>{{ data.summary.validated_payments }}</strong><small>pagos confirmados</small></div><div class="kpi-metric-card"><span class="kpi-label">Matrículas</span><strong>{{ data.summary.registrations }}</strong><small>solicitudes del periodo</small></div></div>
+      <section class="overview-panel"><div class="flex justify-between items-center mb-5"><h3 class="overview-title">🧾 Flujo de pagos</h3><a routerLink="/intranet/registrations" class="overview-link">Validar matrículas →</a></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div *ngFor="let item of data.charts.payment_states" class="rounded-2xl bg-white/[0.03] border border-white/5 p-5"><div class="flex justify-between"><span class="text-xs text-slate-400">{{ item.label }}</span><b class="text-xl text-white">{{ item.value }}</b></div><div class="mt-4 h-3 rounded-full bg-white/5 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-400" [style.width]="chartWidth(item.value, data.charts.payment_states)"></div></div></div></div><div class="mt-5 text-xs text-slate-400">Total recaudado según los recibos registrados: <strong class="text-emerald-400">S/ {{ data.summary.revenue | number:'1.2-2' }}</strong></div></section>
+      <section class="overview-panel"><h3 class="overview-title mb-4">🕘 Últimas solicitudes</h3><div class="space-y-2"><div *ngFor="let item of data.recent.registrations" class="overview-row"><div><b>{{ item.name }}</b><span>{{ item.event }}</span></div><span [class]="item.paid ? 'status-ok' : 'status-pending'">{{ item.paid ? 'Validado' : 'Pendiente' }}</span></div><p *ngIf="!data.recent.registrations.length" class="empty-overview">No hay matrículas en el periodo.</p></div></section>
+    </ng-container>
+
+    <!-- Formación Continua -->
+    <ng-container *ngIf="role() === 'Formación Continua'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"><div class="kpi-metric-card"><span class="kpi-label">Eventos activos</span><strong>{{ data.summary.active_events }}</strong><small>de {{ data.summary.events }} eventos</small></div><div class="kpi-metric-card"><span class="kpi-label">Participantes</span><strong>{{ data.summary.registrations }}</strong><small>matrículas recibidas</small></div><div class="kpi-metric-card"><span class="kpi-label">Certificados</span><strong class="text-sky-400">{{ data.summary.certificates }}</strong><small>documentos emitidos</small></div><div class="kpi-metric-card"><span class="kpi-label">Recaudación</span><strong class="text-emerald-400">S/ {{ data.summary.revenue | number:'1.2-2' }}</strong><small>pagos validados</small></div></div>
+      <section class="overview-panel"><div class="flex justify-between items-center mb-5"><h3 class="overview-title">📚 Oferta académica</h3><a routerLink="/intranet/courses" class="overview-link">Gestionar eventos →</a></div><div class="space-y-4"><div *ngFor="let item of data.charts.event_types"><div class="flex justify-between text-xs mb-1.5"><span class="text-slate-300 font-semibold">{{ item.label }}</span><b class="text-amber-400">{{ item.value }}</b></div><div class="h-2 rounded-full bg-white/5 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-sky-600 to-cyan-400" [style.width]="chartWidth(item.value, data.charts.event_types)"></div></div></div></div></section>
+    </ng-container>
+
+    <!-- Investigación -->
+    <ng-container *ngIf="role() === 'Investigación'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"><div class="kpi-metric-card"><span class="kpi-label">Proyectos</span><strong>{{ data.summary.projects }}</strong><small>del periodo activo</small></div><div class="kpi-metric-card"><span class="kpi-label">Publicados</span><strong class="text-emerald-400">{{ data.summary.published_projects }}</strong><small>visibles en repositorio</small></div><div class="kpi-metric-card"><span class="kpi-label">En ejecución</span><strong class="text-amber-400">{{ data.summary.projects_in_progress }}</strong><small>en desarrollo</small></div><div class="kpi-metric-card"><span class="kpi-label">Concluidos</span><strong>{{ data.summary.completed_projects }}</strong><small>investigaciones finalizadas</small></div></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5"><section class="overview-panel"><div class="flex justify-between items-center mb-5"><h3 class="overview-title">🔬 Estado de proyectos</h3><a routerLink="/intranet/projects" class="overview-link">Gestionar →</a></div><div class="space-y-4"><div *ngFor="let item of data.charts.project_states"><div class="flex justify-between text-xs mb-1.5"><span class="text-slate-300 font-semibold">{{ item.label }}</span><b class="text-amber-400">{{ item.value }}</b></div><div class="h-2 rounded-full bg-white/5 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-violet-700 to-fuchsia-400" [style.width]="chartWidth(item.value, data.charts.project_states)"></div></div></div></div></section><section class="overview-panel"><h3 class="overview-title mb-4">🕘 Proyectos recientes</h3><div class="space-y-2"><div *ngFor="let item of data.recent.projects" class="overview-row"><div><b>{{ item.title }}</b><span>{{ item.period || 'Sin periodo' }} · {{ item.state }}</span></div><span [class]="item.published ? 'status-ok' : 'status-pending'">{{ item.published ? 'Publicado' : 'Oculto' }}</span></div><p *ngIf="!data.recent.projects.length" class="empty-overview">No hay proyectos en el periodo.</p></div></section></div>
+    </ng-container>
   </ng-container>
 
-  <!-- Formación Continua -->
-  <ng-container *ngIf="role() === 'Formación Continua'">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div class="kpi-metric-card"><span class="kpi-label">Eventos activos</span><strong>{{ formationStats().activeEvents }}</strong><small>{{ formationStats().totalEvents }} eventos gestionados</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Eventos concluidos</span><strong>{{ formationStats().pastEvents }}</strong><small>historial académico</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Participantes</span><strong>{{ formationStats().registrations }}</strong><small>matrículas registradas</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Certificados</span><strong class="text-emerald-400">{{ formationStats().certificates }}</strong><small>documentos emitidos</small></div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div *ngFor="let item of eventTypeSummary()" class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl"><span class="text-[10px] uppercase tracking-wider text-slate-500">{{ item.type }}</span><div class="text-3xl font-black text-white mt-2">{{ item.total }}</div><p class="text-xs text-emerald-400 mt-1">{{ item.active }} activos</p></div>
-    </div>
-    <div class="flex gap-3"><a routerLink="/intranet/courses" class="overview-primary">📅 Gestionar eventos</a><a routerLink="/intranet/certificates" class="overview-secondary">🎓 Emitir certificados</a></div>
-  </ng-container>
-
-  <!-- Investigación -->
-  <ng-container *ngIf="role() === 'Investigación'">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div class="kpi-metric-card"><span class="kpi-label">Proyectos</span><strong>{{ researchStats().total }}</strong><small>registros de investigación</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Publicados</span><strong class="text-emerald-400">{{ researchStats().published }}</strong><small>visibles en repositorio</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">En ejecución</span><strong class="text-amber-400">{{ researchStats().inProgress }}</strong><small>proyectos en desarrollo</small></div>
-      <div class="kpi-metric-card"><span class="kpi-label">Concluidos</span><strong>{{ researchStats().completed }}</strong><small>investigaciones finalizadas</small></div>
-    </div>
-    <section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-xl">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-sm font-bold text-slate-200">🔬 Proyectos recientes</h3><a routerLink="/intranet/projects" class="overview-link">Gestionar →</a></div>
-      <div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-white/5"><th class="py-3 pr-3">Proyecto</th><th class="py-3 pr-3">Periodo</th><th class="py-3 pr-3">Inicio</th><th class="py-3">Estado</th></tr></thead><tbody><tr *ngFor="let project of recentProjects()" class="border-b border-white/5 text-slate-300"><td class="py-3 pr-3 font-semibold min-w-56">{{ project.Titulo }}</td><td class="py-3 pr-3 text-amber-400">{{ project.periodo_aca?.Asig || '—' }}</td><td class="py-3 pr-3 font-mono">{{ project.Inicio | date:'dd/MM/yyyy' }}</td><td class="py-3"><span [class]="project.hidden ? 'status-pending' : 'status-ok'">{{ project.hidden ? 'Oculto' : (project.Estado || 'Publicado') }}</span></td></tr></tbody></table></div>
-      <p *ngIf="!recentProjects().length" class="empty-overview">No hay proyectos disponibles.</p>
-    </section>
-  </ng-container>
+  <div *ngIf="!isLoading() && !dashboard()" class="overview-panel text-center"><p class="text-sm text-rose-400">No se pudieron cargar las estadísticas.</p><button (click)="loadDashboardStats()" class="overview-primary mx-auto mt-4">↻ Reintentar</button></div>
 </div>

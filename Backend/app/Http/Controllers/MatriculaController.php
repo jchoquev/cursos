@@ -14,9 +14,15 @@ class MatriculaController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Matricula::with(['documento', 'tipoAsistenteRel'])
+        $query = Matricula::with(['documento', 'tipoAsistenteRel', 'evento.periodoAcademico'])
             ->join('eventos', 'matriculas.evento_id', '=', 'eventos.id')
-            ->select('matriculas.*', 'eventos.titulo as evento_titulo')
+            ->leftJoin('periodo_aca', 'eventos.Id_PeriodoAca', '=', 'periodo_aca.Id')
+            ->select(
+                'matriculas.*',
+                'eventos.titulo as evento_titulo',
+                'eventos.Id_PeriodoAca as periodo_id',
+                'periodo_aca.Asig as periodo_asig'
+            )
             ->whereNull('matriculas.deleted_at')
             ->whereNull('eventos.deleted_at');
 

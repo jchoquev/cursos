@@ -93,13 +93,15 @@
             </tr>
             <tr *ngFor="let r of filteredAndPaginatedRegistrations().items" class="hover:bg-white/[0.02]">
               <td class="px-6 py-4">
-                <div class="font-bold text-slate-100 flex items-center gap-2">
-                  {{ r.userName }}
-                  <span class="inline-block px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] text-slate-400 uppercase font-black">{{ r.tipoAsistente }}</span>
-                </div>
+                <div class="font-bold text-slate-100">{{ r.userName }}</div>
                 <div class="text-xs text-slate-400 font-mono">DNI: {{ r.userDni }} | {{ r.userEmail }}</div>
               </td>
-              <td class="px-6 py-4"><div class="font-medium text-slate-200">{{ r.eventTitle }}</div></td>
+              <td class="px-6 py-4">
+                <div class="font-bold text-slate-100">{{ r.eventTitle }}</div>
+                <div class="text-[10px] font-bold uppercase tracking-wider text-sky-400 mt-1">
+                  {{ getParticipantType(r) }}
+                </div>
+              </td>
               <td class="px-6 py-4 font-mono text-slate-400">{{ r.date }}</td>
               <td class="px-6 py-4 text-center">
                 <span *ngIf="r.isPaymentValidated" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ Validado</span>
