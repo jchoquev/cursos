@@ -79,26 +79,21 @@
     </div>
   </div>
 
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4">
-    <div class="text-xs text-slate-400 font-medium">
-      Mostrando registros del {{ filteredAndPaginatedUsers().items.length === 0 ? 0 : (userCurrentPage() - 1) * userPageSize() + 1 }} al
-      {{ getMinRecord(userCurrentPage(), userPageSize(), filteredAndPaginatedUsers().totalItems) }} de un total de {{ filteredAndPaginatedUsers().totalItems }} registros
-    </div>
-    <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedUsers().totalPages > 1">
-      <button [disabled]="userCurrentPage() === 1" (click)="userCurrentPage.set(userCurrentPage() - 1)"
-        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
-      <button *ngFor="let page of getPagesArray(filteredAndPaginatedUsers().totalPages)" (click)="userCurrentPage.set(page)"
-        [class]="userCurrentPage() === page ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all' : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
-      <button [disabled]="userCurrentPage() === filteredAndPaginatedUsers().totalPages" (click)="userCurrentPage.set(userCurrentPage() + 1)"
-        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
-    </div>
-  </div>
+  <app-pagination
+    [page]="userCurrentPage()"
+    [pageSize]="userPageSize()"
+    [totalItems]="filteredAndPaginatedUsers().totalItems"
+    [totalPages]="filteredAndPaginatedUsers().totalPages"
+    (pageChange)="userCurrentPage.set($event)" />
 </div>
 
 <!-- Modal Agregar/Editar Usuario -->
-<div *ngIf="showUserModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
-    <h3 class="text-lg font-bold text-slate-100">{{ isEditing() ? '📝 Editar Datos de Usuario' : '👥 Registrar Nuevo Usuario' }}</h3>
+<app-modal
+  [open]="showUserModal()"
+  [title]="isEditing() ? '📝 Editar Datos de Usuario' : '👥 Registrar Nuevo Usuario'"
+  maxWidth="max-w-md"
+  panelClass="bg-slate-900 border border-white/10"
+  (closed)="showUserModal.set(false)">
     <div class="space-y-4 text-sm font-medium">
       <div>
         <label class="block text-xs text-slate-400 mb-1">Nombre Completo</label>
@@ -136,7 +131,7 @@
       </div>
     </div>
     <div *ngIf="saveUserError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">⚠️ {{ saveUserError() }}</div>
-    <div class="flex items-center gap-3 pt-2">
+  <div modal-footer class="flex items-center gap-3">
       <button (click)="saveUser()" [disabled]="savingUser()"
         class="flex-1 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
         {{ savingUser() ? 'Procesando...' : 'Guardar Cambios' }}
@@ -145,6 +140,5 @@
         class="flex-1 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
         Cancelar
       </button>
-    </div>
   </div>
-</div>
+</app-modal>

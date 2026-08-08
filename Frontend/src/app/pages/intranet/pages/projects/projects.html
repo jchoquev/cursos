@@ -188,54 +188,23 @@
         </tbody>
       </table>
     </div>
-    <!-- Paginación -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/5">
-      <div class="text-xs text-slate-400 font-medium">
-        Mostrando {{ proyectos().length === 0 ? 0 : (currentPage() - 1) * perPage() + 1 }}
-        al {{ (currentPage() - 1) * perPage() + proyectos().length }}
-        de {{ total() }} proyectos
-      </div>
-      <div class="flex items-center gap-1.5" *ngIf="lastPage() > 1">
-        <button [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"
-          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-          Anterior
-        </button>
-        <ng-container *ngFor="let page of pagesArray()">
-          <button *ngIf="page === 1 || page === lastPage() || (page >= currentPage() - 1 && page <= currentPage() + 1)"
-            (click)="goToPage(page)"
-            [class]="currentPage() === page
-              ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold'
-              : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">
-            {{ page }}
-          </button>
-          <span *ngIf="(page === currentPage() - 2 && page > 1) || (page === currentPage() + 2 && page < lastPage())"
-            class="text-slate-600 text-xs px-1">…</span>
-        </ng-container>
-        <button [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)"
-          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-          Siguiente
-        </button>
-      </div>
-    </div>
+    <app-pagination
+      [page]="currentPage()"
+      [pageSize]="perPage()"
+      [totalItems]="total()"
+      [totalPages]="lastPage()"
+      itemLabel="proyectos"
+      (pageChange)="goToPage($event)" />
   </div>
 </div>
 
 <!-- Modal Nuevo / Editar Proyecto -->
-<div *ngIf="showModal()" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto animate-fade-in p-3 sm:p-5">
-  <div class="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-3xl shadow-2xl my-2 sm:my-5 max-h-[calc(100vh-2rem)] flex flex-col">
-
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 sm:px-8 py-4 border-b border-white/5 shrink-0">
-      <div>
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          🔬 {{ isEditing() ? 'Editar Proyecto de Investigación' : 'Nuevo Proyecto de Investigación' }}
-        </h3>
-        <p class="text-[11px] text-slate-500 mt-0.5">Registro institucional de proyecto de investigación</p>
-      </div>
-      <button (click)="showModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold border-none">✕</button>
-    </div>
-
-    <form (submit)="save(); $event.preventDefault()" class="px-6 sm:px-8 pt-5 pb-6 space-y-6 overflow-y-auto">
+<app-modal [open]="showModal()"
+  [title]="isEditing() ? '🔬 Editar Proyecto de Investigación' : '🔬 Nuevo Proyecto de Investigación'"
+  description="Registro institucional de proyecto de investigación"
+  maxWidth="max-w-3xl" panelClass="bg-slate-900 border border-white/10"
+  (closed)="showModal.set(false)">
+    <form id="projectForm" (submit)="save(); $event.preventDefault()" class="space-y-6">
 
       <!-- Datos generales -->
       <section class="space-y-3">
@@ -357,40 +326,26 @@
         ⚠️ {{ saveError() }}
       </div>
 
-      <!-- Footer -->
-      <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
-        <button type="button" (click)="showModal.set(false)" [disabled]="saving()"
-          class="px-5 py-3 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">
-          ✕ Cerrar
-        </button>
-        <button type="submit" [disabled]="saving()"
-          class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
-          <span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
-          {{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Registrar Proyecto') }}
-        </button>
-      </div>
     </form>
+  <div modal-footer class="flex items-center justify-end gap-3">
+    <button type="button" (click)="showModal.set(false)" [disabled]="saving()"
+      class="px-5 py-3 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">✕ Cerrar</button>
+    <button type="submit" form="projectForm" [disabled]="saving()"
+      class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+      <span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+      {{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Registrar Proyecto') }}
+    </button>
   </div>
-</div>
+</app-modal>
 
 <!-- ==========================================
      MODAL SUBIR PDF DEL PROYECTO (DISEÑO MOCK)
      ========================================== -->
-<div *ngIf="showUploadPdfModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm overflow-y-auto animate-fade-in p-4">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-slate-900">
-      <div>
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          📄 Subir PDF del Proyecto
-        </h3>
-        <p class="text-[10px] text-slate-500 mt-0.5">Asociar documento oficial de investigación</p>
-      </div>
-      <button (click)="showUploadPdfModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold border-none">✕</button>
-    </div>
-    
-    <!-- Body -->
-    <div class="p-6 space-y-4">
+<app-modal [open]="showUploadPdfModal()" title="📄 Subir PDF del Proyecto"
+  description="Asociar documento oficial de investigación"
+  maxWidth="max-w-md" panelClass="bg-slate-900 border border-white/10"
+  (closed)="showUploadPdfModal.set(false)">
+    <div class="space-y-4">
       <div>
         <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Proyecto Seleccionado</div>
         <div class="text-xs font-semibold text-slate-200 truncate bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2">
@@ -414,38 +369,25 @@
         ⚠️ {{ pdfUploadError() }}
       </div>
       
-      <!-- Footer Buttons -->
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-white/5">
-        <button (click)="showUploadPdfModal.set(false)" class="px-4 py-2.5 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer">
-          ✕ Cancelar
-        </button>
-        <button (click)="uploadPdf()" [disabled]="!selectedPdfFile() || isUploadingPdf()" class="px-5 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
-          <span *ngIf="isUploadingPdf()" class="inline-block w-3 h-3 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
-          {{ isUploadingPdf() ? 'Subiendo...' : '✓ Subir Archivo' }}
-        </button>
-      </div>
     </div>
+  <div modal-footer class="flex items-center justify-end gap-3">
+    <button (click)="showUploadPdfModal.set(false)" class="px-4 py-2.5 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer">✕ Cancelar</button>
+    <button (click)="uploadPdf()" [disabled]="!selectedPdfFile() || isUploadingPdf()" class="px-5 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+      <span *ngIf="isUploadingPdf()" class="inline-block w-3 h-3 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+      {{ isUploadingPdf() ? 'Subiendo...' : '✓ Subir Archivo' }}
+    </button>
   </div>
-</div>
+</app-modal>
 
 <!-- ==========================================
      MODAL PREVISUALIZAR PDF (IFRAME)
      ========================================== -->
-<div *ngIf="showPreviewPdfModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-slate-900">
-      <div class="max-w-[80%]">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2 truncate">
-          📕 Vista Previa: {{ previewProject()?.Titulo }}
-        </h3>
-        <p class="text-[10px] text-slate-500 mt-0.5">Visualización del documento de investigación</p>
-      </div>
-      <button (click)="showPreviewPdfModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold border-none">✕</button>
-    </div>
-
-    <!-- Viewer Body -->
-    <div class="flex-1 bg-slate-950 p-4 flex items-center justify-center relative overflow-hidden">
+<app-modal [open]="showPreviewPdfModal()"
+  [title]="'📕 Vista Previa: ' + (previewProject()?.Titulo || '')"
+  description="Visualización del documento de investigación"
+  maxWidth="max-w-4xl" panelClass="bg-slate-900 border border-white/10"
+  (closed)="showPreviewPdfModal.set(false)">
+    <div class="h-[calc(100dvh-14rem)] min-h-[32rem] bg-slate-950 p-4 flex items-center justify-center relative overflow-hidden">
       <!-- Visor de PDF con iframe seguro -->
       <iframe *ngIf="previewPdfUrl()" [src]="previewPdfUrl()" class="w-full h-full border-none rounded-xl bg-white"></iframe>
       
@@ -458,13 +400,8 @@
         </p>
       </div>
     </div>
-
-    <!-- Footer -->
-    <div class="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-slate-900/50">
-      <div class="text-[11px] text-slate-500 font-mono">Código del Proyecto: <span class="text-amber-300 font-bold">{{ previewProject()?.Id }}</span></div>
-      <button (click)="showPreviewPdfModal.set(false)" class="px-5 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer">
-        Cerrar Vista Previa
-      </button>
-    </div>
+  <div modal-footer class="flex items-center justify-between">
+    <div class="text-[11px] text-slate-500 font-mono">Código del Proyecto: <span class="text-amber-300 font-bold">{{ previewProject()?.Id }}</span></div>
+    <button (click)="showPreviewPdfModal.set(false)" class="px-5 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer">Cerrar Vista Previa</button>
   </div>
-</div>
+</app-modal>

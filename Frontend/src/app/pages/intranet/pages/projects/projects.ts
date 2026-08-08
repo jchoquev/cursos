@@ -7,6 +7,8 @@ import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { AlertService } from '../../../../services/alert.service';
 import { environment } from '../../../../../environments/environment';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 export interface InvLinea {
   Id: string;
@@ -46,7 +48,7 @@ export interface Proyecto {
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [CommonModule, FormsModule, DateFormatPipe],
+  imports: [CommonModule, FormsModule, DateFormatPipe, ModalComponent, PaginationComponent],
   templateUrl: './projects.html',
 })
 export class ProjectsComponent implements OnInit {
@@ -85,7 +87,6 @@ export class ProjectsComponent implements OnInit {
   periodoFiltro = signal<string>('');
 
   readonly totalPages = computed(() => this.lastPage());
-  readonly pagesArray = computed(() => Array.from({ length: this.lastPage() }, (_, i) => i + 1));
   readonly lineasDelPeriodo = computed(() => {
     const periodoId = this.form().Id_PeriodoAca;
     return this.lineas().filter(linea => !periodoId || linea.Id_PeriodoAca === periodoId);

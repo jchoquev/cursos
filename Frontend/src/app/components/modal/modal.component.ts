@@ -20,6 +20,7 @@ import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './modal.component.html',
+  styleUrl: './modal.component.css',
 })
 export class ModalComponent implements AfterViewInit, OnDestroy {
   readonly open = input(false);

@@ -50,13 +50,13 @@
   </div>
 </div>
 
-<div *ngIf="showModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5">
-    <div class="flex items-center justify-between border-b border-white/5 pb-3">
-      <h3 class="text-base font-bold text-white flex items-center gap-2"><span>🎫</span>{{ isEditing() ? 'Editar Tipo de Asistente' : 'Nuevo Tipo de Asistente' }}</h3>
-      <button (click)="showModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">✕</button>
-    </div>
-    <form (submit)="save(); $event.preventDefault()" class="space-y-4">
+<app-modal
+  [open]="showModal()"
+  [title]="isEditing() ? '🎫 Editar Tipo de Asistente' : '🎫 Nuevo Tipo de Asistente'"
+  maxWidth="max-w-md"
+  panelClass="bg-slate-900 border border-white/10"
+  (closed)="showModal.set(false)">
+    <form id="attendeeTypeForm" (submit)="save(); $event.preventDefault()" class="space-y-4">
       <div>
         <label class="block text-[11px] text-slate-400 mb-1 font-bold uppercase tracking-wider">Nombre del tipo <span class="text-rose-400">*</span></label>
         <input type="text" [ngModel]="form().AsigTipo" (ngModelChange)="form.update(f => ({...f, AsigTipo: $event}))" name="AsigTipo" placeholder="Ej: PONENTE"
@@ -64,10 +64,9 @@
       </div>
       <p class="text-[11px] text-slate-500">Este nombre se utilizará en las matrículas, certificados y plantillas de documentos.</p>
       <div *ngIf="saveError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">⚠️ {{ saveError() }}</div>
-      <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
-        <button type="button" (click)="showModal.set(false)" [disabled]="saving()" class="px-5 py-2.5 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">✕ Cancelar</button>
-        <button type="submit" [disabled]="saving()" class="px-6 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50"><span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>{{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Crear Tipo') }}</button>
-      </div>
     </form>
+  <div modal-footer class="flex items-center justify-end gap-3">
+    <button type="button" (click)="showModal.set(false)" [disabled]="saving()" class="px-5 py-2.5 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">✕ Cancelar</button>
+    <button type="submit" form="attendeeTypeForm" [disabled]="saving()" class="px-6 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50"><span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>{{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Crear Tipo') }}</button>
   </div>
-</div>
+</app-modal>

@@ -30,7 +30,13 @@
 }
 
 .hero-content {
+  z-index: 2;
+}
+
+.hero-particles {
   z-index: 1;
+  pointer-events: none;
+  opacity: 0.72;
 }
 
 .hero-control {

@@ -39,6 +39,11 @@ export class HeroImage implements AfterViewInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private autoplayId?: number;
   private transition?: gsap.core.Timeline;
+  private particleCanvas?: HTMLCanvasElement;
+  private particleContext?: CanvasRenderingContext2D;
+  private particleAnimationId?: number;
+  private particleResizeHandler?: () => void;
+  private particles: HeroParticle[] = [];
 
   ngAfterViewInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -47,12 +52,15 @@ export class HeroImage implements AfterViewInit, OnDestroy {
     gsap.set(slideElements, { autoAlpha: 0 });
     gsap.set(slideElements[0], { autoAlpha: 1 });
     this.animateContent(slideElements[0], true);
+    this.startParticles();
     this.startAutoplay();
   }
 
   ngOnDestroy(): void {
     this.stopAutoplay();
     this.transition?.kill();
+    if (this.particleAnimationId !== undefined) cancelAnimationFrame(this.particleAnimationId);
+    if (this.particleResizeHandler) window.removeEventListener('resize', this.particleResizeHandler);
   }
 
   nextSlide(): void {
@@ -115,4 +123,80 @@ export class HeroImage implements AfterViewInit, OnDestroy {
       this.autoplayId = undefined;
     }
   }
+
+  private startParticles(): void {
+    this.particleCanvas = this.heroRoot.nativeElement.querySelector('.hero-particles') ?? undefined;
+    if (!this.particleCanvas) return;
+
+    this.particleContext = this.particleCanvas.getContext('2d') ?? undefined;
+    this.resizeParticles();
+    this.particleResizeHandler = () => this.resizeParticles();
+    window.addEventListener('resize', this.particleResizeHandler);
+
+    const draw = (time: number) => {
+      this.drawParticles(time);
+      this.particleAnimationId = requestAnimationFrame(draw);
+    };
+    this.particleAnimationId = requestAnimationFrame(draw);
+  }
+
+  private resizeParticles(): void {
+    if (!this.particleCanvas) return;
+    const bounds = this.heroRoot.nativeElement.getBoundingClientRect();
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    this.particleCanvas.width = bounds.width * ratio;
+    this.particleCanvas.height = bounds.height * ratio;
+    this.particleContext?.setTransform(ratio, 0, 0, ratio, 0, 0);
+    this.particles = Array.from({ length: 46 }, () => this.createParticle(bounds.width, bounds.height, true));
+  }
+
+  private createParticle(width: number, height: number, randomPosition = false): HeroParticle {
+    const colors = ['#f6d477', '#f43f5e', '#c084fc', '#67e8f9', '#ffffff'];
+    return {
+      x: Math.random() * width,
+      y: randomPosition ? Math.random() * height : -10,
+      size: 1.2 + Math.random() * 2.8,
+      speed: 0.08 + Math.random() * 0.22,
+      drift: (Math.random() - 0.5) * 0.18,
+      phase: Math.random() * Math.PI * 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    };
+  }
+
+  private drawParticles(time: number): void {
+    const canvas = this.particleCanvas;
+    const context = this.particleContext;
+    if (!canvas || !context) return;
+
+    const width = this.heroRoot.nativeElement.clientWidth;
+    const height = this.heroRoot.nativeElement.clientHeight;
+    context.clearRect(0, 0, width, height);
+
+    for (const particle of this.particles) {
+      particle.y -= particle.speed;
+      particle.x += particle.drift + Math.sin(time * 0.001 + particle.phase) * 0.08;
+      if (particle.y < -10) Object.assign(particle, this.createParticle(width, height));
+
+      const pulse = 0.35 + (Math.sin(time * 0.002 + particle.phase) + 1) * 0.25;
+      context.beginPath();
+      context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      context.fillStyle = particle.color;
+      context.globalAlpha = pulse;
+      context.shadowBlur = particle.size * 5;
+      context.shadowColor = particle.color;
+      context.fill();
+    }
+    context.globalAlpha = 1;
+    context.shadowBlur = 0;
+  }
+}
+
+interface HeroParticle {
+  x: number;
+  y: number;
+  size: number;
+  speed: number;
+  drift: number;
+  phase: number;
+  color: string;
 }

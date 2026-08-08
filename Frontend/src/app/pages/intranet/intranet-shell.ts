@@ -12,6 +12,7 @@ import { IntranetCertViewerService } from '../../services/intranet-cert-viewer.s
 import { IntranetPaymentService } from '../../services/intranet-payment.service';
 import { NgxEditorModule, Editor, Toolbar } from 'ngx-editor';
 import { AlertService } from '../../services/alert.service';
+import html2canvas from 'html2canvas-pro';
 
 @Component({
   selector: 'app-intranet-shell',
@@ -58,6 +59,12 @@ export class IntranetShellComponent implements OnInit {
   get certDocData() { return this.certViewer.certDocData; }
   get showCertWithBackground() { return this.certViewer.showCertWithBackground; }
   get certParticipantData() { return this.certViewer.certParticipantData; }
+
+  /** PNG dinámico generado desde un canvas. Es lo que se muestra en el modal
+   * y también lo único que se envía a impresión. */
+  readonly certificatePreviewImage = signal<string | null>(null);
+  private certificatePrintImageElement: HTMLImageElement | null = null;
+  private certificatePreviewGeneration = 0;
 
   isBrowser = false;
   editor!: Editor;
@@ -106,6 +113,23 @@ export class IntranetShellComponent implements OnInit {
       } else if (!this.paymentService.showPaymentModal()) {
         this.showPaymentModal.set(false);
       }
+    });
+
+    effect(() => {
+      const open = this.showCertWithBackground();
+      const participant = this.certParticipantData();
+      // Estas lecturas vuelven a generar la imagen si cambia la plantilla.
+      this.certFondoBase64();
+      this.certDocData();
+      const generation = ++this.certificatePreviewGeneration;
+
+      if (!open || !participant) {
+        this.certificatePreviewImage.set(null);
+        this.clearCertificatePrintImage();
+        return;
+      }
+
+      setTimeout(() => { void this.generateCertificatePreview(generation); });
     });
 
     afterNextRender(() => {
@@ -242,10 +266,94 @@ export class IntranetShellComponent implements OnInit {
     this.activeCertificate.set(null);
     this.showCertificateModal.set(false);
     this.certViewer.showCertWithBackground.set(false);
+    this.certificatePreviewImage.set(null);
+    this.clearCertificatePrintImage();
   }
 
-  downloadCertificate(): void {
-    window.print();
+  private clearCertificatePrintImage(): void {
+    this.certificatePrintImageElement?.remove();
+    this.certificatePrintImageElement = null;
+  }
+
+  private async mountCertificatePrintImage(source: string): Promise<void> {
+    const modal = document.querySelector<HTMLElement>('.certificate-print-modal');
+    if (!modal) throw new Error('No se encontró el contenedor de impresión del certificado.');
+
+    this.clearCertificatePrintImage();
+    const image = document.createElement('img');
+    image.className = 'certificate-raster-print';
+    image.alt = 'Certificado rasterizado para impresión A4';
+    image.src = source;
+    modal.insertBefore(image, modal.firstChild);
+    this.certificatePrintImageElement = image;
+    await image.decode();
+  }
+
+  private async generateCertificatePreview(generation: number): Promise<string | null> {
+    if (!this.isBrowser || generation !== this.certificatePreviewGeneration) return null;
+
+    // Vuelve a mostrar la plantilla durante la captura; después queda
+    // sustituida por el PNG dinámico en la vista previa.
+    this.certificatePreviewImage.set(null);
+    await document.fonts?.ready;
+    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    if (generation !== this.certificatePreviewGeneration) return null;
+    const image = await this.createCertificateCanvasImage();
+
+    if (generation === this.certificatePreviewGeneration) {
+      this.certificatePreviewImage.set(image);
+      return image;
+    }
+    return null;
+  }
+
+  private async createCertificateCanvasImage(): Promise<string> {
+    const certificate = document.getElementById('landscape-certificate-print-area');
+    if (!certificate) throw new Error('No se encontró la plantilla del certificado.');
+
+    const canvas = await html2canvas(certificate, {
+      backgroundColor: '#ffffff',
+      // 960 × 678 a escala 4 genera 3840 × 2712 px: ~328 DPI al ocupar
+      // una hoja A4 horizontal (297 × 210 mm), apto para PDF e impresión.
+      scale: 4,
+      useCORS: true,
+      logging: false,
+      onclone: (clonedDocument) => {
+        const clonedCertificate = clonedDocument.getElementById('landscape-certificate-print-area');
+        if (!clonedCertificate) return;
+        clonedCertificate.style.transform = 'none';
+        clonedCertificate.style.borderRadius = '0';
+        clonedCertificate.style.boxShadow = 'none';
+      },
+    });
+    return canvas.toDataURL('image/png');
+  }
+
+  async downloadCertificate(): Promise<void> {
+    if (!this.isBrowser) return;
+
+    try {
+      let image = this.certificatePreviewImage();
+      if (!image) {
+        const generation = ++this.certificatePreviewGeneration;
+        image = await this.generateCertificatePreview(generation);
+      }
+      if (!image) throw new Error('No se pudo obtener la imagen dinámica del certificado.');
+
+      await this.mountCertificatePrintImage(image);
+      // La imagen ya está en el DOM; este frame garantiza que
+      // Chrome evalúe las reglas @media print que ocultan el HTML original.
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      window.addEventListener('afterprint', () => this.clearCertificatePrintImage(), { once: true });
+      window.print();
+    } catch (error) {
+      console.error('No se pudo generar el canvas del certificado para impresión.', error);
+      this.clearCertificatePrintImage();
+      this.alert.error(
+        'No se pudo generar la impresión',
+        'El certificado no se imprimió como HTML. Vuelve a intentarlo para generar el canvas A4.'
+      );
+    }
   }
 
   viewAndDownload(cert: Certificate): void {
@@ -267,14 +375,14 @@ export class IntranetShellComponent implements OnInit {
         this.certViewer.certDocData.set(resp?.status === 'success' ? resp.e_documento : null);
         this.certViewer.certParticipantData.set(participantData);
         this.certViewer.showCertWithBackground.set(true);
-        setTimeout(() => { this.downloadCertificate(); }, 1000);
+        setTimeout(() => { void this.downloadCertificate(); }, 1000);
       },
       error: () => {
         this.certViewer.certFondoBase64.set(null);
         this.certViewer.certDocData.set(null);
         this.certViewer.certParticipantData.set(participantData);
         this.certViewer.showCertWithBackground.set(true);
-        setTimeout(() => { this.downloadCertificate(); }, 1000);
+        setTimeout(() => { void this.downloadCertificate(); }, 1000);
       }
     });
   }

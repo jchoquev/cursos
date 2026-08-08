@@ -9,11 +9,9 @@
       <!-- LOGO -->
       <div class="flex items-center gap-3">
         <a routerLink="/" class="flex items-center gap-2 no-underline group">
-          <img src="/logo-chojata.png" alt="IESTP Chojata" class="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(190,18,60,0.35)]" />
+          <img src="/logo-pgic.png" alt="PGIC" class="w-24 h-10 object-contain drop-shadow-[0_0_8px_rgba(190,18,60,0.35)]" />
           <div class="flex flex-col text-left leading-none ml-1">
-            <span class="lp-brand-name text-sm font-black tracking-wider text-white uppercase" style="font-size:0.875rem">
-              Cursos e Investigación
-            </span>
+            <span class="lp-brand-name text-sm font-black tracking-wider text-white uppercase" style="font-size:0.875rem">PGIC</span>
             <span class="lp-brand-sub text-[9px] font-bold text-slate-500 font-mono tracking-widest mt-0.5">IESTP CHOJATA</span>
           </div>
         </a>
@@ -120,49 +118,22 @@
 
 <ng-container *ngIf="isPublicRoute()">
 <!-- BARRA DE MÉTRICAS Y REDES (SUB-HEADER GLASSMORPHIC VINO) -->
-<div class="lp-subheader bg-[#130307]/75 backdrop-blur-md border-b border-white/5 py-2.5 print:hidden select-none overflow-hidden transition-all duration-300">
+<div class="lp-subheader bg-gradient-to-r from-[#130307]/90 via-[#3b0715]/90 to-[#130307]/90 backdrop-blur-md border-b border-[#f43f5e]/20 py-3 print:hidden select-none overflow-hidden transition-all duration-300">
   <div class="max-w-[1400px] mx-auto px-4 lg:px-6">
-    <div class="flex items-center justify-between gap-6 overflow-x-auto scrollbar-none text-[12px] text-slate-400 font-medium font-sans">
+    <div class="flex items-center justify-center text-[12px] text-slate-400 font-medium font-sans">
       
-      <!-- Metrics Group (Left) -->
-      <div class="flex items-center gap-6 min-w-max">
-        
-        <!-- Avatares de Alumnos -->
-        <div class="flex items-center gap-2">
-          <div class="flex -space-x-2">
-            <img class="w-6 h-6 rounded-full border-2 border-[#130307] object-cover shadow-sm" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Student 1" />
-            <img class="w-6 h-6 rounded-full border-2 border-[#130307] object-cover shadow-sm" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Student 2" />
-            <img class="w-6 h-6 rounded-full border-2 border-[#130307] object-cover shadow-sm" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Student 3" />
-            <img class="w-6 h-6 rounded-full border-2 border-[#130307] object-cover shadow-sm" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80" alt="Student 4" />
-          </div>
-          <span class="lp-metric-val text-slate-200 font-semibold">+500 mil alumnos</span>
-        </div>
-
-        <span class="lp-metric-sep text-white/10 select-none">|</span>
-        
-        <!-- Empresas -->
-        <div class="flex items-center gap-1.5">
-          <span class="lp-metric-val text-slate-200 font-semibold">+50 empresas confían en nosotros</span>
-        </div>
-
-        <span class="lp-metric-sep text-white/10 select-none">|</span>
-
-        <!-- Cursos count -->
-        <div class="flex items-center gap-1.5">
-          <span class="lp-metric-val text-slate-200 font-semibold">+250 cursos</span>
-        </div>
-
-        <span class="lp-metric-sep text-white/10 select-none">|</span>
-
-        <!-- Antigüedad -->
-        <div class="flex items-center gap-1.5">
-          <span class="lp-metric-val text-slate-200 font-semibold">+16 años</span>
-        </div>
-
+      <div class="min-w-0 max-w-full inline-flex items-center gap-2.5 px-3 py-1">
+        <span class="h-px w-8 bg-gradient-to-r from-transparent to-[#d4a72c]/70 sm:w-12" aria-hidden="true"></span>
+        <svg class="h-4 w-4 shrink-0 text-[#d4a72c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m6.364.636-1.414 1.414M21 12h-2M18.364 18.364l-1.414-1.414M12 21v-2m-6.364-.636 1.414-1.414M3 12h2m.636-6.364 1.414 1.414" />
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+        <span class="lp-metric-val truncate text-[#f6d477] font-bold tracking-wide text-center drop-shadow-[0_1px_3px_rgba(212,167,44,0.25)]">Celebramos 16 años formando profesionales</span>
+        <span class="h-px w-8 bg-gradient-to-l from-transparent to-[#d4a72c]/70 sm:w-12" aria-hidden="true"></span>
       </div>
 
       <!-- Social Networks & Counter (Right) -->
-      <div class="flex items-center gap-3 min-w-max">
+      <div class="hidden">
         <div class="flex items-center gap-1.5">
           <!-- YouTube Red Circle -->
           <a href="https://youtube.com" target="_blank" class="w-5 h-5 rounded-full bg-[#ff0000] flex items-center justify-center text-white transition-transform hover:scale-110 hover:shadow-[0_0_8px_rgba(255,0,0,0.5)]">
@@ -207,6 +178,61 @@
 </main>
 
 <ng-container *ngIf="isPublicRoute()">
+<!-- ESCUELAS DESTACADAS — BLOQUE COMPARTIDO DE LAS PÁGINAS PÚBLICAS -->
+<section class="lp-schools-section relative overflow-hidden py-16 sm:py-20 print:hidden" aria-labelledby="lp-schools-title">
+  <div class="lp-schools-glow lp-schools-glow-left" aria-hidden="true"></div>
+  <div class="lp-schools-glow lp-schools-glow-right" aria-hidden="true"></div>
+
+  <div class="relative max-w-6xl mx-auto px-4 lg:px-6">
+    <div class="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
+      <img src="/logo-chojata.png" alt="IESTP Chojata" class="lp-schools-mark lp-schools-logo mx-auto mb-5" />
+      <p class="lp-schools-eyebrow">Investigación y formación continua</p>
+      <h2 id="lp-schools-title" class="lp-schools-title mt-2">Escuelas destacadas</h2>
+      <p class="lp-schools-subtitle mt-3">
+        Investigación y formación continua para impulsar nuestro desarrollo.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto justify-items-center">
+      <article class="lp-school-card lp-school-card-blue w-full max-w-[20rem]">
+        <div class="lp-school-card-top">
+          <div class="lp-school-avatar-wrap">
+            <img
+              src="/schools/technology-person.png"
+              alt="Estudiante de programación"
+              class="lp-school-avatar"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div class="lp-school-content">
+          <span class="lp-school-label">Ing. Juan Alfredo Choque Vizcarra</span>
+          <h3>UNIDAD DE INVESTIGACIÓN</h3>
+          <p>Impulsamos proyectos de investigación aplicada para generar conocimiento y soluciones al servicio de nuestra comunidad.</p>
+        </div>
+      </article>
+
+      <article class="lp-school-card lp-school-card-rose w-full max-w-[20rem]">
+        <div class="lp-school-card-top">
+          <div class="lp-school-avatar-wrap">
+            <img
+              src="/schools/innovation-person.png"
+              alt="Estudiante de gestión y proyectos"
+              class="lp-school-avatar"
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div class="lp-school-content">
+          <span class="lp-school-label">Tec. Geldri Farge Zabalaga Coaguila</span>
+          <h3>UNIDAD DE FORMACIÓN CONTINUA</h3>
+          <p>Fortalecemos las competencias profesionales mediante cursos, talleres y programas de actualización continua.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER INSTITUCIONAL DE ALTA GAMA (WINE PALETTE) -->
 <footer class="lp-footer bg-[#090103] border-t border-white/5 py-8 print:hidden select-none relative overflow-hidden">
   <!-- Soft Wine glow effect -->
@@ -237,8 +263,8 @@
     <!-- Top Identity / Close -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <img src="/logo-chojata.png" alt="IESTP Chojata" class="w-7 h-7 object-contain" />
-        <span class="text-base font-extrabold text-white uppercase tracking-wider">Cursos e Investigación</span>
+        <img src="/logo-pgic.png" alt="PGIC" class="w-20 h-7 object-contain" />
+        <span class="text-base font-extrabold text-white uppercase tracking-wider">PGIC</span>
       </div>
       <button (click)="showMobileMenu.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center cursor-pointer transition-all">
         ✕

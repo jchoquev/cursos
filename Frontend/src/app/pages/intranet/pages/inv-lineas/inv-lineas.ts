@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../services/api.service';
 import { AlertService } from '../../../../services/alert.service';
 import { DnaLoaderService } from '../../../../services/dna-loader.service';
+import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 export interface PeriodoAca { Id: string; Asig: string; Activo: boolean; }
 
@@ -17,7 +19,7 @@ export interface InvLinea {
 @Component({
   selector: 'app-inv-lineas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent, PaginationComponent],
   templateUrl: './inv-lineas.html',
 })
 export class InvLineasComponent implements OnInit {
@@ -45,8 +47,6 @@ export class InvLineasComponent implements OnInit {
   saving = signal<boolean>(false);
   saveError = signal<string>('');
   form = signal<{ Id: string; Id_PeriodoAca: string; Linea: string }>({ Id: '', Id_PeriodoAca: '', Linea: '' });
-
-  readonly pagesArray = computed(() => Array.from({ length: this.lastPage() }, (_, i) => i + 1));
 
   ngOnInit(): void {
     this.loadPeriodos();

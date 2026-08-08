@@ -121,30 +121,23 @@
         </tbody>
       </table>
     </div>
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/5 bg-white/[0.01]" *ngIf="platformService.registrations().length > 0">
-      <div class="text-xs text-slate-400 font-medium">
-        Mostrando registros del {{ filteredAndPaginatedCertificates().items.length === 0 ? 0 : (certCurrentPage() - 1) * certPageSize() + 1 }} al
-        {{ getMinRecord(certCurrentPage(), certPageSize(), filteredAndPaginatedCertificates().totalItems) }} de un total de {{ filteredAndPaginatedCertificates().totalItems }} registros
-      </div>
-      <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedCertificates().totalPages > 1">
-        <button type="button" [disabled]="certCurrentPage() === 1" (click)="certCurrentPage.set(certCurrentPage() - 1); $event.stopPropagation();"
-          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
-        <button type="button" *ngFor="let page of getPagesArray(filteredAndPaginatedCertificates().totalPages)" (click)="certCurrentPage.set(page); $event.stopPropagation();"
-          [class]="certCurrentPage() === page ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all' : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
-        <button type="button" [disabled]="certCurrentPage() === filteredAndPaginatedCertificates().totalPages" (click)="certCurrentPage.set(certCurrentPage() + 1); $event.stopPropagation();"
-          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
-      </div>
-    </div>
+    <app-pagination
+      *ngIf="platformService.registrations().length > 0"
+      [page]="certCurrentPage()"
+      [pageSize]="certPageSize()"
+      [totalItems]="filteredAndPaginatedCertificates().totalItems"
+      [totalPages]="filteredAndPaginatedCertificates().totalPages"
+      (pageChange)="certCurrentPage.set($event)" />
   </div>
 </div>
 
 <!-- Upload Scanned PDF Modal -->
-<div *ngIf="showUploadModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
-    <div class="flex items-center justify-between">
-      <h3 class="text-sm font-bold text-slate-100">📎 Subir Certificado Escaneado (PDF)</h3>
-      <button type="button" (click)="closeUploadModal(); $event.stopPropagation();" class="text-slate-400 hover:text-white text-lg leading-none cursor-pointer bg-transparent border-none">✕</button>
-    </div>
+<app-modal
+  [open]="showUploadModal()"
+  title="📎 Subir Certificado Escaneado (PDF)"
+  maxWidth="max-w-md"
+  panelClass="bg-slate-900 border border-white/10"
+  (closed)="closeUploadModal()">
 
     <div *ngIf="uploadTargetReg()" class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 space-y-1 text-xs">
       <div class="font-bold text-slate-200">{{ uploadTargetReg()!.userName }}</div>
@@ -166,16 +159,15 @@
     <div *ngIf="uploadError()" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">{{ uploadError() }}</div>
     <div *ngIf="uploadSuccess()" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2">{{ uploadSuccess() }}</div>
 
-    <div class="flex gap-3 pt-1">
-      <button type="button" (click)="closeUploadModal(); $event.stopPropagation();" class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer transition-all">
-        Cancelar
-      </button>
-      <button type="button" (click)="submitPdfUpload(); $event.stopPropagation();"
-        [disabled]="!uploadSelectedFile() || uploadingPdf()"
-        class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-        <span *ngIf="!uploadingPdf()">📤 Subir al Servidor</span>
-        <span *ngIf="uploadingPdf()">Subiendo...</span>
-      </button>
-    </div>
+  <div modal-footer class="flex gap-3">
+    <button type="button" (click)="closeUploadModal(); $event.stopPropagation();" class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer transition-all">
+      Cancelar
+    </button>
+    <button type="button" (click)="submitPdfUpload(); $event.stopPropagation();"
+      [disabled]="!uploadSelectedFile() || uploadingPdf()"
+      class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+      <span *ngIf="!uploadingPdf()">📤 Subir al Servidor</span>
+      <span *ngIf="uploadingPdf()">Subiendo...</span>
+    </button>
   </div>
-</div>
+</app-modal>

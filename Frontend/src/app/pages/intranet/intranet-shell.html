@@ -8,10 +8,10 @@
     [class.collapsed]="sidebarCollapsed()">
     <div class="sidebar-brand-header flex items-center justify-between p-5 border-b border-white/5 min-h-[72px]">
       <div class="flex items-center gap-2.5 overflow-hidden">
-        <img src="/logo-chojata.png" alt="IESTP Chojata"
-          class="w-8 h-8 object-contain shrink-0 drop-shadow-[0_0_5px_rgba(244,63,94,0.35)]" />
+        <img src="/logo-pgic.png" alt="PGIC"
+          class="w-16 h-8 object-contain shrink-0 drop-shadow-[0_0_5px_rgba(244,63,94,0.35)]" />
         <div class="flex flex-col leading-none text-left sidebar-brand-text transition-opacity duration-300">
-          <span class="text-xs font-black uppercase tracking-wider text-white">Cursos e Investigación</span>
+          <span class="text-xs font-black uppercase tracking-wider text-white">PGIC</span>
           <span class="text-[8px] font-bold text-slate-500 font-mono tracking-widest mt-0.5">PLATAFORMA</span>
         </div>
       </div>
@@ -315,11 +315,11 @@
      MODAL DE CERTIFICADO CON FONDO
      ========================================== -->
 <div
-  class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-auto print:p-0 print:bg-white"
+  class="certificate-print-modal modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-auto print:p-0 print:bg-white"
   *ngIf="showCertWithBackground() && certParticipantData() as p" (click)="showCertWithBackground.set(false)">
 
   <div
-    class="relative w-full max-w-[1000px] bg-slate-900 border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 m-auto print:p-0 print:border-0 print:bg-white print:shadow-none print:w-full print:max-w-none"
+    class="certificate-print-dialog relative w-full max-w-[1000px] bg-slate-900 border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 m-auto print:p-0 print:border-0 print:bg-white print:shadow-none print:w-full print:max-w-none"
     (click)="$event.stopPropagation()">
 
     <div class="flex items-center justify-between border-b border-white/10 pb-3 print:hidden">
@@ -339,8 +339,11 @@
     </div>
 
     <div
-      class="flex-1 flex justify-center items-center overflow-auto p-4 bg-slate-950/40 rounded-2xl print:p-0 print:bg-white">
-      <div id="landscape-certificate-print-area"
+      class="certificate-print-canvas flex-1 flex justify-center items-center overflow-auto p-4 bg-slate-950/40 rounded-2xl print:p-0 print:bg-white">
+      <img *ngIf="certificatePreviewImage() as previewImage" class="certificate-preview-image"
+        [src]="previewImage" alt="Vista previa del certificado generado como imagen" />
+
+      <div *ngIf="!certificatePreviewImage()" id="landscape-certificate-print-area"
         class="landscape-certificate-sheet relative w-[960px] h-[678px] bg-white text-slate-900 overflow-hidden shadow-2xl print:shadow-none print:border-0"
         [style.background-image]="certFondoBase64() ? 'url(' + certFondoBase64() + ')' : 'none'"
         style="background-size: cover; background-position: center; background-repeat: no-repeat;">

@@ -133,6 +133,60 @@ body {
   background: rgba(2, 6, 23, 0.93);
 }
 
+.anniversary-overlay {
+  overflow: hidden;
+  background: radial-gradient(circle at center, rgba(73, 12, 31, 0.43), rgba(2, 6, 23, 0.63) 70%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: anniversary-fade-in 0.45s ease-out both;
+}
+
+.anniversary-particles {
+  pointer-events: none;
+}
+
+.anniversary-logo {
+  filter: drop-shadow(0 0 18px rgba(217, 180, 92, 0.55));
+  animation: anniversary-logo-pulse 1.8s ease-in-out infinite;
+}
+
+.anniversary-kicker {
+  color: #d9b45c;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.anniversary-title {
+  color: #f3d58a;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.25rem, 8vw, 5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 rgba(73, 12, 31, 0.8), 0 0 24px rgba(217, 180, 92, 0.8);
+}
+
+.anniversary-subtitle {
+  color: #f3d58a;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@keyframes anniversary-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes anniversary-logo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
 body.light-mode .dna-loader-overlay {
   background: rgba(248, 242, 243, 0.94);
 }
@@ -392,7 +446,7 @@ body.light-mode .lp-subheader {
   border-bottom-color: rgba(190, 18, 60, 0.08) !important;
 }
 body.light-mode .lp-subheader span { color: #5c0a1e !important; }
-body.light-mode .lp-subheader .lp-metric-val { color: #3b0010 !important; font-weight: 700 !important; }
+body.light-mode .lp-subheader .lp-metric-val { color: #a16207 !important; font-weight: 700 !important; }
 body.light-mode .lp-subheader .lp-metric-sep { color: rgba(190, 18, 60, 0.15) !important; }
 body.light-mode .lp-subheader .lp-social-badge {
   background: rgba(190, 18, 60, 0.08) !important;
@@ -509,6 +563,138 @@ body.light-mode .lp-modal-btn-ghost {
   color: #475569 !important;
 }
 body.light-mode .lp-modal-btn-ghost:hover { background: rgba(0,0,0,0.08) !important; }
+
+/* --- App modal: contenido proyectado en modo claro ---
+   El backdrop se mueve a <body>, por lo que estas clases deben ser globales. */
+body.light-mode .app-modal-backdrop {
+  background-color: rgba(49, 20, 28, 0.35) !important;
+}
+
+body.light-mode .app-modal-dialog {
+  color: #334155 !important;
+  background: linear-gradient(145deg, #ffffff, #faf6f6) !important;
+  border-color: rgba(92, 10, 30, 0.13) !important;
+  box-shadow: 0 30px 80px rgba(61, 14, 28, 0.18), inset 0 1px 0 #ffffff !important;
+}
+
+body.light-mode .app-modal-dialog :where(.text-white, .text-slate-100, .text-slate-200, .text-slate-300) {
+  color: #334155 !important;
+}
+
+body.light-mode .app-modal-dialog :where(.text-slate-400, .text-slate-500) {
+  color: #64748b !important;
+}
+
+body.light-mode .app-modal-dialog :where(.bg-slate-950, .bg-slate-900) {
+  background-color: #f8f2f3 !important;
+}
+
+body.light-mode .app-modal-dialog :where([class*="bg-white/"]) {
+  background-color: rgba(92, 10, 30, 0.04) !important;
+}
+
+body.light-mode .app-modal-dialog :where([class*="border-white/"]) {
+  border-color: rgba(92, 10, 30, 0.1) !important;
+}
+
+body.light-mode .app-modal-dialog :where(input, select, textarea) {
+  color: #32101a !important;
+  background-color: #f8f2f3 !important;
+  border-color: rgba(92, 10, 30, 0.18) !important;
+}
+
+body.light-mode .app-modal-dialog :where(input, select, textarea)::placeholder {
+  color: #94a3b8 !important;
+}
+
+body.light-mode .app-modal-dialog .NgxEditor__Wrapper,
+body.light-mode .app-modal-dialog .NgxEditor,
+body.light-mode .app-modal-dialog .NgxEditor__MenuBar {
+  color: #334155 !important;
+  background-color: #ffffff !important;
+  border-color: rgba(92, 10, 30, 0.14) !important;
+  --ngx-editor-background-color: #ffffff !important;
+  --ngx-editor-text-color: #334155 !important;
+  --ngx-editor-menubar-bg-color: #f8f2f3 !important;
+}
+
+body.light-mode .app-modal-dialog .modal-close {
+  color: #64748b !important;
+}
+
+/* El proyecto usa la clase dark-mode (no la variante .dark de Tailwind). */
+body.dark-mode .app-modal-dialog .modal-title {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .app-modal-dialog .modal-description,
+body.dark-mode .app-modal-dialog .modal-close {
+  color: #94a3b8 !important;
+}
+
+/* Sin separadores entre cabecera/contenido/pie en todos los modales.
+   Los modales legacy usan divs en vez de header/footer, por eso se cubren
+   también el primer y último bloque de cada panel. */
+:where(.app-modal-dialog, .modal-content, .lp-modal-content) > :where(header, footer),
+:where(.app-modal-dialog, .modal-content, .lp-modal-content) > :first-child[class*="border-b"],
+:where(.app-modal-dialog, .modal-content, .lp-modal-content) > :last-child[class*="border-t"],
+[class~="fixed"][class~="inset-0"] > [class*="bg-"][class*="rounded-"] > :first-child[class*="border-b"],
+[class~="fixed"][class~="inset-0"] > [class*="bg-"][class*="rounded-"] > :last-child[class*="border-t"] {
+  border-top-width: 0 !important;
+  border-bottom-width: 0 !important;
+}
+
+/* Estructura común para los modales legacy de Inicio e Intranet.
+   El panel es el área desplazable; el primer bloque (cabecera) y las acciones
+   finales se mantienen visibles como header/footer. */
+:where(.modal-content, .lp-modal-content):not(.app-modal-dialog),
+[class~="fixed"][class~="inset-0"] > [class*="rounded-"]:not(.app-modal-dialog) {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2rem) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+:where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > :first-child:is(h1, h2, h3, h4),
+:where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > :first-child:has(> :is(h1, h2, h3, h4)),
+[class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :first-child:is(h1, h2, h3, h4),
+[class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :first-child:has(> :is(h1, h2, h3, h4)) {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+:where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > :last-child:has(> button),
+:where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > form > :last-child:has(> button),
+[class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :last-child:has(> button),
+[class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > form > :last-child:has(> button) {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+body.dark-mode :where(.modal-content, .lp-modal-content):not(.bg-white, .app-modal-dialog) > :first-child:is(h1, h2, h3, h4),
+body.dark-mode :where(.modal-content, .lp-modal-content):not(.bg-white, .app-modal-dialog) > :first-child:has(> :is(h1, h2, h3, h4)),
+body.dark-mode :where(.modal-content, .lp-modal-content):not(.bg-white, .app-modal-dialog) > :last-child:has(> button),
+body.dark-mode :where(.modal-content, .lp-modal-content):not(.bg-white, .app-modal-dialog) > form > :last-child:has(> button),
+body.dark-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :first-child:is(h1, h2, h3, h4),
+body.dark-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :first-child:has(> :is(h1, h2, h3, h4)),
+body.dark-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :last-child:has(> button),
+body.dark-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > form > :last-child:has(> button) {
+  background-color: #0f172a !important;
+}
+
+body.light-mode :where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > :first-child:is(h1, h2, h3, h4),
+body.light-mode :where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > :first-child:has(> :is(h1, h2, h3, h4)),
+body.light-mode :where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > :last-child:has(> button),
+body.light-mode :where(.modal-content, .lp-modal-content):not(.app-modal-dialog) > form > :last-child:has(> button),
+body.light-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :first-child:is(h1, h2, h3, h4),
+body.light-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :first-child:has(> :is(h1, h2, h3, h4)),
+body.light-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > :last-child:has(> button),
+body.light-mode [class~="fixed"][class~="inset-0"] > [class*="bg-slate-"][class*="rounded-"] > form > :last-child:has(> button) {
+  background-color: #fffdfc !important;
+}
 
 /* --- Mobile Menu --- */
 body.light-mode .lp-mobile-drawer {
@@ -894,6 +1080,14 @@ body.light-mode .theme-toggle-btn {
 }
 body.light-mode .theme-toggle-btn:hover {
   background: rgba(0,0,0,0.08) !important;
+  color: #1e293b !important;
+}
+
+/* Safety net for utility hovers inherited from the dark interface. In the
+   clear theme, a white hover on a pale surface makes labels disappear. */
+body.light-mode .lp-hamburger:hover,
+body.light-mode .lp-filter-toggle button:hover {
+  color: #5c0a1e !important;
 }
 
 /* ============================================================

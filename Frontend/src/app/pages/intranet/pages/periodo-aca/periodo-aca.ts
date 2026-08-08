@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../services/api.service';
 import { AlertService } from '../../../../services/alert.service';
+import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 export interface PeriodoAca {
   Id: string;
@@ -14,11 +16,10 @@ export interface PeriodoAca {
 @Component({
   selector: 'app-periodo-aca',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent, PaginationComponent],
   templateUrl: './periodo-aca.html',
 })
 export class PeriodoAcaComponent implements OnInit {
-  readonly Math = Math;
   private readonly apiService = inject(ApiService);
   private readonly alert = inject(AlertService);
 
@@ -53,8 +54,6 @@ export class PeriodoAcaComponent implements OnInit {
     const start = (page - 1) * size;
     return { items: list.slice(start, start + size), total: list.length, pages: Math.ceil(list.length / size) || 1 };
   });
-
-  getPagesArray(n: number): number[] { return Array.from({ length: n }, (_, i) => i + 1); }
 
   ngOnInit(): void { this.load(); }
 

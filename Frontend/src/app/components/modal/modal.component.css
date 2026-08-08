@@ -1,0 +1,69 @@
+:host-context(body.light-mode) section[role='dialog'] {
+  color: #334155 !important;
+  background: linear-gradient(145deg, #ffffff, #faf6f6) !important;
+  border-color: rgba(92, 10, 30, 0.13) !important;
+}
+
+:host-context(body.dark-mode) section[role='dialog'] {
+  color: #e2e8f0;
+  background-color: #0f172a;
+}
+
+:host-context(body.light-mode) section[role='dialog'] header,
+:host-context(body.light-mode) section[role='dialog'] footer {
+  border-color: rgba(92, 10, 30, 0.1) !important;
+}
+
+:host-context(body.light-mode) section[role='dialog'] :where(.text-white, .text-slate-100, .text-slate-200, .text-slate-300) {
+  color: #334155 !important;
+}
+
+:host-context(body.light-mode) section[role='dialog'] :where(.text-slate-400, .text-slate-500) {
+  color: #64748b !important;
+}
+
+:host-context(body.light-mode) section[role='dialog'] :where(.bg-slate-950, .bg-slate-900) {
+  background-color: #f8f2f3 !important;
+}
+
+:host-context(body.light-mode) section[role='dialog'] :where([class*='bg-white/']) {
+  background-color: rgba(92, 10, 30, 0.04) !important;
+}
+
+:host-context(body.light-mode) section[role='dialog'] :where([class*='border-white/']) {
+  border-color: rgba(92, 10, 30, 0.1) !important;
+}
+
+:host-context(body.light-mode) section[role='dialog'] :where(input, select, textarea) {
+  color: #32101a !important;
+  background-color: #f8f2f3 !important;
+  border-color: rgba(92, 10, 30, 0.18) !important;
+}
+
+:host-context(body.light-mode) section[role='dialog'] :where(input, select, textarea)::placeholder {
+  color: #94a3b8 !important;
+}
+
+:host-context(body.light-mode) .modal-title {
+  color: #0f172a !important;
+}
+
+:host-context(body.light-mode) .modal-description {
+  color: #64748b;
+}
+
+:host-context(body.light-mode) .modal-close {
+  color: #64748b;
+}
+
+:host-context(body.dark-mode) .modal-title {
+  color: #f8fafc !important;
+}
+
+:host-context(body.dark-mode) .modal-description {
+  color: #94a3b8;
+}
+
+:host-context(body.dark-mode) .modal-close {
+  color: #94a3b8;
+}

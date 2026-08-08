@@ -35,3 +35,15 @@
 
   </div>
 </div>
+
+<div *ngIf="loader.anniversaryVisible()"
+     class="anniversary-overlay fixed inset-0 z-[210] flex items-center justify-center select-none"
+     aria-live="polite">
+  <canvas class="anniversary-particles absolute inset-0 w-full h-full" aria-hidden="true"></canvas>
+  <div class="anniversary-content relative z-10 flex flex-col items-center text-center px-6">
+    <img src="/logo-chojata.png" alt="IESTP Chojata" class="anniversary-logo w-56 sm:w-72 object-contain" />
+    <p class="anniversary-kicker mt-6">Celebramos juntos</p>
+    <p class="anniversary-title">FELIZ XVII ANIVERSARIO</p>
+    <p class="anniversary-subtitle">IESTP Chojata</p>
+  </div>
+</div>

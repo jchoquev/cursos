@@ -511,6 +511,27 @@ table th { font-family: inherit; }
   flex-shrink: 0;
 }
 
+/* El canvas solo existe como superficie de impresión. */
+.certificate-raster-print {
+  display: none;
+}
+
+.certificate-preview-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 960 / 678;
+  object-fit: fill;
+  border: 0;
+  border-radius: 12px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.certificate-print-canvas:has(.certificate-preview-image) {
+  overflow: hidden !important;
+}
+
 .landscape-certificate-sheet .recipient-name {
   font-family: 'Playfair Display', 'Georgia', serif;
   font-size: 32px;
@@ -834,6 +855,8 @@ table th { font-family: inherit; }
     margin: 0 !important; padding: 0 !important;
     border: none !important; background: transparent !important;
     display: block !important; box-shadow: none !important;
+    max-height: none !important;
+    overflow: hidden !important;
   }
 
   .modal-backdrop > div > div {
@@ -842,6 +865,10 @@ table th { font-family: inherit; }
     width: 297mm !important; height: 210mm !important;
     margin: 0 !important; padding: 0 !important;
     display: block !important; background: transparent !important;
+    /* El visor conserva overflow-auto en pantalla; al imprimir generaba
+       un scrollbar interno y recortaba la hoja del certificado. */
+    overflow: hidden !important;
+    max-height: none !important;
   }
 
   .print\:hidden, .print\:hidden * { display: none !important; visibility: hidden !important; }
@@ -849,11 +876,11 @@ table th { font-family: inherit; }
   #landscape-certificate-print-area.landscape-certificate-sheet {
     position: absolute !important;
     left: 0 !important; top: 0 !important;
-    width: 960px !important; height: 678px !important;
-    transform: scale(1.169) !important;
+    width: 297mm !important; height: 210mm !important;
+    transform: none !important;
     transform-origin: top left !important;
     margin: 0 !important; padding: 0 !important;
-    border: none !important; box-shadow: none !important;
+    border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
     background-size: 100% 100% !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
@@ -861,6 +888,94 @@ table th { font-family: inherit; }
     page-break-after: avoid !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Aislamiento del certificado: no debe heredar el scroll de los modales
+     genéricos cuando Chrome compone la hoja A4. */
+  body .certificate-print-modal,
+  body .certificate-print-modal > .certificate-print-dialog,
+  body .certificate-print-modal .certificate-print-canvas {
+    width: 297mm !important;
+    height: 210mm !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    scrollbar-width: none !important;
+  }
+
+  body .certificate-print-modal .certificate-print-canvas::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Cuando existe el canvas, se imprime exclusivamente esa superficie A4. El
+     certificado HTML y sus contenedores con scroll quedan fuera del flujo de
+     impresión, por lo que Chrome no puede partirlo ni agregar barras. */
+  body .certificate-print-modal .certificate-raster-print {
+    display: block !important;
+    visibility: visible !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    z-index: 100000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body .certificate-print-modal .certificate-raster-print ~ .certificate-print-dialog {
+    display: none !important;
+  }
+
+  /* El certificado conserva su lienzo original y se amplía con una única
+     escala uniforme. 960 × 678 px y A4 horizontal tienen prácticamente la
+     misma proporción; 1.1693 es el máximo zoom que cabe sin recortes. */
+  body .certificate-print-modal #landscape-certificate-print-area.landscape-certificate-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 960px !important;
+    height: 678px !important;
+    transform: scale(1.14) !important;
+    transform-origin: top left !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background-color: #ffffff !important;
+    background-size: 100% 100% !important;
+  }
+
+  /* El lienzo se escala de forma uniforme para no recortar la hoja. Como la
+     vista previa de Chrome reduce el A4, reforzamos únicamente la tipografía
+     del contenido; no se escala el contenedor ni el QR, por lo que ambos
+     bordes siguen completos. */
+  body .certificate-print-modal #landscape-certificate-print-area h6 {
+    font-size: 13px !important;
+  }
+
+  body .certificate-print-modal #landscape-certificate-print-area h1 {
+    font-size: 52px !important;
+  }
+
+  body .certificate-print-modal #landscape-certificate-print-area h1 + div {
+    font-size: 22px !important;
+  }
+
+  body .certificate-print-modal #landscape-certificate-print-area .recipient-name-cursive p {
+    font-size: 40px !important;
+  }
+
+  body .certificate-print-modal #landscape-certificate-print-area .text-\[15px\] {
+    font-size: 16px !important;
+  }
+
+  body .certificate-print-modal #landscape-certificate-print-area .text-\[18px\] {
+    font-size: 20px !important;
+  }
+
+  body .certificate-print-modal #landscape-certificate-print-area .text-\[12px\] {
+    font-size: 13px !important;
   }
 }
 
@@ -923,3 +1038,37 @@ body.light-mode .lp-btn-amber {
 body.light-mode .lp-btn-amber:hover {
   background-color: rgba(180, 83, 9, 0.18) !important;
 }
+
+/* Los controles oscuros de la intranet comparten utilidades hover:text-white.
+   En el tema claro deben conservar tinta vino, no convertirse en texto blanco
+   sobre fondos casi blancos. Se excluyen los CTAs de color sólido. */
+body.light-mode .dashboard-shell-layout :where(button, a, th)[class*="hover:text-white"]:hover,
+body.light-mode .dashboard-shell-layout .dashboard-topbar button:hover,
+body.light-mode .dashboard-shell-layout .sidebar-brand-header button:hover {
+  color: #5c0a1e !important;
+}
+
+body.light-mode .dashboard-shell-layout th[class*="hover:text-white"]:hover {
+  color: #9b1942 !important;
+  background-color: rgba(122, 16, 48, 0.055);
+}
+
+body.light-mode .overview-action {
+  color: #475569;
+  background: #fff;
+  border-color: rgba(92, 10, 30, .12);
+}
+
+body.light-mode .overview-action:hover {
+  color: #5c0a1e;
+  background: #f8eef0;
+  border-color: rgba(122, 16, 48, .24);
+}
+
+body.light-mode .overview-secondary {
+  color: #475569;
+  background: #f8f2f3;
+  border-color: rgba(92, 10, 30, .14);
+}
+
+body.light-mode .overview-secondary:hover { color: #5c0a1e; background: #f2e4e7; }

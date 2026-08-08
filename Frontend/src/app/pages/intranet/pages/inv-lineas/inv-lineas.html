@@ -105,47 +105,23 @@
       </table>
     </div>
 
-    <!-- Paginación -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/5">
-      <div class="text-xs text-slate-400 font-medium">
-        Mostrando {{ lineas().length === 0 ? 0 : (currentPage() - 1) * perPage() + 1 }}
-        al {{ (currentPage() - 1) * perPage() + lineas().length }}
-        de {{ total() }} líneas
-      </div>
-      <div class="flex items-center gap-1.5" *ngIf="lastPage() > 1">
-        <button [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)"
-          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
-        <ng-container *ngFor="let page of pagesArray()">
-          <button *ngIf="page === 1 || page === lastPage() || (page >= currentPage() - 1 && page <= currentPage() + 1)"
-            (click)="goToPage(page)"
-            [class]="currentPage() === page
-              ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold'
-              : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
-          <span *ngIf="(page === currentPage() - 2 && page > 1) || (page === currentPage() + 2 && page < lastPage())"
-            class="text-slate-600 text-xs px-1">…</span>
-        </ng-container>
-        <button [disabled]="currentPage() === lastPage()" (click)="goToPage(currentPage() + 1)"
-          class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
-      </div>
-    </div>
+    <app-pagination
+      [page]="currentPage()"
+      [pageSize]="perPage()"
+      [totalItems]="total()"
+      [totalPages]="lastPage()"
+      itemLabel="líneas"
+      (pageChange)="goToPage($event)" />
   </div>
 </div>
 
 <!-- Modal -->
-<div *ngIf="showModal()" class="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto animate-fade-in p-4">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl my-6">
-
-    <div class="flex items-center justify-between px-6 py-3 border-b border-white/5">
-      <div>
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          🧭 {{ isEditing() ? 'Editar Línea de Investigación' : 'Nueva Línea de Investigación' }}
-        </h3>
-        <p class="text-[11px] text-slate-500 mt-0.5">Vinculada a un periodo académico</p>
-      </div>
-      <button (click)="showModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold border-none">✕</button>
-    </div>
-
-    <form (submit)="save(); $event.preventDefault()" class="px-6 pt-4 pb-5 space-y-4">
+<app-modal [open]="showModal()"
+  [title]="isEditing() ? '🧭 Editar Línea de Investigación' : '🧭 Nueva Línea de Investigación'"
+  description="Vinculada a un periodo académico"
+  maxWidth="max-w-lg" panelClass="bg-slate-900 border border-white/10"
+  (closed)="showModal.set(false)">
+    <form id="researchLineForm" (submit)="save(); $event.preventDefault()" class="space-y-4">
 
       <!-- Periodo Académico -->
       <div>
@@ -172,17 +148,14 @@
         ⚠️ {{ saveError() }}
       </div>
 
-      <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
-        <button type="button" (click)="showModal.set(false)" [disabled]="saving()"
-          class="px-5 py-2.5 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">
-          ✕ Cerrar
-        </button>
-        <button type="submit" [disabled]="saving()"
-          class="px-6 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
-          <span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
-          {{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Crear Línea') }}
-        </button>
-      </div>
     </form>
+  <div modal-footer class="flex items-center justify-end gap-3">
+    <button type="button" (click)="showModal.set(false)" [disabled]="saving()"
+      class="px-5 py-2.5 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">✕ Cerrar</button>
+    <button type="submit" form="researchLineForm" [disabled]="saving()"
+      class="px-6 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+      <span *ngIf="saving()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+      {{ saving() ? 'Guardando...' : (isEditing() ? '✓ Actualizar' : '✓ Crear Línea') }}
+    </button>
   </div>
-</div>
+</app-modal>

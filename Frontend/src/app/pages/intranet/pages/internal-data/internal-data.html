@@ -124,43 +124,20 @@
     </div>
   </div>
 
-  <!-- Pagination -->
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl">
-    <div class="text-xs text-slate-400 font-medium">
-      Mostrando del {{ filteredAndPaginatedInternalData().items.length === 0 ? 0 : (internalCurrentPage() - 1) * internalPageSize() + 1 }} al
-      {{ getMinRecord(internalCurrentPage(), internalPageSize(), filteredAndPaginatedInternalData().totalItems) }} de
-      {{ filteredAndPaginatedInternalData().totalItems }} registros
-    </div>
-    <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedInternalData().totalPages > 1">
-      <button [disabled]="internalCurrentPage() === 1"
-        (click)="internalCurrentPage.set(internalCurrentPage() - 1)"
-        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-        Anterior
-      </button>
-      <button *ngFor="let page of getPagesArray(filteredAndPaginatedInternalData().totalPages)"
-        (click)="internalCurrentPage.set(page)"
-        [class]="internalCurrentPage() === page
-          ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all'
-          : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all cursor-pointer'">
-        {{ page }}
-      </button>
-      <button [disabled]="internalCurrentPage() === filteredAndPaginatedInternalData().totalPages"
-        (click)="internalCurrentPage.set(internalCurrentPage() + 1)"
-        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-        Siguiente
-      </button>
-    </div>
-  </div>
+  <app-pagination
+    [page]="internalCurrentPage()"
+    [pageSize]="internalPageSize()"
+    [totalItems]="filteredAndPaginatedInternalData().totalItems"
+    [totalPages]="filteredAndPaginatedInternalData().totalPages"
+    (pageChange)="internalCurrentPage.set($event)" />
 
 </div>
 
 <!-- Modal: Agregar / Editar Registro Interno -->
-<div *ngIf="showInternalModal()"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-    <h3 class="text-lg font-bold text-slate-100 pb-2 border-b border-white/5">
-      {{ isEditing() ? '📝 Editar Registro Interno' : '📥 Agregar Nuevo Registro Interno' }}
-    </h3>
+<app-modal [open]="showInternalModal()"
+  [title]="isEditing() ? '📝 Editar Registro Interno' : '📥 Agregar Nuevo Registro Interno'"
+  maxWidth="max-w-lg" panelClass="bg-slate-900 border border-white/10"
+  (closed)="showInternalModal.set(false)">
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-medium text-left">
       <div>
@@ -222,7 +199,7 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-3 pt-4 border-t border-white/5">
+  <div modal-footer class="flex items-center gap-3">
       <button (click)="saveInternal()"
         class="flex-1 py-3 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs transition-all cursor-pointer">
         ✓ Registrar Información
@@ -231,21 +208,13 @@
         class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer">
         Cancelar
       </button>
-    </div>
   </div>
-</div>
+</app-modal>
 
 <!-- Modal: Importación Masiva CSV -->
-<div *ngIf="showImportModal()"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fade-in">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5">
-    <div class="flex items-center justify-between border-b border-white/5 pb-3">
-      <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-        <span>📥</span> Importación de Datos en Bloque (CSV / Excel)
-      </h3>
-      <button (click)="showImportModal.set(false)"
-        class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">✕</button>
-    </div>
+<app-modal [open]="showImportModal()" title="📥 Importación de Datos en Bloque (CSV / Excel)"
+  maxWidth="max-w-lg" panelClass="bg-slate-900 border border-white/10"
+  (closed)="showImportModal.set(false)">
 
     <div class="space-y-4 text-xs leading-relaxed text-left text-slate-300">
       <p>Guarde su archivo Excel en formato CSV delimitado por comas. El sistema procesará cada fila automáticamente.</p>
@@ -280,11 +249,10 @@
       </div>
     </div>
 
-    <div class="flex justify-end pt-3 border-t border-white/5">
+  <div modal-footer class="flex justify-end">
       <button (click)="showImportModal.set(false)"
         class="px-5 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition-all cursor-pointer">
         Cerrar Ventana
       </button>
-    </div>
   </div>
-</div>
+</app-modal>

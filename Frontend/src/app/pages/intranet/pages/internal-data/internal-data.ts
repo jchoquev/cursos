@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { PlatformService } from '../../../../services/platform.service';
 import { ApiService } from '../../../../services/api.service';
 import { AlertService } from '../../../../services/alert.service';
+import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-internal-data',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent, PaginationComponent],
   templateUrl: './internal-data.html',
 })
 export class InternalDataComponent {
@@ -104,14 +106,6 @@ export class InternalDataComponent {
       this.internalCurrentPage.set(1);
       this.loadInternalData();
     }
-  }
-
-  getPagesArray(totalPages: number): number[] {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  getMinRecord(page: number, size: number, total: number): number {
-    return Math.min(page * size, total);
   }
 
   openAddInternal(): void {

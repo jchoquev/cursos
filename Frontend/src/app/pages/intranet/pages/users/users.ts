@@ -5,11 +5,13 @@ import { PlatformService, UserItem } from '../../../../services/platform.service
 import { ApiService } from '../../../../services/api.service';
 import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { AlertService } from '../../../../services/alert.service';
+import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent, PaginationComponent],
   templateUrl: './users.html',
 })
 export class UsersComponent implements OnInit {
@@ -64,9 +66,6 @@ export class UsersComponent implements OnInit {
     else { this.userSortColumn.set(column); this.userSortDirection.set('asc'); }
     this.userCurrentPage.set(1);
   }
-
-  getPagesArray(totalPages: number): number[] { return Array.from({ length: totalPages }, (_, i) => i + 1); }
-  getMinRecord(page: number, size: number, total: number): number { return Math.min(page * size, total); }
 
   openAddUser(): void {
     this.isEditing.set(false); this.savingUser.set(false); this.saveUserError.set('');

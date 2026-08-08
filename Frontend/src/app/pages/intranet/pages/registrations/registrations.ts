@@ -7,12 +7,14 @@ import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { DnaLoaderComponent } from '../../../../components/dna-loader/dna-loader';
 import { IntranetPaymentService } from '../../../../services/intranet-payment.service';
 import { AlertService } from '../../../../services/alert.service';
+import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 // Registrations component managing manually added and pending registrations
 @Component({
   selector: 'app-registrations',
   standalone: true,
-  imports: [CommonModule, FormsModule, DnaLoaderComponent],
+  imports: [CommonModule, FormsModule, DnaLoaderComponent, ModalComponent, PaginationComponent],
   templateUrl: './registrations.html',
 })
 export class RegistrationsComponent implements OnInit {
@@ -104,9 +106,6 @@ export class RegistrationsComponent implements OnInit {
     this.regCurrentPage.set(1);
   }
 
-  getPagesArray(n: number): number[] { return Array.from({ length: n }, (_, i) => i + 1); }
-  getMinRecord(page: number, size: number, total: number): number { return Math.min(page * size, total); }
-
   getParticipantType(registration: Registration): string {
     const type = (registration.tipoAsistente || 'PARTICIPANTE').trim().toUpperCase();
     return type === 'ASISTENTE' ? 'PARTICIPANTE' : type;
@@ -125,28 +124,24 @@ export class RegistrationsComponent implements OnInit {
           // Sort periods descending by Asig (e.g. 2026-I, 2025-II, 2025-I)
           periods.sort((a, b) => b.Asig.localeCompare(a.Asig, undefined, { numeric: true, sensitivity: 'base' }));
           this.academicPeriods.set(periods);
-          const active = periods.find(p => p.Activo) || periods[0];
-          if (active) {
-            this.selectedPeriodId.set(String(active.Id));
-            this.onPeriodChange(String(active.Id));
-            
-            // Pre-select active period in main filters
-            this.tempFilterPeriodId.set(String(active.Id));
-            this.activeFilterPeriodId.set(String(active.Id));
-          }
         }
       }
     });
   }
 
   private loadEventsForModal(periodId: string): void {
-    const params = periodId ? { periodo_id: periodId } : {};
+    if (!periodId) {
+      this.filteredEventsForModal.set([]);
+      return;
+    }
+
+    const params = { periodo_id: periodId, solo_activos: '1' };
     this.apiService.get<any[]>('/eventos', params).subscribe({
       next: (events) => {
         if (Array.isArray(events)) {
           const mapped = events
             .map(item => this.platformService.mapBackendEventoToEventItem(item))
-            .filter(ev => ev.type !== 'Repositorio');
+            .filter(ev => ev.type !== 'Repositorio' && ev.status === 'activo');
           this.filteredEventsForModal.set(mapped);
         } else {
           this.filteredEventsForModal.set([]);
@@ -158,7 +153,7 @@ export class RegistrationsComponent implements OnInit {
 
   onPeriodChange(periodId: string): void {
     this.selectedPeriodId.set(periodId);
-    this.registrationForm.update(f => ({ ...f, eventId: null })); // solo resetea cuando el USUARIO cambia el periodo
+    this.registrationForm.update(f => ({ ...f, eventId: null }));
     this.loadEventsForModal(periodId);
   }
 
@@ -171,11 +166,8 @@ export class RegistrationsComponent implements OnInit {
       userTipoAsistente: 1, eventId: null,
     });
 
-    const periods = this.academicPeriods();
-    const active = periods.find(p => p.Activo) || periods[0];
-    const periodId = active ? String(active.Id) : '';
-    this.selectedPeriodId.set(periodId);
-    this.loadEventsForModal(periodId); // carga eventos sin resetear eventId
+    this.selectedPeriodId.set('');
+    this.filteredEventsForModal.set([]);
 
     this.showRegistrationModal.set(true);
   }

@@ -22,6 +22,10 @@ class EventoController extends Controller
             $query->where('Id_PeriodoAca', $request->input('periodo_id'));
         }
 
+        if ($request->boolean('solo_activos')) {
+            $query->where('Estado', true);
+        }
+
         $eventos = $query->orderBy('created_at', 'desc')->get();
         return response()->json($eventos);
     }

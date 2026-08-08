@@ -1,0 +1,23 @@
+<div class="pagination-bar" aria-label="Paginación">
+  <p class="pagination-summary">
+    Mostrando {{ firstItem() }} al {{ lastItem() }} de {{ totalItems() }} {{ itemLabel() }}
+  </p>
+
+  <nav *ngIf="totalPages() > 1" class="pagination-controls" aria-label="Páginas">
+    <button type="button" class="pagination-button" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+      Anterior
+    </button>
+    <button
+      *ngFor="let pageNumber of pages()"
+      type="button"
+      class="pagination-button"
+      [class.is-active]="pageNumber === page()"
+      [attr.aria-current]="pageNumber === page() ? 'page' : null"
+      (click)="goTo(pageNumber)">
+      {{ pageNumber }}
+    </button>
+    <button type="button" class="pagination-button" [disabled]="page() === totalPages()" (click)="goTo(page() + 1)">
+      Siguiente
+    </button>
+  </nav>
+</div>

@@ -17,6 +17,7 @@
       <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Periodo Académico</label>
       <select [ngModel]="tempFilterPeriodId()" (ngModelChange)="tempFilterPeriodId.set($event); tempFilterEventId.set(''); applyRegistrationFilters()"
         class="w-full bg-slate-900 border border-white/10 text-white rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-semibold cursor-pointer transition-all">
+        <option value="">Todos los períodos</option>
         <option *ngFor="let p of academicPeriods()" [value]="p.Id">{{ p.Asig }} {{ p.Activo ? '(Activo)' : '' }}</option>
       </select>
     </div>
@@ -126,33 +127,24 @@
     </div>
   </div>
 
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.03] border border-white/10 p-4 rounded-2xl mt-4" *ngIf="platformService.registrations().length > 0">
-    <div class="text-xs text-slate-400 font-medium">
-      Mostrando registros del {{ filteredAndPaginatedRegistrations().items.length === 0 ? 0 : (regCurrentPage() - 1) * regPageSize() + 1 }} al
-      {{ getMinRecord(regCurrentPage(), regPageSize(), filteredAndPaginatedRegistrations().totalItems) }} de un total de {{ filteredAndPaginatedRegistrations().totalItems }} registros
-    </div>
-    <div class="flex items-center gap-1.5" *ngIf="filteredAndPaginatedRegistrations().totalPages > 1">
-      <button [disabled]="regCurrentPage() === 1" (click)="regCurrentPage.set(regCurrentPage() - 1)"
-        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Anterior</button>
-      <button *ngFor="let page of getPagesArray(filteredAndPaginatedRegistrations().totalPages)" (click)="regCurrentPage.set(page)"
-        [class]="regCurrentPage() === page ? 'px-3 py-1.5 rounded-lg bg-amber-500 border border-amber-500 text-slate-950 text-xs font-bold transition-all' : 'px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all cursor-pointer'">{{ page }}</button>
-      <button [disabled]="regCurrentPage() === filteredAndPaginatedRegistrations().totalPages" (click)="regCurrentPage.set(regCurrentPage() + 1)"
-        class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Siguiente</button>
-    </div>
-  </div>
+  <app-pagination
+    *ngIf="platformService.registrations().length > 0"
+    [page]="regCurrentPage()"
+    [pageSize]="regPageSize()"
+    [totalItems]="filteredAndPaginatedRegistrations().totalItems"
+    [totalPages]="filteredAndPaginatedRegistrations().totalPages"
+    (pageChange)="regCurrentPage.set($event)" />
 </div>
 
 <!-- Modal Ficha de Registro de Participante -->
-<div *ngIf="showRegistrationModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
-  <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-3xl p-6 shadow-2xl space-y-6 my-8">
-    <div class="flex items-center justify-between border-b border-white/5 pb-3">
-      <div>
-        <h3 class="text-lg font-bold text-white flex items-center gap-2"><span>📝</span> Ficha de Registro de Participante</h3>
-        <p class="text-xs text-slate-400 font-mono mt-0.5">Inscripción manual por parte del personal administrativo</p>
-      </div>
-      <button (click)="showRegistrationModal.set(false)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all cursor-pointer text-sm font-bold">✕</button>
-    </div>
-    <form (submit)="saveRegistration(); $event.preventDefault()" class="space-y-6">
+<app-modal
+  [open]="showRegistrationModal()"
+  title="📝 Ficha de Registro de Participante"
+  description="Inscripción manual por parte del personal administrativo"
+  maxWidth="max-w-3xl"
+  panelClass="bg-slate-900 border border-white/10"
+  (closed)="showRegistrationModal.set(false)">
+    <form id="registrationForm" (submit)="saveRegistration(); $event.preventDefault()" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium">
         <div class="space-y-4">
           <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 border-b border-white/5 pb-1">👤 Datos Personales</h4>
@@ -271,13 +263,15 @@
             <label class="block text-[11px] text-slate-400 mb-1 font-bold">Periodo Académico</label>
             <select [ngModel]="selectedPeriodId()" (ngModelChange)="onPeriodChange($event)" [name]="'regPeriodo'"
               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold">
+              <option value="" disabled>Seleccione un período académico...</option>
               <option *ngFor="let p of academicPeriods()" [value]="p.Id">{{ p.Asig }} {{ p.Activo ? '(Activo)' : '' }}</option>
             </select>
           </div>
           <div>
             <label class="block text-[11px] text-slate-400 mb-1 font-bold">Curso / Evento <span class="text-rose-400">*</span></label>
             <select [ngModel]="registrationForm().eventId" (ngModelChange)="registrationForm.update(f => ({...f, eventId: $event}))" [name]="'regEvento'"
-              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold">
+              [disabled]="!selectedPeriodId()"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-amber-500/50 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
               <option [ngValue]="null" disabled>Seleccione un curso...</option>
               <option *ngFor="let e of filteredEventsForModal()" [ngValue]="e.id">[{{ e.type }}] {{ e.title }}</option>
             </select>
@@ -290,15 +284,14 @@
         </div>
       </div>
       <div *ngIf="saveRegistrationError()" class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">⚠️ {{ saveRegistrationError() }}</div>
-      <div class="flex items-center justify-end gap-3 border-t border-white/5 pt-4">
-        <button type="button" (click)="showRegistrationModal.set(false)" [disabled]="savingRegistration()"
-          class="px-5 py-3 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">✕ Cerrar</button>
-        <button type="submit" [disabled]="savingRegistration() || searchingDniReg()"
-          class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
-          <span *ngIf="savingRegistration()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
-          {{ savingRegistration() ? 'Registrando...' : '✓ Registrar' }}
-        </button>
-      </div>
     </form>
+  <div modal-footer class="flex items-center justify-end gap-3">
+    <button type="button" (click)="showRegistrationModal.set(false)" [disabled]="savingRegistration()"
+      class="px-5 py-3 rounded-xl font-bold bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-600/10 text-xs transition-all cursor-pointer disabled:opacity-50">✕ Cerrar</button>
+    <button type="submit" form="registrationForm" [disabled]="savingRegistration() || searchingDniReg()"
+      class="px-6 py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+      <span *ngIf="savingRegistration()" class="inline-block w-3.5 h-3.5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></span>
+      {{ savingRegistration() ? 'Registrando...' : '✓ Registrar' }}
+    </button>
   </div>
-</div>
+</app-modal>

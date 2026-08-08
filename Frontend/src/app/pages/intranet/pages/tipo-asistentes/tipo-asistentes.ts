@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../services/api.service';
 import { AlertService } from '../../../../services/alert.service';
 import { PlatformService } from '../../../../services/platform.service';
+import { ModalComponent } from '../../../../components/modal/modal.component';
 
 export interface TipoAsistente {
   id: number;
@@ -14,7 +15,7 @@ export interface TipoAsistente {
 @Component({
   selector: 'app-tipo-asistentes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent],
   templateUrl: './tipo-asistentes.html',
 })
 export class TipoAsistentesComponent implements OnInit {

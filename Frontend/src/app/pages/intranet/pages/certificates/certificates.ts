@@ -8,11 +8,13 @@ import { DnaLoaderService } from '../../../../services/dna-loader.service';
 import { DnaLoaderComponent } from '../../../../components/dna-loader/dna-loader';
 import { PeriodoAca } from '../periodo-aca/periodo-aca';
 import { AlertService } from '../../../../services/alert.service';
+import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-certificates',
   standalone: true,
-  imports: [CommonModule, FormsModule, DnaLoaderComponent],
+  imports: [CommonModule, FormsModule, DnaLoaderComponent, ModalComponent, PaginationComponent],
   templateUrl: './certificates.html',
 })
 export class CertificatesComponent implements OnInit, OnDestroy {
@@ -98,9 +100,6 @@ export class CertificatesComponent implements OnInit, OnDestroy {
     else { this.certSortColumn.set(column); this.certSortDirection.set('asc'); }
     this.certCurrentPage.set(1);
   }
-
-  getPagesArray(n: number): number[] { return Array.from({ length: n }, (_, i) => i + 1); }
-  getMinRecord(page: number, size: number, total: number): number { return Math.min(page * size, total); }
 
   getAcademicPeriodName(registration: Registration): string {
     if (registration.periodoAsig) return registration.periodoAsig;

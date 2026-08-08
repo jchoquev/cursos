@@ -8,11 +8,12 @@ import { NgxEditorModule, Editor, Toolbar } from 'ngx-editor';
 import { AlertService } from '../../../../services/alert.service';
 import { environment } from '../../../../../environments/environment';
 import { ModalComponent } from '../../../../components/modal/modal.component';
+import { PaginationComponent } from '../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-courses',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgxEditorModule, ModalComponent],
+  imports: [CommonModule, FormsModule, NgxEditorModule, ModalComponent, PaginationComponent],
   templateUrl: './courses.html',
 })
 export class CoursesComponent implements OnInit, OnDestroy {
@@ -111,9 +112,6 @@ export class CoursesComponent implements OnInit, OnDestroy {
     else { this.eventSortColumn.set(column); this.eventSortDirection.set('asc'); }
     this.eventCurrentPage.set(1);
   }
-
-  getPagesArray(n: number): number[] { return Array.from({ length: n }, (_, i) => i + 1); }
-  getMinRecord(page: number, size: number, total: number): number { return Math.min(page * size, total); }
 
   getAcademicPeriodName(event: EventItem): string {
     if (event.periodoAsig) return event.periodoAsig;
