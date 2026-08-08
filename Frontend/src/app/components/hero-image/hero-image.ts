@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { gsap } from 'gsap';
 
 interface HeroSlide {
+  image: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -19,16 +20,19 @@ export class HeroImage implements AfterViewInit, OnDestroy {
 
   readonly slides: HeroSlide[] = [
     {
+      image: 'slider/hero-chojata.png',
       eyebrow: 'Formación que transforma',
       title: 'Aprende sin límites',
       subtitle: 'Explora cursos diseñados para llevarte al siguiente nivel',
     },
     {
+      image: 'slider/hero-chojata-2.png',
       eyebrow: 'Tu próximo reto empieza aquí',
       title: 'Crece con propósito',
       subtitle: 'Desarrolla nuevas habilidades con expertos y experiencias reales',
     },
     {
+      image: 'slider/hero-chojata-3.png',
       eyebrow: 'Conocimiento para avanzar',
       title: 'Inspírate y transforma',
       subtitle: 'Descubre oportunidades para convertir tus ideas en resultados',
@@ -39,8 +43,8 @@ export class HeroImage implements AfterViewInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private autoplayId?: number;
   private transition?: gsap.core.Timeline;
-  private particleCanvas?: HTMLCanvasElement;
-  private particleContext?: CanvasRenderingContext2D;
+  private particleCanvases: HTMLCanvasElement[] = [];
+  private particleContexts: CanvasRenderingContext2D[] = [];
   private particleAnimationId?: number;
   private particleResizeHandler?: () => void;
   private particles: HeroParticle[] = [];
@@ -125,10 +129,12 @@ export class HeroImage implements AfterViewInit, OnDestroy {
   }
 
   private startParticles(): void {
-    this.particleCanvas = this.heroRoot.nativeElement.querySelector('.hero-particles') ?? undefined;
-    if (!this.particleCanvas) return;
+    this.particleCanvases = Array.from(this.heroRoot.nativeElement.querySelectorAll<HTMLCanvasElement>('.hero-particles'));
+    this.particleContexts = this.particleCanvases
+      .map((canvas) => canvas.getContext('2d'))
+      .filter((context): context is CanvasRenderingContext2D => context !== null);
+    if (!this.particleCanvases.length || !this.particleContexts.length) return;
 
-    this.particleContext = this.particleCanvas.getContext('2d') ?? undefined;
     this.resizeParticles();
     this.particleResizeHandler = () => this.resizeParticles();
     window.addEventListener('resize', this.particleResizeHandler);
@@ -141,13 +147,15 @@ export class HeroImage implements AfterViewInit, OnDestroy {
   }
 
   private resizeParticles(): void {
-    if (!this.particleCanvas) return;
+    if (!this.particleCanvases.length) return;
     const bounds = this.heroRoot.nativeElement.getBoundingClientRect();
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    this.particleCanvas.width = bounds.width * ratio;
-    this.particleCanvas.height = bounds.height * ratio;
-    this.particleContext?.setTransform(ratio, 0, 0, ratio, 0, 0);
-    this.particles = Array.from({ length: 46 }, () => this.createParticle(bounds.width, bounds.height, true));
+    this.particleCanvases.forEach((canvas) => {
+      canvas.width = bounds.width * ratio;
+      canvas.height = bounds.height * ratio;
+    });
+    this.particleContexts.forEach((context) => context.setTransform(ratio, 0, 0, ratio, 0, 0));
+    this.particles = Array.from({ length: 56 }, () => this.createParticle(bounds.width, bounds.height, true));
   }
 
   private createParticle(width: number, height: number, randomPosition = false): HeroParticle {
@@ -156,38 +164,55 @@ export class HeroImage implements AfterViewInit, OnDestroy {
       x: Math.random() * width,
       y: randomPosition ? Math.random() * height : -10,
       size: 1.2 + Math.random() * 2.8,
-      speed: 0.08 + Math.random() * 0.22,
+      speed: 0.25 + Math.random() * 0.45,
       drift: (Math.random() - 0.5) * 0.18,
       phase: Math.random() * Math.PI * 2,
       color: colors[Math.floor(Math.random() * colors.length)],
+      settled: false,
+      settledAt: 0,
     };
   }
 
   private drawParticles(time: number): void {
-    const canvas = this.particleCanvas;
-    const context = this.particleContext;
-    if (!canvas || !context) return;
+    if (!this.particleCanvases.length || !this.particleContexts.length) return;
 
     const width = this.heroRoot.nativeElement.clientWidth;
     const height = this.heroRoot.nativeElement.clientHeight;
-    context.clearRect(0, 0, width, height);
 
     for (const particle of this.particles) {
-      particle.y -= particle.speed;
-      particle.x += particle.drift + Math.sin(time * 0.001 + particle.phase) * 0.08;
-      if (particle.y < -10) Object.assign(particle, this.createParticle(width, height));
-
-      const pulse = 0.35 + (Math.sin(time * 0.002 + particle.phase) + 1) * 0.25;
-      context.beginPath();
-      context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-      context.fillStyle = particle.color;
-      context.globalAlpha = pulse;
-      context.shadowBlur = particle.size * 5;
-      context.shadowColor = particle.color;
-      context.fill();
+      if (!particle.settled) {
+        particle.y += particle.speed;
+        particle.x += particle.drift + Math.sin(time * 0.001 + particle.phase) * 0.08;
+        if (particle.y >= height - particle.size) {
+          particle.y = height - particle.size - Math.random() * 18;
+          particle.settled = true;
+          particle.settledAt = time;
+        }
+      } else if (time - particle.settledAt > 3500) {
+        Object.assign(particle, this.createParticle(width, height));
+        particle.y = -10;
+      }
     }
-    context.globalAlpha = 1;
-    context.shadowBlur = 0;
+
+    this.particleContexts.forEach((context) => {
+      context.clearRect(0, 0, width, height);
+      for (const particle of this.particles) {
+        const settledAge = particle.settled ? time - particle.settledAt : 0;
+        const fadeOut = settledAge > 2400 ? Math.max(0, 1 - (settledAge - 2400) / 1100) : 1;
+        const pulse = particle.settled
+          ? fadeOut
+          : 0.35 + (Math.sin(time * 0.002 + particle.phase) + 1) * 0.25;
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        context.fillStyle = particle.color;
+        context.globalAlpha = pulse * 0.72;
+        context.shadowBlur = particle.size * 5;
+        context.shadowColor = particle.color;
+        context.fill();
+      }
+      context.globalAlpha = 1;
+      context.shadowBlur = 0;
+    });
   }
 }
 
@@ -199,4 +224,6 @@ interface HeroParticle {
   drift: number;
   phase: number;
   color: string;
+  settled: boolean;
+  settledAt: number;
 }
