@@ -19,6 +19,9 @@
 /storage/*.key
 /storage/pail
 /vendor
+# Runtime local de PHP para Windows y paquetes de despliegue
+/php83
+/backend-deploy.zip
 Homestead.json
 Homestead.yaml
 Thumbs.db
