@@ -6,6 +6,7 @@ export class DnaLoaderService {
   readonly title    = signal('Procesando');
   readonly message  = signal('Por favor espere...');
   readonly anniversaryVisible = signal(false);
+  readonly sliderReady = signal(true);
   private anniversaryShown = false;
   private anniversaryTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -28,5 +29,13 @@ export class DnaLoaderService {
         this.anniversaryTimer = null;
       }, 5000);
     }
+  }
+
+  startSliderLoading(): void {
+    this.sliderReady.set(false);
+  }
+
+  finishSliderLoading(): void {
+    this.sliderReady.set(true);
   }
 }

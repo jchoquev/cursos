@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://pgic.iestpchojata.edu.pe/api',
-  backendUrl: 'https://pgic.iestpchojata.edu.pe',
+  apiUrl: 'https://api-pgic.iestpchojata.edu.pe/api',
+  backendUrl: 'https://api-pgic.iestpchojata.edu.pe',
 };

@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Observable, of, forkJoin } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { AlertService } from './alert.service';
 import { environment } from '../../environments/environment';
 
 export interface EventItem {
@@ -97,6 +98,7 @@ export interface AttendanceRecord {
 export class PlatformService {
   private readonly apiService = inject(ApiService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly alert = inject(AlertService);
 
   readonly activityTypes = signal<{ id: number; tipActividad: string }[]>([
     { id: 1, tipActividad: 'Curso' },
@@ -727,6 +729,13 @@ export class PlatformService {
   }
 
   logout(): void {
+    // Revoca el bearer token en Sanctum antes de eliminar la copia local.
+    this.apiService.logout().subscribe({
+      error: () => {
+        // El cierre local sigue siendo seguro aunque la red no esté disponible.
+      },
+    });
+
     this.currentUser.set(null);
     this.errorMessage.set('');
     this.eventsLoaded = false;
@@ -908,7 +917,7 @@ export class PlatformService {
     this.isLoading.set(true);
     return this.apiService.post<any>('/users', user).pipe(
       tap(() => {
-        this.loadUsers();
+        this.loadUsers(true);
       }),
       catchError((err) => {
         this.isLoading.set(false);
@@ -921,7 +930,7 @@ export class PlatformService {
     this.isLoading.set(true);
     return this.apiService.put<any>(`/users/${originalEmail}`, updated).pipe(
       tap(() => {
-        this.loadUsers();
+        this.loadUsers(true);
       }),
       catchError((err) => {
         this.isLoading.set(false);
@@ -931,14 +940,16 @@ export class PlatformService {
   }
 
   deleteUser(email: string): void {
+    this.isLoading.set(true);
     this.apiService.delete<any>(`/users/${email}`).subscribe({
       next: (resp) => {
-        this.loadUsers();
-        alert('✅ Usuario eliminado correctamente.');
+        this.loadUsers(true);
+        this.alert.success('Usuario eliminado correctamente.');
       },
       error: (err) => {
         console.error('Error al eliminar usuario:', err);
-        alert('❌ Error al eliminar el usuario: ' + (err?.error?.message || 'Error del servidor.'));
+        this.isLoading.set(false);
+        this.alert.error('No se pudo eliminar el usuario', err?.error?.message || 'Error del servidor.');
       }
     });
   }

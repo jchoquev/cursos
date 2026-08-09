@@ -68,7 +68,7 @@
         <!-- Tema -->
         <button
           (click)="toggleTheme()"
-          class="theme-toggle-btn w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center cursor-pointer text-sm"
+          class="theme-toggle-btn hidden w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center cursor-pointer text-sm"
           [title]="themeMode() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
         >
           {{ themeMode() === 'dark' ? '☀️' : '🌙' }}
@@ -303,7 +303,7 @@
     <!-- Theme Toggle (Mobile) -->
     <button
       (click)="toggleTheme()"
-      class="theme-toggle-btn flex items-center gap-3 py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 cursor-pointer transition-all text-sm w-full"
+      class="theme-toggle-btn hidden flex items-center gap-3 py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 cursor-pointer transition-all text-sm w-full"
     >
       <span>{{ themeMode() === 'dark' ? '☀️' : '🌙' }}</span>
       <span class="lp-brand-name text-xs font-semibold">{{ themeMode() === 'dark' ? 'Modo Claro' : 'Modo Oscuro' }}</span>

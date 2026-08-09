@@ -4,7 +4,14 @@
     <article *ngFor="let slide of slides; let i = index"
              class="hero-slide absolute inset-0"
              [class.is-active]="i === activeIndex()">
-      <img [src]="slide.image" [alt]="slide.title" class="hero-image block h-full w-full object-cover" />
+      <img
+        [src]="slide.image"
+        [alt]="slide.title"
+        [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+        [attr.fetchpriority]="i === 0 ? 'high' : 'low'"
+        decoding="async"
+        class="hero-image block h-full w-full object-cover"
+      />
       <div class="hero-overlay absolute inset-0" [class]="'hero-overlay hero-overlay-' + i"></div>
       <canvas class="hero-particles absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
       <div class="hero-content absolute inset-0 flex flex-col items-center justify-center px-8 text-center">

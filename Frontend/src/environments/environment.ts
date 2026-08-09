@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000/api',
-  backendUrl: 'http://localhost:8000',
+  apiUrl: 'https://api-pgic.iestpchojata.edu.pe/api',
+  backendUrl: 'https://api-pgic.iestpchojata.edu.pe',
 };

@@ -16,7 +16,7 @@ use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ValidarCertificadoController;
 use App\Http\Controllers\DashboardController;
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 Route::get('/tipo-actividades', [TipoActividadController::class, 'index']);
 Route::get('/tipo-asistentes', [App\Http\Controllers\TipoAsistenteController::class, 'index']);
 Route::get('/consulta-dni/{dni}', [DataInternaController::class, 'consultaDni']);
@@ -32,6 +32,7 @@ Route::get('/proyectos/publicos', [ProyectoController::class, 'publicIndex']);
 Route::get('/proyectos/{id}/imagen-base64', [ProyectoController::class, 'publicImageBase64']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::apiResource('eventos', EventoController::class)->except(['index', 'show']);
     Route::apiResource('data-interna', DataInternaController::class)->parameters([

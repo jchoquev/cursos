@@ -17,17 +17,14 @@ export class ThemeService {
     if (!isPlatformBrowser(this.platformId)) return;
 
     this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const saved = localStorage.getItem(this.storageKey) as ThemeMode | null;
-
-    if (saved === 'light' || saved === 'dark') {
-      this.mode.set(saved);
-      this.followsSystem.set(false);
-    } else {
-      this.mode.set(this.mediaQuery.matches ? 'dark' : 'light');
-    }
+    // El tema público actual es oscuro. Se conserva la lógica de claro para
+    // reactivarla en el futuro, pero no se permite que una preferencia antigua
+    // o el tema del sistema cambien la interfaz visible.
+    localStorage.removeItem(this.storageKey);
+    this.mode.set('dark');
+    this.followsSystem.set(false);
 
     this.apply();
-    this.mediaQuery.addEventListener('change', this.handleSystemThemeChange);
   }
 
   toggle(): void {

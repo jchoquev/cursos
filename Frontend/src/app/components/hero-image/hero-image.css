@@ -64,7 +64,8 @@
 }
 
 .hero-control:hover {
-  background: rgba(112, 67, 180, 0.75);
+  background: rgba(122, 16, 48, 0.88);
+  border-color: rgba(246, 212, 119, 0.65);
 }
 
 .hero-control-prev { left: 1rem; }

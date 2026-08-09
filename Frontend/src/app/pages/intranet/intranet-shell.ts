@@ -295,7 +295,25 @@ export class IntranetShellComponent implements OnInit {
     // Vuelve a mostrar la plantilla durante la captura; después queda
     // sustituida por el PNG dinámico en la vista previa.
     this.certificatePreviewImage.set(null);
-    await document.fonts?.ready;
+    // Esperar la fuente manuscrita antes de rasterizar. Si el navegador
+    // rechaza la carga por caché o por una ruta de assets antigua, no se debe
+    // cancelar toda la impresión: html2canvas usará la fuente declarada en CSS.
+    if (document.fonts) {
+      try {
+        // Registrar la fuente con FontFace evita que html2canvas use la
+        // fuente genérica "cursive" dentro del documento clonado.
+        const handwrittenFont = new FontFace(
+          'Chocolate',
+          'url("/font/chocolate_5/Chocolate.ttf") format("truetype")'
+        );
+        await handwrittenFont.load();
+        document.fonts.add(handwrittenFont);
+        await document.fonts.load('38.5px "Chocolate"');
+        await document.fonts.ready;
+      } catch (fontError) {
+        console.warn('No se pudo precargar Chocolate; se continúa con CSS.', fontError);
+      }
+    }
     await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     if (generation !== this.certificatePreviewGeneration) return null;
     const image = await this.createCertificateCanvasImage();

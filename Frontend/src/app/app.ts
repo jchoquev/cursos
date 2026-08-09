@@ -40,7 +40,7 @@ export class App implements OnInit {
 
     // Wire platform loading state → DNA loader automatically
     effect(() => {
-      if (this.platformService.isLoading()) {
+      if (this.platformService.isLoading() || !this.dnaLoader.sliderReady()) {
         this.dnaLoader.show('Cargando', 'Sincronizando datos de la plataforma...');
       } else {
         this.dnaLoader.hide();

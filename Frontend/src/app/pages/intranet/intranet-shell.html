@@ -165,7 +165,7 @@
         </button>
         <button (click)="toggleTheme()"
           [title]="themeMode() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-          class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition-all">
+          class="hidden w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 flex items-center justify-center cursor-pointer transition-all">
           <span class="text-xs">{{ themeMode() === 'dark' ? '☀️' : '🌙' }}</span>
         </button>
         <button
@@ -382,8 +382,8 @@
             <div class="text-[15px] print:text-[15px] text-slate-500 italic leading-none">Otorgado a:</div>
 
             <div class="recipient-name-cursive text-2xl sm:text-3.5xl text-[#0d47a1] leading-none my-1"
-              style="font-family: 'Great Vibes', cursive;">
-              <p class="text-[35px] print:text-[35px]">{{ toTitleCase(p.fullName) }}</p>
+              style="font-family: 'Chocolate', cursive !important;">
+              <p class="text-[38.5px] print:text-[38.5px]">{{ toTitleCase(p.fullName) }}</p>
             </div>
 
             <div

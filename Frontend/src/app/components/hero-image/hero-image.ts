@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, PLATFORM_ID, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { gsap } from 'gsap';
+import { DnaLoaderService } from '../../services/dna-loader.service';
 
 interface HeroSlide {
   image: string;
@@ -20,19 +21,19 @@ export class HeroImage implements AfterViewInit, OnDestroy {
 
   readonly slides: HeroSlide[] = [
     {
-      image: 'slider/hero-chojata.png',
+      image: 'slider/hero-chojata.webp',
       eyebrow: 'Formación que transforma',
       title: 'Aprende sin límites',
       subtitle: 'Explora cursos diseñados para llevarte al siguiente nivel',
     },
     {
-      image: 'slider/hero-chojata-2.png',
+      image: 'slider/hero-chojata-2.webp',
       eyebrow: 'Tu próximo reto empieza aquí',
       title: 'Crece con propósito',
       subtitle: 'Desarrolla nuevas habilidades con expertos y experiencias reales',
     },
     {
-      image: 'slider/hero-chojata-3.png',
+      image: 'slider/hero-chojata-3.webp',
       eyebrow: 'Conocimiento para avanzar',
       title: 'Inspírate y transforma',
       subtitle: 'Descubre oportunidades para convertir tus ideas en resultados',
@@ -41,6 +42,7 @@ export class HeroImage implements AfterViewInit, OnDestroy {
 
   readonly activeIndex = signal(0);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly dnaLoader = inject(DnaLoaderService);
   private autoplayId?: number;
   private transition?: gsap.core.Timeline;
   private particleCanvases: HTMLCanvasElement[] = [];
@@ -49,9 +51,16 @@ export class HeroImage implements AfterViewInit, OnDestroy {
   private particleResizeHandler?: () => void;
   private particles: HeroParticle[] = [];
 
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.dnaLoader.startSliderLoading();
+    }
+  }
+
   ngAfterViewInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
+    this.preloadSliderImages();
     const slideElements = this.getSlideElements();
     gsap.set(slideElements, { autoAlpha: 0 });
     gsap.set(slideElements[0], { autoAlpha: 1 });
@@ -61,6 +70,7 @@ export class HeroImage implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.dnaLoader.finishSliderLoading();
     this.stopAutoplay();
     this.transition?.kill();
     if (this.particleAnimationId !== undefined) cancelAnimationFrame(this.particleAnimationId);
@@ -110,6 +120,17 @@ export class HeroImage implements AfterViewInit, OnDestroy {
     gsap.set(slide.querySelector('.hero-eyebrow'), { autoAlpha: 1, y: 0 });
     gsap.set(slide.querySelector('.hero-title'), { autoAlpha: 1, y: 0 });
     gsap.set(slide.querySelector('.hero-subtitle'), { autoAlpha: 1, y: 0 });
+  }
+
+  private preloadSliderImages(): void {
+    const imageLoads = this.slides.map((slide) => new Promise<void>((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve();
+      image.onerror = () => resolve();
+      image.src = slide.image;
+    }));
+
+    Promise.all(imageLoads).then(() => this.dnaLoader.finishSliderLoading());
   }
 
   private getSlideElements(): HTMLElement[] {

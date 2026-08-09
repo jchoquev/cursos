@@ -107,8 +107,7 @@ export class RegistrationsComponent implements OnInit {
   }
 
   getParticipantType(registration: Registration): string {
-    const type = (registration.tipoAsistente || 'PARTICIPANTE').trim().toUpperCase();
-    return type === 'ASISTENTE' ? 'PARTICIPANTE' : type;
+    return registration.tipoAsistente?.trim().toUpperCase() || 'SIN TIPO';
   }
 
   ngOnInit(): void {
