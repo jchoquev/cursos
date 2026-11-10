@@ -123,14 +123,19 @@ export class HeroImage implements AfterViewInit, OnDestroy {
   }
 
   private preloadSliderImages(): void {
-    const imageLoads = this.slides.map((slide) => new Promise<void>((resolve) => {
+    const load = (src: string) => new Promise<void>((resolve) => {
       const image = new Image();
       image.onload = () => resolve();
       image.onerror = () => resolve();
-      image.src = slide.image;
-    }));
+      image.src = src;
+    });
 
-    Promise.all(imageLoads).then(() => this.dnaLoader.finishSliderLoading());
+    // Solo la primera diapositiva es visible al entrar; las demás no bloquean.
+    const [first, ...rest] = this.slides;
+    load(first.image).then(() => {
+      this.dnaLoader.finishSliderLoading(true);
+      rest.forEach((slide) => void load(slide.image));
+    });
   }
 
   private getSlideElements(): HTMLElement[] {

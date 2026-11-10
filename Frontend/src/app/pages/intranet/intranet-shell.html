@@ -73,7 +73,8 @@
       <div *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua' || user.role === 'Caja'"
         class="space-y-1 pt-2 border-t border-white/5">
         <span
-          class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Formación Continua</span>
+          class="sidebar-nav-group-title block px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">Formación
+          Continua</span>
 
         <a routerLink="/intranet/registrations" routerLinkActive="sidebar-btn-active"
           class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
@@ -86,8 +87,8 @@
           </span>
         </a>
 
-        <a *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'"
-          routerLink="/intranet/courses" routerLinkActive="sidebar-btn-active"
+        <a *ngIf="user.role === 'Administrador' || user.role === 'Formación Continua'" routerLink="/intranet/courses"
+          routerLinkActive="sidebar-btn-active"
           class="sidebar-btn-inactive flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer no-underline">
           <span class="sidebar-btn-icon">📅</span>
           <span class="sidebar-btn-text">Gestión de Eventos</span>
@@ -221,8 +222,7 @@
 <!-- ==========================================
      MODAL: VALIDACIÓN DE PAGO
      ========================================== -->
-<div
-  class="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+<div class="modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
   *ngIf="showPaymentModal()" (click)="showPaymentModal.set(false)">
   <div
     class="modal-content relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-6"
@@ -249,10 +249,10 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Número de Recibo / Operación</label>
-        <input type="text" [ngModel]="paymentReceiptNumber()"
-          (ngModelChange)="paymentReceiptNumber.set($event)" [name]="'paymentReceiptNumber'"
-          placeholder="REC-2026-XXXX"
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Número de Recibo /
+          Operación</label>
+        <input type="text" [ngModel]="paymentReceiptNumber()" (ngModelChange)="paymentReceiptNumber.set($event)"
+          [name]="'paymentReceiptNumber'" placeholder="REC-2026-XXXX"
           class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           [disabled]="paymentIsFree()" [required]="!paymentIsFree()" />
       </div>
@@ -260,23 +260,22 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fecha de Pago</label>
-          <input type="date" [ngModel]="paymentDate()" (ngModelChange)="paymentDate.set($event)"
-            [name]="'paymentDate'"
+          <input type="date" [ngModel]="paymentDate()" (ngModelChange)="paymentDate.set($event)" [name]="'paymentDate'"
             class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
             [disabled]="paymentIsFree()" [required]="!paymentIsFree()" />
         </div>
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Monto Pagado (S/.)</label>
           <input type="number" step="0.01" [ngModel]="paymentAmount()"
-            (ngModelChange)="paymentAmount.set($event ? +$event : null)" [name]="'paymentAmount'"
-            placeholder="0.00"
+            (ngModelChange)="paymentAmount.set($event ? +$event : null)" [name]="'paymentAmount'" placeholder="0.00"
             class="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-amber-500/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
             [disabled]="paymentIsFree()" [required]="!paymentIsFree()" />
         </div>
       </div>
 
       <div *ngIf="!paymentIsFree()">
-        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subir Foto o Escaneo de Recibo</label>
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subir Foto o Escaneo de
+          Recibo</label>
         <div
           class="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-2xl p-4 bg-white/[0.01] hover:bg-white/[0.03] transition-all relative">
           <input type="file" accept="image/*" (change)="onReceiptFileChange($event)"
@@ -340,8 +339,8 @@
 
     <div
       class="certificate-print-canvas flex-1 flex justify-center items-center overflow-auto p-4 bg-slate-950/40 rounded-2xl print:p-0 print:bg-white">
-      <img *ngIf="certificatePreviewImage() as previewImage" class="certificate-preview-image"
-        [src]="previewImage" alt="Vista previa del certificado generado como imagen" />
+      <img *ngIf="certificatePreviewImage() as previewImage" class="certificate-preview-image" [src]="previewImage"
+        alt="Vista previa del certificado generado como imagen" />
 
       <div *ngIf="!certificatePreviewImage()" id="landscape-certificate-print-area"
         class="landscape-certificate-sheet relative w-[960px] h-[678px] bg-white text-slate-900 overflow-hidden shadow-2xl print:shadow-none print:border-0"
@@ -381,9 +380,9 @@
 
             <div class="text-[15px] print:text-[15px] text-slate-500 italic leading-none">Otorgado a:</div>
 
-            <div class="recipient-name-cursive text-2xl sm:text-3.5xl text-[#0d47a1] leading-none my-1"
-              style="font-family: 'Chocolate', cursive !important;">
-              <p class="text-[38.5px] print:text-[38.5px]">{{ toTitleCase(p.fullName) }}</p>
+            <div class="recipient-name-cursive text-2xl sm:text-3.5xl text-[#0d47a1] leading-none mt-1 mb-4"
+              style="font-family: 'Mea Culpa', cursive !important;">
+              <p class="text-[47px] print:text-[47px]">{{ toTitleCase(p.fullName) }}</p>
             </div>
 
             <div
@@ -406,16 +405,25 @@
             <table class="w-2/3 text-center mt-10">
               <tr>
                 <td>
-                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
-                  <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma01 }}</div>
+                  <ng-container *ngIf="hasSignature(certDocData()?.Firma01)">
+                    <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
+                    <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{
+                      certDocData()?.Firma01 }}</div>
+                  </ng-container>
                 </td>
                 <td>
-                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
-                  <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma02 }}</div>
+                  <ng-container *ngIf="hasSignature(certDocData()?.Firma02)">
+                    <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
+                    <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{
+                      certDocData()?.Firma02 }}</div>
+                  </ng-container>
                 </td>
                 <td>
-                  <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
-                  <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{ certDocData()?.Firma03 }}</div>
+                  <ng-container *ngIf="hasSignature(certDocData()?.Firma03)">
+                    <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
+                    <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{
+                      certDocData()?.Firma03 }}</div>
+                  </ng-container>
                 </td>
               </tr>
             </table>

@@ -1838,6 +1838,12 @@ export class IntranetComponent implements OnInit, OnDestroy {
     }
   }
 
+  hasSignature(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    const text = String(value).trim();
+    return text.length > 0 && text.toLowerCase() !== 'null' && text.toLowerCase() !== 'undefined';
+  }
+
   toTitleCase(str: string | null | undefined): string {
     if (!str) return '';
     return str

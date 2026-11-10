@@ -8,7 +8,6 @@ export class DnaLoaderService {
   readonly anniversaryVisible = signal(false);
   readonly sliderReady = signal(true);
   private anniversaryShown = false;
-  private anniversaryTimer: ReturnType<typeof setTimeout> | null = null;
 
   show(title = 'Procesando', message = 'Por favor espere...'): void {
     this.title.set(title);
@@ -17,25 +16,32 @@ export class DnaLoaderService {
   }
 
   hide(): void {
-    const wasVisible = this.visible();
     this.visible.set(false);
-
-    // La celebración se muestra una sola vez, al terminar la carga inicial.
-    if (wasVisible && !this.anniversaryShown) {
-      this.anniversaryShown = true;
-      this.anniversaryVisible.set(true);
-      this.anniversaryTimer = setTimeout(() => {
-        this.anniversaryVisible.set(false);
-        this.anniversaryTimer = null;
-      }, 5000);
-    }
   }
 
   startSliderLoading(): void {
     this.sliderReady.set(false);
   }
 
-  finishSliderLoading(): void {
+  finishSliderLoading(celebrate = false): void {
+    if (this.sliderReady()) return;
     this.sliderReady.set(true);
+    if (celebrate) this.showAnniversaryOnce();
+  }
+
+  /** La celebración sale una vez por sesión del navegador, no en cada recarga. */
+  private showAnniversaryOnce(): void {
+    if (this.anniversaryShown) return;
+    this.anniversaryShown = true;
+
+    try {
+      if (sessionStorage.getItem('anniversary_shown')) return;
+      sessionStorage.setItem('anniversary_shown', '1');
+    } catch {
+      // Sin sessionStorage se limita a una vez por carga de la app.
+    }
+
+    this.anniversaryVisible.set(true);
+    setTimeout(() => this.anniversaryVisible.set(false), 2500);
   }
 }

@@ -97,6 +97,7 @@ export class Home implements OnInit {
       this.selectedCategory.set(params['category'] || 'Todos');
     });
     this.platformService.loadEvents();
+    this.platformService.requestCovers();
   }
 
   // Filters state
@@ -570,7 +571,7 @@ export class Home implements OnInit {
   }
 
   getQrCodeSvg(code: string): SafeHtml {
-    const url = `https://iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
+    const url = `https://pgic.iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
     try {
       const qr = qrcode(0, 'M');
       qr.addData(url);

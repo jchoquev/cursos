@@ -1,6 +1,8 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, DestroyRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../services/api.service';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { DnaLoaderService } from '../../services/dna-loader.service';
@@ -28,10 +30,12 @@ export interface CertResult {
   templateUrl: './search-certificates.html',
   styleUrl: './search-certificates.css',
 })
-export class SearchCertificates {
+export class SearchCertificates implements OnInit {
   private readonly apiService = inject(ApiService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly dnaLoader = inject(DnaLoaderService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   searchQuery = signal<string>('');
   isSearching = signal<boolean>(false);
@@ -45,6 +49,19 @@ export class SearchCertificates {
   showResolutionModal = signal<boolean>(false);
   resolucionPdfUrl = signal<SafeResourceUrl | null>(null);
   resolucionError = signal<string>('');
+
+  ngOnInit(): void {
+    // Al escanear el QR llega ?code=XXXX: se completa el buscador y se valida.
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const code = params.get('code')?.trim();
+        if (code && code !== this.searchQuery()) {
+          this.searchQuery.set(code);
+          this.onSearch();
+        }
+      });
+  }
 
   onSearch(): void {
     const query = this.searchQuery().trim();
@@ -60,6 +77,8 @@ export class SearchCertificates {
       next: (res) => {
         this.result.set(res);
         this.isValid.set(res.valido);
+        // El backend responde 200 con valido=false cuando el certificado está revocado.
+        if (!res.valido) this.errorMsg.set(res.mensaje || '');
         this.isSearching.set(false);
         this.hasSearched.set(true);
       },
@@ -125,7 +144,7 @@ export class SearchCertificates {
   }
 
   getQrCodeSvgRaw(code: string): string {
-    const url = `https://iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
+    const url = `https://pgic.iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
     try {
       const qr = qrcode(0, 'M');
       qr.addData(url);

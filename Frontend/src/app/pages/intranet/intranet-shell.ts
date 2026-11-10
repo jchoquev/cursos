@@ -87,7 +87,7 @@ export class IntranetShellComponent implements OnInit {
   });
 
   getQrCodeSvg(code: string): SafeHtml {
-    const url = `https://iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
+    const url = `https://pgic.iestpchojata.edu.pe/certificados/validador?code=${encodeURIComponent(code)}`;
     try {
       const qr = qrcode(0, 'M');
       qr.addData(url);
@@ -149,6 +149,7 @@ export class IntranetShellComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.platformService.loadEvents();
     this.apiService.get<any>('/periodo-aca/activo').subscribe({
       next: (data) => { if (data?.Asig) this.periodoActivo.set(data.Asig); }
     });}
@@ -300,18 +301,12 @@ export class IntranetShellComponent implements OnInit {
     // cancelar toda la impresión: html2canvas usará la fuente declarada en CSS.
     if (document.fonts) {
       try {
-        // Registrar la fuente con FontFace evita que html2canvas use la
-        // fuente genérica "cursive" dentro del documento clonado.
-        const handwrittenFont = new FontFace(
-          'Chocolate',
-          'url("/font/chocolate_5/Chocolate.ttf") format("truetype")'
-        );
-        await handwrittenFont.load();
-        document.fonts.add(handwrittenFont);
-        await document.fonts.load('38.5px "Chocolate"');
+        // "Mea Culpa" se declara desde Google Fonts en index.html; forzar su
+        // carga evita que html2canvas use la fuente genérica "cursive".
+        await document.fonts.load('38.5px "Mea Culpa"');
         await document.fonts.ready;
       } catch (fontError) {
-        console.warn('No se pudo precargar Chocolate; se continúa con CSS.', fontError);
+        console.warn('No se pudo precargar Mea Culpa; se continúa con CSS.', fontError);
       }
     }
     await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
@@ -342,6 +337,28 @@ export class IntranetShellComponent implements OnInit {
         clonedCertificate.style.transform = 'none';
         clonedCertificate.style.borderRadius = '0';
         clonedCertificate.style.boxShadow = 'none';
+
+        // html2canvas reduce los background-image al tamaño CSS (960 × 678)
+        // antes de aplicar la escala, lo que pixela el fondo. Un <img> se
+        // dibuja con su resolución original, así que se sustituye el fondo.
+        const fondo = this.certViewer.certFondoBase64();
+        if (fondo) {
+          clonedCertificate.style.backgroundImage = 'none';
+          const backgroundImage = clonedDocument.createElement('img');
+          backgroundImage.src = fondo;
+          backgroundImage.alt = '';
+          Object.assign(backgroundImage.style, {
+            position: 'absolute',
+            inset: '0',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            zIndex: '0',
+            pointerEvents: 'none',
+          });
+          clonedCertificate.insertBefore(backgroundImage, clonedCertificate.firstChild);
+        }
       },
     });
     return canvas.toDataURL('image/png');
@@ -442,6 +459,12 @@ export class IntranetShellComponent implements OnInit {
       const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
       return `${dateObj.getDate()} de ${months[dateObj.getMonth()]} de ${dateObj.getFullYear()}`;
     } catch { return dateStr; }
+  }
+
+  hasSignature(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    const text = String(value).trim();
+    return text.length > 0 && text.toLowerCase() !== 'null' && text.toLowerCase() !== 'undefined';
   }
 
   toTitleCase(str: string | null | undefined): string {

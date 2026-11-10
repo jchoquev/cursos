@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
-import { SearchCertificates } from './pages/search-certificates/search-certificates';
 import { inject } from '@angular/core';
 import { Router, CanActivateChildFn } from '@angular/router';
 import { PlatformService } from './services/platform.service';
@@ -33,9 +32,14 @@ export const intranetGuard: CanActivateChildFn = (route, state) => {
   }
 };
 
+const loadSearchCertificates = () =>
+  import('./pages/search-certificates/search-certificates').then(m => m.SearchCertificates);
+
 export const routes: Routes = [
   { path: '', component: Home },
-  { path: 'buscar-certificados', component: SearchCertificates },
+  { path: 'buscar-certificados', loadComponent: loadSearchCertificates },
+  // Destino del QR impreso en los certificados: /certificados/validador?code=XXXX
+  { path: 'certificados/validador', loadComponent: loadSearchCertificates },
   {
     path: 'intranet',
     canActivateChild: [intranetGuard],

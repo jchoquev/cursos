@@ -37,8 +37,9 @@ export class ApiService {
     if (isPlatformBrowser(this.platformId)) {
       token = localStorage.getItem('auth_token') ?? '';
     }
+    // Sin Content-Type fijo: HttpClient lo añade solo cuando hay cuerpo JSON.
+    // Enviarlo en los GET forzaba una petición OPTIONS extra en cada llamada.
     return new HttpHeaders({
-      'Content-Type': 'application/json',
       Accept: 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     });

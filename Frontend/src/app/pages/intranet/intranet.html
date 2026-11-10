@@ -3169,7 +3169,7 @@
             <div class="text-[15px] print:text-[15px] text-slate-500 italic leading-none">Otorgado a:</div>
 
             <!-- Recipient Name (Calligraphic font) -->
-            <div class="recipient-name-cursive text-2xl sm:text-3.5xl text-[#0d47a1] leading-none my-1"
+            <div class="recipient-name-cursive text-2xl sm:text-3.5xl text-[#0d47a1] leading-none mt-1 mb-4"
               style="font-family: 'Chocolate', cursive !important;">
               <p class="text-[38.5px] print:text-[38.5px] ">
                 {{ toTitleCase(p.fullName) }}
@@ -3200,19 +3200,25 @@
             <table class="w-2/3 text-center mt-10">
               <tr>
                 <td>
+                  <ng-container *ngIf="hasSignature(certDocData()?.Firma01)">
                   <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
                   <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{
                     certDocData()?.Firma01 }}</div>
+                  </ng-container>
                 </td>
                 <td>
+                  <ng-container *ngIf="hasSignature(certDocData()?.Firma02)">
                   <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
                   <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{
                     certDocData()?.Firma02 }}</div>
+                  </ng-container>
                 </td>
                 <td>
+                  <ng-container *ngIf="hasSignature(certDocData()?.Firma03)">
                   <div class="h-[1px] w-40 bg-slate-400 mx-auto mt-1 mb-0.5"></div>
                   <div class="text-[9px] font-bold text-slate-700 leading-none uppercase font-mono">{{
                     certDocData()?.Firma03 }}</div>
+                  </ng-container>
                 </td>
               </tr>
             </table>

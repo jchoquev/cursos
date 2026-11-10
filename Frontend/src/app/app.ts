@@ -40,7 +40,7 @@ export class App implements OnInit {
 
     // Wire platform loading state → DNA loader automatically
     effect(() => {
-      if (this.platformService.isLoading() || !this.dnaLoader.sliderReady()) {
+      if (this.platformService.isSaving() || !this.dnaLoader.sliderReady()) {
         this.dnaLoader.show('Cargando', 'Sincronizando datos de la plataforma...');
       } else {
         this.dnaLoader.hide();
@@ -76,6 +76,7 @@ export class App implements OnInit {
   }
 
   openSearchOverlay(): void {
+    this.platformService.loadEvents();
     this.showSearchOverlay.set(true);
   }
 

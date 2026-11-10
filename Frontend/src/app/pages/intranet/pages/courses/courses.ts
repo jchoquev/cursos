@@ -147,6 +147,8 @@ export class CoursesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.platformService.loadEvents();
+    // La vista previa del formulario de edición usa la portada.
+    this.platformService.requestCovers();
     this.loadPeriods();
   }
 

@@ -1,10 +1,21 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, of, forkJoin } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { Observable, of, forkJoin, from, Subscription } from 'rxjs';
+import { catchError, finalize, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { AlertService } from './alert.service';
+import { CoverCacheService } from './cover-cache.service';
 import { environment } from '../../environments/environment';
+
+/** Portada pendiente de un evento o proyecto. */
+interface CoverJob {
+  id: string;
+  key: string;
+  endpoint: string;
+}
+
+/** Deja conexiones libres para el resto de peticiones a la API. */
+const MAX_CONCURRENT_COVERS = 3;
 
 export interface EventItem {
   id: any;
@@ -99,6 +110,7 @@ export class PlatformService {
   private readonly apiService = inject(ApiService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly alert = inject(AlertService);
+  private readonly coverCache = inject(CoverCacheService);
 
   readonly activityTypes = signal<{ id: number; tipActividad: string }[]>([
     { id: 1, tipActividad: 'Curso' },
@@ -135,7 +147,7 @@ export class PlatformService {
         }
       }
 
-      this.loadEvents();
+      // Los eventos los pide cada página que los necesita (ver loadEvents).
       this.loadActivityTypes();
       this.loadTipoAsistentes();
       if (this.isLoggedIn()) {
@@ -276,11 +288,21 @@ export class PlatformService {
 
   loadEvents(force = false): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    if (!force && this.eventsLoaded && this.periodosLoaded) return;
-    this.isLoading.set(true);
-    // El repositorio se reconstruye desde la tabla `proyectos` en cada carga.
+    // Una carga en curso se reutiliza, salvo que se pida refrescar expresamente.
+    if (!force && (this.eventsRequest || (this.eventsLoaded && this.periodosLoaded))) return;
+    this.eventsRequest?.unsubscribe();
+
+    // Solo la primera carga limpia la lista: los refrescos ocurren sin parpadeos.
     // Así no permanecen las tarjetas de demostración ni se duplican registros.
-    this.events.set([]);
+    if (!this.eventsLoaded) {
+      this.eventsLoading.set(true);
+      this.events.set([]);
+    }
+
+    const finish = () => {
+      this.eventsRequest = undefined;
+      this.eventsLoading.set(false);
+    };
 
     const events$ = this.apiService.get<any[]>('/eventos').pipe(
       catchError(err => {
@@ -303,7 +325,7 @@ export class PlatformService {
       })
     );
 
-    forkJoin([events$, projects$, periodos$]).subscribe({
+    this.eventsRequest = forkJoin([events$, projects$, periodos$]).subscribe({
       next: ([eventsData, projectsData, periodosData]) => {
         // 1. Process Periodos
         if (Array.isArray(periodosData) && periodosData.length > 0) {
@@ -315,72 +337,87 @@ export class PlatformService {
 
         // 2. Process Events and repository projects from the projects table
         if (Array.isArray(eventsData)) {
-          const mapped = eventsData.map(item => this.mapBackendEventoToEventItem(item));
+          const jobs: CoverJob[] = [];
+          const mapped = eventsData.map(item => this.withCover(
+            this.mapBackendEventoToEventItem(item),
+            `/eventos/${item.id}/banner-base64`,
+            item.updated_at,
+            jobs
+          ));
           const mappedProjects = Array.isArray(projectsData)
-            ? projectsData.map(item => this.mapBackendProyectoToEventItem(item))
+            ? projectsData.map(item => this.withCover(
+                this.mapBackendProyectoToEventItem(item),
+                `/proyectos/${item.Id}/imagen-base64`,
+                item.updated_at,
+                jobs
+              ))
             : [];
-          
-          const bannerRequests = mapped.map(event => {
-            if (event.id && event.coverUrl) {
-              return this.apiService.get<{ base64: string }>(`/eventos/${event.id}/banner-base64`).pipe(
-                catchError(() => of({ base64: '' })),
-                map(res => {
-                  if (res && res.base64) {
-                    event.coverUrl = res.base64;
-                  }
-                  return event;
-                })
-              );
-            }
-            return of(event);
-          });
 
-          const projectImageRequests = mappedProjects.map(project => {
-            if (project.id && project.coverUrl) {
-              return this.apiService.get<{ base64: string | null }>(`/proyectos/${project.id}/imagen-base64`).pipe(
-                catchError(() => of({ base64: null })),
-                map(res => {
-                  if (res?.base64) {
-                    project.coverUrl = res.base64;
-                  }
-                  return project;
-                })
-              );
-            }
-            return of(project);
-          });
-
-          const imageRequests = [...bannerRequests, ...projectImageRequests];
-          if (imageRequests.length > 0) {
-            forkJoin(imageRequests).subscribe({
-              next: (updatedItems) => {
-                const updatedEvents = updatedItems.slice(0, bannerRequests.length);
-                const updatedProjects = updatedItems.slice(bannerRequests.length);
-                this.events.set([...updatedEvents, ...updatedProjects]);
-                this.eventsLoaded = true;
-                this.isLoading.set(false);
-              },
-              error: (err) => {
-                console.error('Error loading banners:', err);
-                this.events.set([...mapped, ...mappedProjects]);
-                this.eventsLoaded = true;
-                this.isLoading.set(false);
-              }
-            });
-          } else {
-            this.events.set([...mapped, ...mappedProjects]);
-            this.eventsLoaded = true;
-            this.isLoading.set(false);
+          // El contenido se publica ya; las portadas llegan después sin bloquearlo.
+          this.events.set([...mapped, ...mappedProjects]);
+          this.eventsLoaded = true;
+          this.coverJobs = jobs;
+          if (eventsData.length > 0) {
+            void this.coverCache.prune(new Set(jobs.map(job => job.key)));
           }
-        } else {
-          this.isLoading.set(false);
+          this.startCovers();
         }
+        finish();
       },
       error: (err) => {
         console.error('Error fetching initial data from backend:', err);
-        this.isLoading.set(false);
+        finish();
       }
     });
+  }
+
+  /** Activa la descarga de portadas; solo la piden las páginas que las muestran. */
+  requestCovers(): void {
+    this.coversWanted = true;
+    this.startCovers();
+  }
+
+  /**
+   * Registra la portada del elemento. Hasta tenerla en base64 se deja vacía,
+   * porque la ruta /storage no es pública y mostraría una imagen rota.
+   */
+  private withCover(item: EventItem, endpoint: string, version: unknown, jobs: CoverJob[]): EventItem {
+    if (!item.id || !item.coverUrl) return item;
+    const key = `${item.coverUrl}|${version ?? ''}`;
+    jobs.push({ id: String(item.id), key, endpoint });
+    return { ...item, coverUrl: this.loadedCovers.get(key) ?? '' };
+  }
+
+  private startCovers(): void {
+    if (!this.coversWanted || this.coverJobs.length === 0) return;
+    const jobs = this.coverJobs.filter(job => !this.loadedCovers.has(job.key));
+    this.coverJobs = [];
+    this.coversRequest?.unsubscribe();
+
+    this.coversRequest = from(jobs).pipe(
+      mergeMap(job => this.fetchCover(job).pipe(map(base64 => ({ job, base64 }))), MAX_CONCURRENT_COVERS)
+    ).subscribe(({ job, base64 }) => {
+      if (!base64) return;
+      this.loadedCovers.set(job.key, base64);
+      this.events.update(list => list.map(item =>
+        String(item.id) === job.id ? { ...item, coverUrl: base64 } : item
+      ));
+    });
+  }
+
+  private fetchCover(job: CoverJob): Observable<string> {
+    return from(this.coverCache.get(job.key)).pipe(
+      switchMap(cached => cached
+        ? of(cached)
+        : this.apiService.get<{ base64: string | null }>(job.endpoint).pipe(
+            map(res => res?.base64 || ''),
+            tap(base64 => {
+              if (base64) void this.coverCache.set(job.key, base64);
+            })
+          )
+      ),
+      catchError(() => of(''))
+    );
   }
 
   loadActivityTypes(): void {
@@ -416,13 +453,33 @@ export class PlatformService {
   }
 
   // --- ESTADO GLOBAL DE CARGA Y ERROR ---
-  readonly isLoading = signal<boolean>(false);
+  private readonly eventsLoading = signal<boolean>(false);
+  private readonly registrationsLoading = signal<boolean>(false);
+  private readonly usersLoading = signal<boolean>(false);
+
+  /** Acción del usuario en curso: es lo único que bloquea la pantalla. */
+  readonly isSaving = signal<boolean>(false);
+
+  /** Primera carga de datos o guardado en curso; lo usan los esqueletos de las tablas. */
+  readonly isLoading = computed(() =>
+    this.eventsLoading() || this.registrationsLoading() || this.usersLoading() || this.isSaving()
+  );
   readonly errorMessage = signal<string>('');
 
   // Cache flags — prevent redundant API calls when navigating between pages
   private eventsLoaded = false;
   private registrationsLoaded = false;
   private usersLoaded = false;
+
+  // Peticiones en curso, para no lanzar la misma carga dos veces
+  private eventsRequest?: Subscription;
+  private registrationsRequest?: Subscription;
+  private usersRequest?: Subscription;
+  private coversRequest?: Subscription;
+
+  private coversWanted = false;
+  private coverJobs: CoverJob[] = [];
+  private readonly loadedCovers = new Map<string, string>();
 
   // --- MOCK STORES USING SIGNALS ---
 
@@ -688,13 +745,13 @@ export class PlatformService {
 
   // Authentication — delega al ApiService (llama al backend real)
   login(email: string, password: string): Observable<boolean> {
-    this.isLoading.set(true);
+    this.isSaving.set(true);
     this.errorMessage.set('');
 
     return new Observable<boolean>((observer) => {
       this.apiService.login(email, password).subscribe({
         next: (res) => {
-          this.isLoading.set(false);
+          this.isSaving.set(false);
           if (res.status === 'success' && res.user && res.token) {
             const user: UserItem = {
               email: res.user.email,
@@ -719,7 +776,7 @@ export class PlatformService {
           observer.complete();
         },
         error: (err: Error) => {
-          this.isLoading.set(false);
+          this.isSaving.set(false);
           this.errorMessage.set(err.message ?? 'Error al conectar con el servidor.');
           observer.next(false);
           observer.complete();
@@ -738,6 +795,15 @@ export class PlatformService {
 
     this.currentUser.set(null);
     this.errorMessage.set('');
+    this.eventsRequest?.unsubscribe();
+    this.registrationsRequest?.unsubscribe();
+    this.usersRequest?.unsubscribe();
+    this.eventsRequest = undefined;
+    this.registrationsRequest = undefined;
+    this.usersRequest = undefined;
+    this.eventsLoading.set(false);
+    this.registrationsLoading.set(false);
+    this.usersLoading.set(false);
     this.eventsLoaded = false;
     this.registrationsLoaded = false;
     this.usersLoaded = false;
@@ -853,26 +919,40 @@ export class PlatformService {
 
   loadUsers(force = false): void {
     if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn() || this.userRole() !== 'Administrador') return;
-    if (!force && this.usersLoaded) return;
-    this.isLoading.set(true);
-    this.apiService.get<UserItem[]>('/users').subscribe({
+    if (!force && (this.usersLoaded || this.usersRequest)) return;
+    this.usersRequest?.unsubscribe();
+    // Los refrescos tras una acción ocurren en segundo plano, sin esqueletos.
+    if (!this.usersLoaded) this.usersLoading.set(true);
+
+    const finish = () => {
+      this.usersRequest = undefined;
+      this.usersLoading.set(false);
+    };
+    this.usersRequest = this.apiService.get<UserItem[]>('/users').subscribe({
       next: (data) => {
         if (Array.isArray(data)) this.users.set(data);
         this.usersLoaded = true;
-        this.isLoading.set(false);
+        finish();
       },
       error: (err) => {
         console.error('Error fetching users:', err);
-        this.isLoading.set(false);
+        finish();
       }
     });
   }
 
   loadRegistrations(force = false): void {
     if (!isPlatformBrowser(this.platformId) || !this.isLoggedIn()) return;
-    if (!force && this.registrationsLoaded) return;
-    this.isLoading.set(true);
-    this.apiService.get<any[]>('/matriculas', { all: 'true' }).subscribe({
+    if (!force && (this.registrationsLoaded || this.registrationsRequest)) return;
+    this.registrationsRequest?.unsubscribe();
+    // Los refrescos tras una acción ocurren en segundo plano, sin esqueletos.
+    if (!this.registrationsLoaded) this.registrationsLoading.set(true);
+
+    const finish = () => {
+      this.registrationsRequest = undefined;
+      this.registrationsLoading.set(false);
+    };
+    this.registrationsRequest = this.apiService.get<any[]>('/matriculas', { all: 'true' }).subscribe({
       next: (data) => {
         if (Array.isArray(data)) {
           const mapped = data.map((item) => {
@@ -903,52 +983,47 @@ export class PlatformService {
           this.registrations.set(mapped);
         }
         this.registrationsLoaded = true;
-        this.isLoading.set(false);
+        finish();
       },
       error: (err) => {
         console.error('Error fetching registrations:', err);
-        this.isLoading.set(false);
+        finish();
       }
     });
   }
 
   // Add / Edit / Delete Users (Admin / Coordinator)
   addUser(user: UserItem): Observable<any> {
-    this.isLoading.set(true);
+    this.isSaving.set(true);
     return this.apiService.post<any>('/users', user).pipe(
       tap(() => {
         this.loadUsers(true);
       }),
-      catchError((err) => {
-        this.isLoading.set(false);
-        throw err;
-      })
+      finalize(() => this.isSaving.set(false))
     );
   }
 
   editUser(updated: UserItem, originalEmail: string): Observable<any> {
-    this.isLoading.set(true);
+    this.isSaving.set(true);
     return this.apiService.put<any>(`/users/${originalEmail}`, updated).pipe(
       tap(() => {
         this.loadUsers(true);
       }),
-      catchError((err) => {
-        this.isLoading.set(false);
-        throw err;
-      })
+      finalize(() => this.isSaving.set(false))
     );
   }
 
   deleteUser(email: string): void {
-    this.isLoading.set(true);
+    this.isSaving.set(true);
     this.apiService.delete<any>(`/users/${email}`).subscribe({
       next: (resp) => {
+        this.isSaving.set(false);
         this.loadUsers(true);
         this.alert.success('Usuario eliminado correctamente.');
       },
       error: (err) => {
         console.error('Error al eliminar usuario:', err);
-        this.isLoading.set(false);
+        this.isSaving.set(false);
         this.alert.error('No se pudo eliminar el usuario', err?.error?.message || 'Error del servidor.');
       }
     });
